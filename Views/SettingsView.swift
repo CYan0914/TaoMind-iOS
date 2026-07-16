@@ -1,0 +1,106 @@
+import SwiftUI
+
+// MARK: - Settings View
+
+struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        List {
+            // MARK: - Subscription Section
+            Section {
+                VStack(spacing: 12) {
+                    HStack {
+                        Text("☯")
+                            .font(.system(size: 36))
+                        Spacer()
+                        if appState.isPro {
+                            Label("Active", systemImage: "checkmark.seal.fill")
+                                .foregroundColor(.green)
+                                .font(.subheadline)
+                        } else {
+                            Text("Free Tier")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.orange.opacity(0.15))
+                                .foregroundColor(.orange)
+                                .cornerRadius(6)
+                        }
+                    }
+
+                    Text("Unlock unlimited wisdom sessions, journal entries, and more.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    Button(action: { /* open IAP */ }) {
+                        HStack {
+                            Text("Upgrade to Premium")
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                }
+                .padding(.vertical, 8)
+            } header: {
+                Label("TaoMind Premium", systemImage: "crown")
+            }
+
+            // MARK: - Preferences
+            Section {
+                Picker("Language", selection: $appState.language) {
+                    ForEach(AppState.Language.allCases, id: \.self) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+
+                Text("Responses will appear in your selected language when supported.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Label("Preferences", systemImage: "gearshape")
+            }
+
+            // MARK: - About
+            Section {
+                HStack {
+                    Text("Version")
+                    Spacer()
+                    Text("1.0.0")
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text("API Status")
+                    Spacer()
+                    Label("Connected", systemImage: "circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                }
+
+                Link("Privacy Policy", destination: URL(string: "https://taomind.app/privacy")!)
+                Link("Terms of Service", destination: URL(string: "https://taomind.app/terms")!)
+                Link("Restore Purchases", destination: URL(string: "#")!)
+            } header: {
+                Label("About", systemImage: "info.circle")
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("TaoMind brings the wisdom of the Tao Te Ching and Diamond Sutra to your modern challenges.")
+                        .font(.caption)
+                    Text("\nAll AI-generated content is reflective in nature and not a substitute for professional advice.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 8)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Settings")
+    }
+}

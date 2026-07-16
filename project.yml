@@ -1,0 +1,59 @@
+name: TaoMind
+options:
+  bundleIdPrefix: com.cyan0914
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.4"
+  generateEmptyDirectories: true
+  groupSortPosition: top
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    INFOPLIST_FILE: Resources/Info.plist
+    INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
+    INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: >
+      UIInterfaceOrientationPortrait,
+      UIInterfaceOrientationLandscapeLeft,
+      UIInterfaceOrientationLandscapeRight
+    INFOPLIST_KEY_LSRequiresIPhoneOS: YES
+    INFOPLIST_KEY_UIApplicationSceneManifest: >
+      {"UIApplicationSupportsMultipleScenes": false}
+    INFOPLIST_KEY_UIRequiredDeviceCapabilities: ["arm64"]
+    INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: false
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    Release:
+      SWIFT_COMPILATION_MODE: wholemodule
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+targets:
+  TaoMind:
+    type: application
+    platform: iOS
+    sources:
+      - path: .
+        excludes:
+          - "project.yml"
+          - ".github/"
+          - "**/.gitkeep"
+          - "README.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cyan0914.taomind
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+    dependencies: []
+    preBuildScripts:
+      - name: "Verify SwiftLint"
+        script: |
+          if which swiftlint >/dev/null 2>&1; then swiftlint; fi
+        basedOnDependencyAnalysis: false
