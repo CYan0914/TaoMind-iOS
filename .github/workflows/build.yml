@@ -102,20 +102,17 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
         run: |
-          if [ -n "$ASC_API_KEY_ID" ]; then
-            echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
-            AUTH_ARGS="-authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 -authenticationKeyID $ASC_API_KEY_ID -authenticationKeyIssuerID $ASC_API_ISSUER_ID"
-          else
-            AUTH_ARGS=""
-          fi
-          xcodebuild archive \
+          echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+          xcodebuild \
+            -authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_API_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID" \
+            -allowProvisioningUpdates \
+            archive \
             -project TaoMind.xcodeproj \
             -scheme TaoMind \
             -configuration Release \
             -archivePath TaoMind.xcarchive \
-            -allowProvisioningUpdates \
-            $AUTH_ARGS \
-            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
         working-directory: .
 
@@ -125,18 +122,16 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
         run: |
-          if [ -n "$ASC_API_KEY_ID" ]; then
-            echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
-            AUTH_ARGS="-authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 -authenticationKeyID $ASC_API_KEY_ID -authenticationKeyIssuerID $ASC_API_ISSUER_ID"
-          else
-            AUTH_ARGS=""
-          fi
-          xcodebuild -exportArchive \
+          echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+          xcodebuild \
+            -authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_API_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID" \
+            -allowProvisioningUpdates \
+            -exportArchive \
             -archivePath TaoMind.xcarchive \
             -exportPath ./TaoMind.ipa \
-            -exportOptionsPlist Resources/ExportOptions.plist \
-            -allowProvisioningUpdates \
-            $AUTH_ARGS
+            -exportOptionsPlist Resources/ExportOptions.plist
         working-directory: .
 
       - name: Upload IPA (artifact backup)
