@@ -106,9 +106,29 @@ jobs:
             -exportOptionsPlist Resources/ExportOptions.plist
         working-directory: .
 
-      - name: Upload IPA
+      - name: Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
         with:
           name: TaoMind-IPA
           path: TaoMind-iOS/TaoMind.ipa/TaoMind.ipa
           retention-days: 30
+
+      - name: Upload to App Store Connect (TestFlight)
+        if: ${{ secrets.ASC_API_KEY_ID != '' }}
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          echo "$ASC_API_KEY" > /tmp/asc_key.p8
+          xcrun altool --upload-app \
+            -f "TaoMind-iOS/TaoMind.ipa/TaoMind.ipa" \
+            --apiKey "$ASC_API_KEY_ID" \
+            --apiIssuer "$ASC_API_ISSUER_ID" \
+            --type ios \
+            --verbose 2>&1
+        working-directory: .
+
+      - name: Upload to App Store Connect (skipped — no API key)
+        if: ${{ secrets.ASC_API_KEY_ID == '' }}
+        run: echo "Skipping TestFlight upload — ASC_API_KEY_ID not set. IPA available as artifact."

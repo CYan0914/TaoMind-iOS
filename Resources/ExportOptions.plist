@@ -14,5 +14,7 @@
     <string>export</string>
     <key>signingStyle</key>
     <string>automatic</string>
+    <key>uploadToAppStore</key>
+    <false/>
 </dict>
 </plist>
