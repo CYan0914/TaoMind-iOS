@@ -103,9 +103,8 @@ jobs:
             -scheme TaoMind \
             -configuration Release \
             -archivePath TaoMind.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}" \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE }}" \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
         working-directory: .
 
@@ -114,7 +113,8 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath TaoMind.xcarchive \
             -exportPath ./TaoMind.ipa \
-            -exportOptionsPlist Resources/ExportOptions.plist
+            -exportOptionsPlist Resources/ExportOptions.plist \
+            -allowProvisioningUpdates
         working-directory: .
 
       - name: Upload IPA (artifact backup)

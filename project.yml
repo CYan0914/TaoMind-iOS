@@ -3,7 +3,6 @@ options:
   bundleIdPrefix: com.cyan0914
   deploymentTarget:
     iOS: "16.0"
-  xcodeVersion: "15.4"
   generateEmptyDirectories: true
   groupSortPosition: top
 settings:
@@ -53,8 +52,3 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
     dependencies: []
-    preBuildScripts:
-      - name: "Verify SwiftLint"
-        script: |
-          if which swiftlint >/dev/null 2>&1; then swiftlint; fi
-        basedOnDependencyAnalysis: false
