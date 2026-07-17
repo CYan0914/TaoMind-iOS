@@ -97,24 +97,46 @@ jobs:
         run: xcodegen generate
 
       - name: Archive
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
         run: |
+          if [ -n "$ASC_API_KEY_ID" ]; then
+            echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+            AUTH_ARGS="-authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 -authenticationKeyID $ASC_API_KEY_ID -authenticationKeyIssuerID $ASC_API_ISSUER_ID"
+          else
+            AUTH_ARGS=""
+          fi
           xcodebuild archive \
             -project TaoMind.xcodeproj \
             -scheme TaoMind \
             -configuration Release \
             -archivePath TaoMind.xcarchive \
             -allowProvisioningUpdates \
+            $AUTH_ARGS \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
         working-directory: .
 
       - name: Export IPA
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
         run: |
+          if [ -n "$ASC_API_KEY_ID" ]; then
+            echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+            AUTH_ARGS="-authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 -authenticationKeyID $ASC_API_KEY_ID -authenticationKeyIssuerID $ASC_API_ISSUER_ID"
+          else
+            AUTH_ARGS=""
+          fi
           xcodebuild -exportArchive \
             -archivePath TaoMind.xcarchive \
             -exportPath ./TaoMind.ipa \
             -exportOptionsPlist Resources/ExportOptions.plist \
-            -allowProvisioningUpdates
+            -allowProvisioningUpdates \
+            $AUTH_ARGS
         working-directory: .
 
       - name: Upload IPA (artifact backup)
