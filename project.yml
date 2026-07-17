@@ -9,11 +9,11 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    DEVELOPMENT_TEAM: ""
+    ALWAYS_SEARCH_USER_PATHS: NO
+    DEVELOPMENT_TEAM: H4VQ9X6KYK
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1,2"
-    INFOPLIST_FILE: Resources/Info.plist
     INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
     INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
     INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
@@ -41,16 +41,17 @@ targets:
       - path: .
         excludes:
           - "project.yml"
+          - ".git/"
           - ".github/"
           - "**/.gitkeep"
           - "README.md"
     settings:
       base:
+        PRODUCT_NAME: TaoMind
         PRODUCT_BUNDLE_IDENTIFIER: com.cyan0914.taomind
         INFOPLIST_FILE: Resources/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_IDENTITY: Apple Development
     dependencies: []
     preBuildScripts:
       - name: "Verify SwiftLint"

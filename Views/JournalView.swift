@@ -124,8 +124,8 @@ struct JournalRow: View {
                     .foregroundColor(.secondary)
             }
 
-            if let wisdom = entry.wisdom, !wisdom.isEmpty {
-                Text(wisdom)
+            if !entry.wisdom.isEmpty {
+                Text(entry.wisdom)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)

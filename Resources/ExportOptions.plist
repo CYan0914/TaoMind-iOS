@@ -5,7 +5,7 @@
     <key>method</key>
     <string>app-store</string>
     <key>teamID</key>
-    <string>$(DEVELOPMENT_TEAM)</string>
+    <string>H4VQ9X6KYK</string>
     <key>uploadSymbols</key>
     <true/>
     <key>compileBitcode</key>
@@ -13,6 +13,6 @@
     <key>destination</key>
     <string>export</string>
     <key>signingStyle</key>
-    <string>manual</string>
+    <string>automatic</string>
 </dict>
 </plist>
