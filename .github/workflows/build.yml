@@ -27,16 +27,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Select Xcode (latest)
         run: |
-          ls /Applications/Xcode*.app/Contents/Developer 2>/dev/null | head -3
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer 2>/dev/null || true
+          echo "Available Xcode versions:"
+          ls -d /Applications/Xcode*.app 2>/dev/null || echo "  (none found)"
+          XCODE_APP=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE_APP" ]; then
+            sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+            echo "Selected: $XCODE_APP"
+          fi
           xcodebuild -version
 
       - name: Install xcodegen
         run: |
           brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
           xcodegen --version
+
+      - name: Clean stale project (avoid Xcode format mismatch)
+        run: rm -rf TaoMind.xcodeproj
 
       - name: Generate Xcode Project
         run: xcodegen generate
@@ -81,6 +89,9 @@ jobs:
         run: |
           brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
           xcodegen --version
+
+      - name: Clean stale project (avoid Xcode format mismatch)
+        run: rm -rf TaoMind.xcodeproj
 
       - name: Generate Xcode Project
         run: xcodegen generate
