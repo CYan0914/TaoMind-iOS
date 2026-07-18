@@ -54,6 +54,11 @@ jobs:
         run: xcodegen generate
         working-directory: .
 
+      - name: Downgrade project format (Xcode 15.4 compatible)
+        run: |
+          sed -i '' 's/objectVersion = [0-9]*;/objectVersion = 21;/g' TaoMind.xcodeproj/project.pbxproj
+          echo "objectVersion: $(grep 'objectVersion' TaoMind.xcodeproj/project.pbxproj)"
+
       - name: Build for Simulator
         run: |
           xcodebuild build \
@@ -103,6 +108,11 @@ jobs:
 
       - name: Generate Xcode Project
         run: xcodegen generate
+
+      - name: Downgrade project format (Xcode 15.4 compatible)
+        run: |
+          sed -i '' 's/objectVersion = [0-9]*;/objectVersion = 21;/g' TaoMind.xcodeproj/project.pbxproj
+          echo "objectVersion: $(grep 'objectVersion' TaoMind.xcodeproj/project.pbxproj)"
 
       - name: Archive
         env:
