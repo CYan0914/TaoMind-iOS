@@ -88,8 +88,8 @@ jobs:
   archive:
     name: Archive for App Store
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_ipa == 'true'
-    runs-on: macos-14
-    needs: [build]
+    runs-on: macos-latest  # Need Xcode 26+ for App Store upload
+    needs: []
 
     steps:
       - name: Checkout
