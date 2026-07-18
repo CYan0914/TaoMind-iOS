@@ -44,7 +44,11 @@ jobs:
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
-        run: rm -rf TaoMind.xcodeproj
+        run: |
+          echo "Before cleanup:"
+          ls -la TaoMind.xcodeproj/ 2>/dev/null || echo "  (no xcodeproj)"
+          rm -rf TaoMind.xcodeproj
+          echo "After cleanup: done"
 
       - name: Generate Xcode Project
         run: xcodegen generate
@@ -91,7 +95,11 @@ jobs:
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
-        run: rm -rf TaoMind.xcodeproj
+        run: |
+          echo "Before cleanup:"
+          ls -la TaoMind.xcodeproj/ 2>/dev/null || echo "  (no xcodeproj)"
+          rm -rf TaoMind.xcodeproj
+          echo "After cleanup: done"
 
       - name: Generate Xcode Project
         run: xcodegen generate

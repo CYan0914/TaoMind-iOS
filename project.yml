@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.cyan0914
   deploymentTarget:
     iOS: "16.0"
+  xcodeVersion: "16.0"
   generateEmptyDirectories: true
   groupSortPosition: top
 settings:
