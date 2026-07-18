@@ -161,7 +161,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TaoMind-IPA
-          path: TaoMind-iOS/TaoMind.ipa/TaoMind.ipa
+          path: TaoMind.ipa/TaoMind.ipa
           retention-days: 30
 
       - name: Upload to App Store Connect (TestFlight)
@@ -174,9 +174,10 @@ jobs:
             echo "APPSTORE_KEY_ID not set — skipping TestFlight upload. IPA available as artifact."
             exit 0
           fi
-          echo "$APPSTORE_API_KEY" > /tmp/asc_key.p8
+          mkdir -p ~/private_keys
+          echo "$APPSTORE_API_KEY" > ~/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
           xcrun altool --upload-app \
-            -f "TaoMind-iOS/TaoMind.ipa/TaoMind.ipa" \
+            -f "TaoMind.ipa/TaoMind.ipa" \
             --apiKey "$APPSTORE_KEY_ID" \
             --apiIssuer "$APPSTORE_ISSUER_ID" \
             --type ios \
