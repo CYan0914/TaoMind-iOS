@@ -53,6 +53,5 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
       configs:
-        Release:
-          CODE_SIGN_IDENTITY: "iOS Distribution"
+        Release: {}
     dependencies: []
