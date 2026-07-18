@@ -157,7 +157,19 @@ struct SeekWisdomView: View {
             .padding()
         }
         .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .scrollDismissesKeyboard(.immediately)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { dismissKeyboard() }
+                    .fontWeight(.semibold)
+            }
+        }
         .animation(.easeInOut(duration: 0.3), value: result != nil)
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     // MARK: - Actions
