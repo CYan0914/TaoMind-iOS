@@ -38,9 +38,11 @@ jobs:
           fi
           xcodebuild -version
 
-      - name: Install xcodegen
+      - name: Install xcodegen (v2.37 — Xcode 15.4 compatible)
         run: |
-          brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
+          curl -L https://github.com/yonaskolb/XcodeGen/releases/download/2.37.0/xcodegen.zip -o /tmp/xcodegen.zip
+          unzip -o /tmp/xcodegen.zip -d /tmp/xcodegen
+          sudo cp -f /tmp/xcodegen/bin/xcodegen /usr/local/bin/xcodegen 2>/dev/null || true
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
@@ -94,9 +96,11 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Install xcodegen
+      - name: Install xcodegen (v2.37 — Xcode 15.4 compatible)
         run: |
-          brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
+          curl -L https://github.com/yonaskolb/XcodeGen/releases/download/2.37.0/xcodegen.zip -o /tmp/xcodegen.zip
+          unzip -o /tmp/xcodegen.zip -d /tmp/xcodegen
+          sudo cp -f /tmp/xcodegen/bin/xcodegen /usr/local/bin/xcodegen 2>/dev/null || true
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
