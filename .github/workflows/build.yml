@@ -21,18 +21,18 @@ jobs:
   # ─── Build & Test ───────────────────────────────────────
   build:
     name: Build for iOS Simulator
-    runs-on: macos-14  # Apple Silicon (M1/M2) runner
+    runs-on: macos-latest  # Need Xcode 26+ for App Store upload
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
+      - name: Select Xcode
         run: |
           echo "Available:"
           ls -d /Applications/Xcode*.app 2>/dev/null
-          # Try Xcode 16 first (can read newer formats)
-          for ver in "Xcode_16.2" "Xcode_16.1" "Xcode_16.0" "Xcode_15.4"; do
+          # Try newest Xcode first (need 26+ for App Store upload)
+          for ver in "Xcode_26" "Xcode_25" "Xcode_16.2" "Xcode_16.1" "Xcode_16.0" "Xcode_15.4"; do
             if [ -d "/Applications/${ver}.app" ]; then
               sudo xcode-select -s "/Applications/${ver}.app/Contents/Developer"
               echo "Selected: ${ver}"
