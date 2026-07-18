@@ -98,15 +98,15 @@ jobs:
 
       - name: Archive
         env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
         run: |
-          echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+          echo "$APPSTORE_API_KEY" > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           xcodebuild \
-            -authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 \
-            -authenticationKeyID "$ASC_API_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID" \
+            -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
+            -authenticationKeyID "$APPSTORE_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
             -allowProvisioningUpdates \
             archive \
             -project TaoMind.xcodeproj \
@@ -118,15 +118,15 @@ jobs:
 
       - name: Export IPA
         env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
         run: |
-          echo "$ASC_API_KEY" > /tmp/AuthKey_${ASC_API_KEY_ID}.p8
+          echo "$APPSTORE_API_KEY" > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           xcodebuild \
-            -authenticationKeyPath /tmp/AuthKey_${ASC_API_KEY_ID}.p8 \
-            -authenticationKeyID "$ASC_API_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID" \
+            -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
+            -authenticationKeyID "$APPSTORE_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
             -allowProvisioningUpdates \
             -exportArchive \
             -archivePath TaoMind.xcarchive \
@@ -143,19 +143,19 @@ jobs:
 
       - name: Upload to App Store Connect (TestFlight)
         env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
         run: |
-          if [ -z "$ASC_API_KEY_ID" ]; then
-            echo "ASC_API_KEY_ID not set — skipping TestFlight upload. IPA available as artifact."
+          if [ -z "$APPSTORE_KEY_ID" ]; then
+            echo "APPSTORE_KEY_ID not set — skipping TestFlight upload. IPA available as artifact."
             exit 0
           fi
-          echo "$ASC_API_KEY" > /tmp/asc_key.p8
+          echo "$APPSTORE_API_KEY" > /tmp/asc_key.p8
           xcrun altool --upload-app \
             -f "TaoMind-iOS/TaoMind.ipa/TaoMind.ipa" \
-            --apiKey "$ASC_API_KEY_ID" \
-            --apiIssuer "$ASC_API_ISSUER_ID" \
+            --apiKey "$APPSTORE_KEY_ID" \
+            --apiIssuer "$APPSTORE_ISSUER_ID" \
             --type ios \
             --verbose 2>&1
         working-directory: .
