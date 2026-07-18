@@ -117,18 +117,9 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Archive
-        env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
+      - name: Archive (unsigned — sign at export)
         run: |
-          echo "$APPSTORE_API_KEY" > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           xcodebuild \
-            -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
-            -authenticationKeyID "$APPSTORE_KEY_ID" \
-            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
-            -allowProvisioningUpdates \
             archive \
             -project TaoMind.xcodeproj \
             -scheme TaoMind \
@@ -136,8 +127,9 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath TaoMind.xcarchive \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iOS Distribution" \
-            DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
         working-directory: .
 
       - name: Export IPA
