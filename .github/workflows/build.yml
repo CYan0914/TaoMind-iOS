@@ -18,9 +18,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ─── Build & Test ───────────────────────────────────────
+  # ─── Build & Test (skipped when create_ipa=true) ────────
   build:
     name: Build for iOS Simulator
+    if: github.event.inputs.create_ipa != 'true'
     runs-on: macos-latest  # Need Xcode 26+ for App Store upload
 
     steps:
