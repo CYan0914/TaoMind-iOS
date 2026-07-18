@@ -34,9 +34,11 @@ struct SettingsView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 
-                    Button(action: { /* open IAP */ }) {
+                    Button(action: {
+                        // IAP not yet implemented — show coming soon
+                    }) {
                         HStack {
-                            Text("Upgrade to Premium")
+                            Text("Upgrade to Premium — Coming Soon")
                                 .fontWeight(.semibold)
                             Image(systemName: "arrow.right")
                         }
@@ -84,9 +86,9 @@ struct SettingsView: View {
                         .font(.caption)
                 }
 
-                Link("Privacy Policy", destination: URL(string: "https://taomind.app/privacy")!)
-                Link("Terms of Service", destination: URL(string: "https://taomind.app/terms")!)
-                Link("Restore Purchases", destination: URL(string: "#")!)
+                Link("Privacy Policy", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
+                Link("Terms of Service", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
+                // Restore Purchases — hidden until IAP is implemented
             } header: {
                 Label("About", systemImage: "info.circle")
             } footer: {

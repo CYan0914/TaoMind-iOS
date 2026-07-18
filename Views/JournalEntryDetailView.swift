@@ -74,15 +74,16 @@ struct JournalEntryDetailView: View {
                             .cornerRadius(12)
 
                         Button("Save Notes") {
-                            // save notes via API
+                            // Notes saving not yet implemented on backend
                         }
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .background(Color(red: 0.17, green: 0.14, blue: 0.09).opacity(0.5))
                         .foregroundColor(.white)
                         .cornerRadius(10)
+                        .disabled(true)
                     }
                 }
                 .padding()
