@@ -1,10 +1,6 @@
 name: Build TaoMind
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
     inputs:
       create_ipa:
@@ -96,17 +92,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
+      - name: Select Xcode (need 26+ for App Store)
         run: |
-          echo "Available:"
-          ls -d /Applications/Xcode*.app 2>/dev/null
-          for ver in "Xcode_16.2" "Xcode_16.1" "Xcode_16.0" "Xcode_15.4"; do
-            if [ -d "/Applications/${ver}.app" ]; then
-              sudo xcode-select -s "/Applications/${ver}.app/Contents/Developer"
-              echo "Selected: ${ver}"
-              break
+          echo "=== Available Xcode ==="
+          ls -d /Applications/Xcode*.app 2>/dev/null || echo "(none found)"
+          for xc in /Applications/Xcode*.app; do
+            if sudo xcode-select -s "$xc/Contents/Developer" 2>/dev/null; then
+              sdk=$(xcrun --sdk iphoneos --show-sdk-version 2>/dev/null || echo "unknown")
+              echo "  $xc → iOS SDK $sdk"
+              if [[ "$sdk" == 2[6-9].* ]] || [[ "$sdk" == [3-9]* ]]; then
+                echo "✅ Selected: $xc (iOS SDK $sdk)"
+                xcodebuild -version
+                exit 0
+              fi
             fi
           done
+          echo "⚠️ No Xcode with SDK 26+ found — using fallback"
           xcodebuild -version
 
       - name: Install xcodegen
