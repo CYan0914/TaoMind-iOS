@@ -135,7 +135,8 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath TaoMind.xcarchive \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iOS Distribution" \
             DEVELOPMENT_TEAM="${{ secrets.DEVELOPMENT_TEAM }}"
         working-directory: .
 
