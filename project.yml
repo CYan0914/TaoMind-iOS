@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.cyan0914
   deploymentTarget:
     iOS: "16.0"
-  projectVersion: 21
+  minimumXcodeGenVersion: 2.40
   generateEmptyDirectories: true
   groupSortPosition: top
 settings:
@@ -52,4 +52,7 @@ targets:
         INFOPLIST_FILE: Resources/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
+      configs:
+        Release:
+          CODE_SIGN_IDENTITY: "iOS Distribution"
     dependencies: []
