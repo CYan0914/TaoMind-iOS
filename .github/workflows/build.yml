@@ -27,22 +27,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode (latest)
+      - name: Select Xcode 16
         run: |
-          echo "Available Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null || echo "  (none found)"
-          XCODE_APP=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
-          if [ -n "$XCODE_APP" ]; then
-            sudo xcode-select -s "$XCODE_APP/Contents/Developer"
-            echo "Selected: $XCODE_APP"
-          fi
+          echo "Available:"
+          ls -d /Applications/Xcode*.app 2>/dev/null
+          # Try Xcode 16 first (can read newer formats)
+          for ver in "Xcode_16.2" "Xcode_16.1" "Xcode_16.0" "Xcode_15.4"; do
+            if [ -d "/Applications/${ver}.app" ]; then
+              sudo xcode-select -s "/Applications/${ver}.app/Contents/Developer"
+              echo "Selected: ${ver}"
+              break
+            fi
+          done
           xcodebuild -version
 
-      - name: Install xcodegen (v2.37 — Xcode 15.4 compatible)
+      - name: Install xcodegen
         run: |
-          curl -L https://github.com/yonaskolb/XcodeGen/releases/download/2.37.0/xcodegen.zip -o /tmp/xcodegen.zip
-          unzip -o /tmp/xcodegen.zip -d /tmp/xcodegen
-          sudo cp -f /tmp/xcodegen/bin/xcodegen /usr/local/bin/xcodegen 2>/dev/null || true
+          brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
@@ -55,11 +56,6 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
         working-directory: .
-
-      - name: Downgrade project format (Xcode 15.4 compatible)
-        run: |
-          sed -i '' 's/objectVersion = [0-9]*;/objectVersion = 21;/g' TaoMind.xcodeproj/project.pbxproj
-          echo "objectVersion: $(grep 'objectVersion' TaoMind.xcodeproj/project.pbxproj)"
 
       - name: Build for Simulator
         run: |
@@ -93,14 +89,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-
-      - name: Install xcodegen (v2.37 — Xcode 15.4 compatible)
+      - name: Select Xcode 16
         run: |
-          curl -L https://github.com/yonaskolb/XcodeGen/releases/download/2.37.0/xcodegen.zip -o /tmp/xcodegen.zip
-          unzip -o /tmp/xcodegen.zip -d /tmp/xcodegen
-          sudo cp -f /tmp/xcodegen/bin/xcodegen /usr/local/bin/xcodegen 2>/dev/null || true
+          echo "Available:"
+          ls -d /Applications/Xcode*.app 2>/dev/null
+          for ver in "Xcode_16.2" "Xcode_16.1" "Xcode_16.0" "Xcode_15.4"; do
+            if [ -d "/Applications/${ver}.app" ]; then
+              sudo xcode-select -s "/Applications/${ver}.app/Contents/Developer"
+              echo "Selected: ${ver}"
+              break
+            fi
+          done
+          xcodebuild -version
+
+      - name: Install xcodegen
+        run: |
+          brew install xcodegen 2>/dev/null || brew upgrade xcodegen 2>/dev/null
           xcodegen --version
 
       - name: Clean stale project (avoid Xcode format mismatch)
@@ -112,11 +116,6 @@ jobs:
 
       - name: Generate Xcode Project
         run: xcodegen generate
-
-      - name: Downgrade project format (Xcode 15.4 compatible)
-        run: |
-          sed -i '' 's/objectVersion = [0-9]*;/objectVersion = 21;/g' TaoMind.xcodeproj/project.pbxproj
-          echo "objectVersion: $(grep 'objectVersion' TaoMind.xcodeproj/project.pbxproj)"
 
       - name: Archive
         env:
