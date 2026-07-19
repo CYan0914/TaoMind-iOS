@@ -127,8 +127,12 @@ jobs:
 
       - name: Ensure iOS SDK is ready (Xcode first launch)
         run: |
-          sudo xcodebuild -runFirstLaunch 2>/dev/null || true
+          sudo xcodebuild -runFirstLaunch 2>&1 || true
+          # Install missing iOS platform (needed for generic/platform=iOS archive destination)
+          xcodebuild -downloadPlatform iOS 2>&1 || true
+          echo "=== SDK check ==="
           xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphoneos --show-sdk-path
           echo "SDK OK"
 
       - name: Archive (unsigned — sign at export)
