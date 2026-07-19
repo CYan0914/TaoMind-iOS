@@ -205,9 +205,3 @@ private struct PlanCard: View {
         }
     }
 }
-
-// MARK: - Package Identifiable conformance
-
-extension Package: @retroactive Identifiable {
-    public var id: String { identifier }
-}

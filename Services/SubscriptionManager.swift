@@ -12,7 +12,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var showingPaywall = false
 
-    private init() {
+    override private init() {
         Purchases.shared.delegate = self
         Task { await refreshStatus() }
     }
