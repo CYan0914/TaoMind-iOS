@@ -125,6 +125,12 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
+      - name: Ensure iOS SDK is ready (Xcode first launch)
+        run: |
+          sudo xcodebuild -runFirstLaunch 2>/dev/null || true
+          xcrun --sdk iphoneos --show-sdk-version
+          echo "SDK OK"
+
       - name: Archive (unsigned — sign at export)
         run: |
           xcodebuild \
@@ -132,7 +138,8 @@ jobs:
             -project TaoMind.xcodeproj \
             -scheme TaoMind \
             -configuration Release \
-            -destination 'generic/platform=iOS' \
+            -destination generic/platform=iOS \
+            -sdk iphoneos \
             -archivePath TaoMind.xcarchive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="" \
