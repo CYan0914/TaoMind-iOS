@@ -132,5 +132,9 @@ struct SettingsView: View {
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
             PaywallView()
         }
+        .task {
+            // Refresh subscription status when user opens Settings
+            await subscriptionManager.refreshStatus()
+        }
     }
 }

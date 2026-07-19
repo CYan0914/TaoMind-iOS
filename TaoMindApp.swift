@@ -21,6 +21,10 @@ struct TaoMindApp: App {
                 .task {
                     await loadDailyVerse()
                 }
+                .task {
+                    // Refresh subscription status on every cold launch
+                    await SubscriptionManager.shared.refreshStatus()
+                }
         }
     }
 

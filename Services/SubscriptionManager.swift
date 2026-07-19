@@ -31,12 +31,21 @@ final class SubscriptionManager: NSObject, ObservableObject {
     // MARK: - Status
 
     func refreshStatus() async {
-        do {
-            let customerInfo = try await Purchases.shared.customerInfo()
-            isPro = customerInfo.entitlements["premium"]?.isActive == true
-        } catch {
-            print("[RevenueCat] Failed to refresh: \(error)")
+        // Retry up to 3 times — RevenueCat may not be fully initialized yet
+        for attempt in 1...3 {
+            do {
+                let customerInfo = try await Purchases.shared.customerInfo()
+                isPro = customerInfo.entitlements["premium"]?.isActive == true
+                if isPro { print("[RevenueCat] Premium active ✅") }
+                return
+            } catch {
+                print("[RevenueCat] Refresh attempt \(attempt)/3 failed: \(error)")
+                if attempt < 3 {
+                    try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * Double(attempt)))
+                }
+            }
         }
+        print("[RevenueCat] All refresh attempts exhausted — isPro stays false")
     }
 
     func fetchOfferings() async {
