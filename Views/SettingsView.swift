@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
 
     var body: some View {
         List {
@@ -14,7 +15,7 @@ struct SettingsView: View {
                         Text("☯")
                             .font(.system(size: 36))
                         Spacer()
-                        if appState.isPro {
+                        if subscriptionManager.isPro {
                             Label("Active", systemImage: "checkmark.seal.fill")
                                 .foregroundColor(.green)
                                 .font(.subheadline)
@@ -30,28 +31,53 @@ struct SettingsView: View {
                         }
                     }
 
-                    Text("Unlock unlimited wisdom sessions, journal entries, and more.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    if subscriptionManager.isPro {
+                        Text("You have full access to all features. Thank you for supporting TaoMind!")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Unlimited wisdom sessions, journal entries, and more.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
 
-                    Button(action: {
-                        // IAP not yet implemented — show coming soon
-                    }) {
-                        HStack {
-                            Text("Upgrade to Premium — Coming Soon")
-                                .fontWeight(.semibold)
-                            Image(systemName: "arrow.right")
+                    if subscriptionManager.isPro {
+                        Button(action: { Task { await subscriptionManager.restore() } }) {
+                            HStack {
+                                if subscriptionManager.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Restore Purchases")
+                                        .fontWeight(.semibold)
+                                    Image(systemName: "arrow.right")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(.systemGray6))
+                            .foregroundColor(.primary)
+                            .cornerRadius(12)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color(red: 0.17, green: 0.14, blue: 0.09))
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .disabled(subscriptionManager.isLoading)
+                    } else {
+                        Button(action: { subscriptionManager.showingPaywall = true }) {
+                            HStack {
+                                Text("Upgrade to Premium")
+                                    .fontWeight(.semibold)
+                                Image(systemName: "arrow.right")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
                     }
                 }
                 .padding(.vertical, 8)
             } header: {
-                Label("TaoMind Premium", systemImage: "crown")
+                Label("TaoMind Premium", systemImage: subscriptionManager.isPro ? "crown.fill" : "crown")
             }
 
             // MARK: - Preferences
@@ -88,7 +114,6 @@ struct SettingsView: View {
 
                 Link("Privacy Policy", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
                 Link("Terms of Service", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
-                // Restore Purchases — hidden until IAP is implemented
             } header: {
                 Label("About", systemImage: "info.circle")
             } footer: {
@@ -104,5 +129,8 @@ struct SettingsView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Settings")
+        .sheet(isPresented: $subscriptionManager.showingPaywall) {
+            PaywallView()
+        }
     }
 }

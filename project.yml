@@ -6,6 +6,10 @@ options:
   minimumXcodeGenVersion: 2.40
   generateEmptyDirectories: true
   groupSortPosition: top
+packages:
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios
+    from: 5.14.0
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -54,4 +58,5 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
       configs:
         Release: {}
-    dependencies: []
+    dependencies:
+      - package: RevenueCat

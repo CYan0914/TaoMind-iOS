@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SeekWisdomView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var question: String = ""
     @State private var selectedScenario: ScenarioType = .business_decision
     @State private var temperature: Double = 0.7
@@ -35,6 +36,18 @@ struct SeekWisdomView: View {
                     Text("Describe your situation. Receive ancient guidance.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+
+                    // Free tier usage indicator
+                    if !subscriptionManager.isPro {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.caption2)
+                            Text("\(appState.seeksRemainingToday == Int.max ? "∞" : "\(appState.seeksRemainingToday)") free today")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.secondary)
+                        .padding(.top, 2)
+                    }
                 }
                 .padding(.top, 8)
 
@@ -166,6 +179,9 @@ struct SeekWisdomView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: result != nil)
+        .sheet(isPresented: $subscriptionManager.showingPaywall) {
+            PaywallView()
+        }
     }
 
     private func dismissKeyboard() {
@@ -176,6 +192,12 @@ struct SeekWisdomView: View {
 
     private func seekWisdom() {
         guard !question.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+
+        // Check daily usage limit for free tier
+        guard appState.canSeekWisdom else {
+            subscriptionManager.showingPaywall = true
+            return
+        }
 
         isSeeking = true
         errorMessage = nil
@@ -197,6 +219,7 @@ struct SeekWisdomView: View {
                 await MainActor.run {
                     result = response
                     isSeeking = false
+                    appState.incrementDailyUsage()
 
                     // Auto-save to journal
                     saveToJournal(response: response)
