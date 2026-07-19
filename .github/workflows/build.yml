@@ -127,13 +127,26 @@ jobs:
 
       - name: Ensure iOS SDK is ready (Xcode first launch)
         run: |
+          # 1) Accept license & run first launch
+          sudo xcodebuild -license accept 2>&1 || true
           sudo xcodebuild -runFirstLaunch 2>&1 || true
-          # Install missing iOS platform (needed for generic/platform=iOS archive destination)
-          xcodebuild -downloadPlatform iOS 2>&1 || true
-          echo "=== SDK check ==="
-          xcrun --sdk iphoneos --show-sdk-version
-          xcrun --sdk iphoneos --show-sdk-path
-          echo "SDK OK"
+
+          # 2) Install iOS platform with retry (removes || true so we see failures)
+          echo "--- Downloading iOS platform ---"
+          for i in 1 2 3; do
+            echo "Attempt $i..."
+            sudo xcodebuild -downloadPlatform iOS -quiet 2>&1 && break
+            echo "Attempt $i failed, sleeping 10s..."
+            sleep 10
+          done
+
+          # 3) Verify SDK
+          echo "=== SDK verification ==="
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version || echo "⚠️ iphoneos SDK not found!"
+          xcrun --sdk iphoneos --show-sdk-path || true
+          ls -la /Applications/Xcode*.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport/ 2>/dev/null | head -5 || echo "No DeviceSupport found"
+          echo "=== Done ==="
 
       - name: Archive (unsigned — sign at export)
         run: |
