@@ -10,6 +10,7 @@ struct TaoMindApp: App {
 
     init() {
         SubscriptionManager.configure()
+        NotificationService.shared.requestPermission()
     }
 
     var body: some Scene {
@@ -20,6 +21,8 @@ struct TaoMindApp: App {
                 .preferredColorScheme(.light)
                 .task {
                     await loadDailyVerse()
+                    // Schedule tomorrow's daily verse notification
+                    await NotificationService.shared.scheduleDailyVerse()
                 }
                 .task {
                     // Refresh subscription status on every cold launch
