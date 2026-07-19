@@ -35,7 +35,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         for attempt in 1...3 {
             do {
                 let customerInfo = try await Purchases.shared.customerInfo()
-                isPro = customerInfo.entitlements["premium"]?.isActive == true
+                isPro = customerInfo.entitlements["pro"]?.isActive == true
                 if isPro { print("[RevenueCat] Premium active ✅") }
                 return
             } catch {
@@ -65,11 +65,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         defer { isLoading = false }
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            // Log the raw result for debugging
-            let isActive = result.customerInfo.entitlements["premium"]?.isActive == true
-            print("[RevenueCat] Purchase returned isPro=\(isActive)")
-            // Always refresh from server — immediate result may lag behind
-            await refreshStatus()
+            isPro = result.customerInfo.entitlements["pro"]?.isActive == true
             if isPro { showingPaywall = false }
             return isPro
         } catch {
@@ -85,7 +81,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         defer { isLoading = false }
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
-            isPro = customerInfo.entitlements["premium"]?.isActive == true
+            isPro = customerInfo.entitlements["pro"]?.isActive == true
             return isPro
         } catch {
             print("[RevenueCat] Restore failed: \(error)")
@@ -99,7 +95,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
 extension SubscriptionManager: PurchasesDelegate {
     nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
-            isPro = customerInfo.entitlements["premium"]?.isActive == true
+            isPro = customerInfo.entitlements["pro"]?.isActive == true
         }
     }
 }

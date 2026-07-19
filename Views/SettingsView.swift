@@ -41,27 +41,26 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Always show Restore Purchases (for users whose entitlements need syncing)
-                    Button(action: { Task { await subscriptionManager.restore() } }) {
-                        HStack {
-                            if subscriptionManager.isLoading {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                            } else {
-                                Text("Restore Purchases")
-                                    .fontWeight(.semibold)
-                                Image(systemName: "arrow.right")
+                    if subscriptionManager.isPro {
+                        Button(action: { Task { await subscriptionManager.restore() } }) {
+                            HStack {
+                                if subscriptionManager.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Restore Purchases")
+                                        .fontWeight(.semibold)
+                                    Image(systemName: "arrow.right")
+                                }
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(.systemGray6))
+                            .foregroundColor(.primary)
+                            .cornerRadius(12)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color(.systemGray6))
-                        .foregroundColor(.primary)
-                        .cornerRadius(12)
-                    }
-                    .disabled(subscriptionManager.isLoading)
-
-                    if !subscriptionManager.isPro {
+                        .disabled(subscriptionManager.isLoading)
+                    } else {
                         Button(action: { subscriptionManager.showingPaywall = true }) {
                             HStack {
                                 Text("Upgrade to Premium")
