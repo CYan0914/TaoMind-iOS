@@ -163,7 +163,7 @@ private struct PlanCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
 
-                    if let period = package.storeProduct.subscriptionPeriod {
+                    if package.storeProduct.subscriptionPeriod != nil {
                         Text(periodDetail)
                             .font(.caption)
                             .foregroundColor(.secondary)

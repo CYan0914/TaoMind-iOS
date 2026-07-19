@@ -63,21 +63,21 @@ class AppState: ObservableObject {
 
     /// Whether the user can perform another Seak Wisdom this day
     var canSeekWisdom: Bool {
-        if isPro { return true }
+        if SubscriptionManager.shared.isPro { return true }
         resetDailyIfNeeded()
         return defaults.integer(forKey: usageCountKey) < freeLimit
     }
 
     /// Number of seeks remaining today
     var seeksRemainingToday: Int {
-        if isPro { return Int.max }
+        if SubscriptionManager.shared.isPro { return Int.max }
         resetDailyIfNeeded()
         return max(0, freeLimit - defaults.integer(forKey: usageCountKey))
     }
 
     /// Call after each successful Seek Wisdom
     func incrementDailyUsage() {
-        guard !isPro else { return }
+        guard !SubscriptionManager.shared.isPro else { return }
         resetDailyIfNeeded()
         let count = defaults.integer(forKey: usageCountKey) + 1
         defaults.set(count, forKey: usageCountKey)

@@ -4,7 +4,7 @@ import RevenueCat
 // MARK: - Subscription Manager (RevenueCat wrapper)
 
 @MainActor
-final class SubscriptionManager: ObservableObject {
+final class SubscriptionManager: NSObject, ObservableObject {
     static let shared = SubscriptionManager()
 
     @Published var isPro = false
