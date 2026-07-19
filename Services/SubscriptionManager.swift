@@ -65,7 +65,11 @@ final class SubscriptionManager: NSObject, ObservableObject {
         defer { isLoading = false }
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            isPro = result.customerInfo.entitlements["premium"]?.isActive == true
+            // Log the raw result for debugging
+            let isActive = result.customerInfo.entitlements["premium"]?.isActive == true
+            print("[RevenueCat] Purchase returned isPro=\(isActive)")
+            // Always refresh from server — immediate result may lag behind
+            await refreshStatus()
             if isPro { showingPaywall = false }
             return isPro
         } catch {

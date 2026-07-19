@@ -110,11 +110,20 @@ struct PaywallView: View {
                 Text(restoreMessage)
             }
             .task {
+                // If already Pro, dismiss immediately
+                if subscriptionManager.isPro {
+                    dismiss()
+                    return
+                }
                 await subscriptionManager.fetchOfferings()
                 // Auto-select first (usually yearly — best value)
                 if let first = subscriptionManager.offerings?.current?.availablePackages.first {
                     selectedPackage = first
                 }
+            }
+            // Auto-dismiss when purchase succeeds
+            .onChange(of: subscriptionManager.isPro) { isPro in
+                if isPro { dismiss() }
             }
         }
     }
