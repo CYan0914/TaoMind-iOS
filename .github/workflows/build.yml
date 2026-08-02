@@ -224,10 +224,21 @@ jobs:
           fi
           mkdir -p ~/private_keys
           printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > ~/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
-          xcrun altool --upload-app \
+          set +e
+          ALT_OUT=$(xcrun altool --upload-app \
             -f "TaoMind.ipa/TaoMind.ipa" \
             --apiKey "$APPSTORE_KEY_ID" \
             --apiIssuer "$APPSTORE_ISSUER_ID" \
             --type ios \
-            --verbose 2>&1
+            --verbose 2>&1)
+          ALT_EXIT=$?
+          set -e
+          echo "$ALT_OUT"
+          # altool sometimes exits 0 even when the upload was rejected —
+          # treat its own failure message as a hard error
+          if [ $ALT_EXIT -ne 0 ] || printf '%s' "$ALT_OUT" | grep -q "Failed to upload package"; then
+            echo "::error::altool upload failed"
+            exit 1
+          fi
+          echo "Upload OK"
         working-directory: .
