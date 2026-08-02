@@ -170,7 +170,12 @@ jobs:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
         run: |
-          echo "$APPSTORE_API_KEY" > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
+          # Write API key robustly (strip CRLF, no trailing newline added by echo)
+          printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
+          echo "=== p8 diagnostics ==="
+          echo "size: $(wc -c < /tmp/AuthKey_${APPSTORE_KEY_ID}.p8) bytes"
+          echo "first line: $(head -1 /tmp/AuthKey_${APPSTORE_KEY_ID}.p8)"
+          echo "last line:  $(tail -1 /tmp/AuthKey_${APPSTORE_KEY_ID}.p8)"
           xcodebuild \
             -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
             -authenticationKeyID "$APPSTORE_KEY_ID" \
@@ -181,6 +186,24 @@ jobs:
             -exportPath ./TaoMind.ipa \
             -exportOptionsPlist Resources/ExportOptions.plist
         working-directory: .
+
+      - name: Capture Distribution Logs (on failure)
+        if: failure()
+        run: |
+          mkdir -p dist-logs
+          find /var/folders -maxdepth 8 -name "*.xcdistributionlogs" -type d 2>/dev/null | while read d; do
+            echo "Copying: $d"
+            cp -r "$d" dist-logs/ 2>/dev/null || true
+          done
+          ls -la dist-logs/ || true
+
+      - name: Upload Distribution Logs Artifact (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-distribution-logs
+          path: dist-logs/
+          retention-days: 7
 
       - name: Upload IPA (artifact backup)
         uses: actions/upload-artifact@v4
@@ -200,7 +223,7 @@ jobs:
             exit 0
           fi
           mkdir -p ~/private_keys
-          echo "$APPSTORE_API_KEY" > ~/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > ~/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
           xcrun altool --upload-app \
             -f "TaoMind.ipa/TaoMind.ipa" \
             --apiKey "$APPSTORE_KEY_ID" \
