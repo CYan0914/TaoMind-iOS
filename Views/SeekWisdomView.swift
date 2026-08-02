@@ -42,7 +42,7 @@ struct SeekWisdomView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "sparkles")
                                 .font(.caption2)
-                            Text("\(appState.seeksRemainingToday == Int.max ? "∞" : "\(appState.seeksRemainingToday)") free today")
+                            Text(usageText)
                                 .font(.caption)
                         }
                         .foregroundColor(.secondary)
@@ -83,7 +83,7 @@ struct SeekWisdomView: View {
 
                     ZStack(alignment: .topLeading) {
                         if question.isEmpty {
-                            Text("Describe what you're facing... e.g., \n\"My team is burning out from constant deadlines...\"")
+                            Text(AppState.tr("Describe what you're facing... e.g., \n\"My team is burning out from constant deadlines...\""))
                                 .foregroundColor(.secondary.opacity(0.6))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 12)
@@ -226,7 +226,7 @@ struct SeekWisdomView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "The sage is silent. Check your connection and try again."
+                    errorMessage = AppState.tr("The sage is silent. Check your connection and try again.")
                     isSeeking = false
                 }
             }
@@ -254,10 +254,17 @@ struct SeekWisdomView: View {
 
     private var temperatureLabel: String {
         switch temperature {
-        case ..<0.5: return "Classic · Direct"
-        case ..<0.8: return "Balanced"
-        default: return "Reflective · Poetic"
+        case ..<0.5: return AppState.tr("Classic · Direct")
+        case ..<0.8: return AppState.tr("Balanced")
+        default: return AppState.tr("Reflective · Poetic")
         }
+    }
+
+    private var usageText: String {
+        if appState.seeksRemainingToday == Int.max {
+            return AppState.tr("Unlimited free today")
+        }
+        return String(format: AppState.tr("free_today_fmt"), appState.seeksRemainingToday)
     }
 }
 
@@ -273,7 +280,7 @@ struct ScenarioChip: View {
             HStack(spacing: 6) {
                 Image(systemName: scenario.icon)
                     .font(.caption)
-                Text(scenario.rawValue)
+                Text(AppState.tr(scenario.rawValue))
                     .font(.subheadline)
                     .fontWeight(isSelected ? .semibold : .regular)
             }

@@ -37,22 +37,22 @@ struct JournalEntryDetailView: View {
 
                     // Passage
                     if !entry.passage.isEmpty {
-                        DetailSection(title: "📜 The Passage", content: entry.passage)
+                        DetailSection(title: AppState.tr("📜 The Passage"), content: entry.passage)
                     }
 
                     // Wisdom
                     if !entry.wisdom.isEmpty {
-                        DetailSection(title: "🌿 The Wisdom", content: entry.wisdom)
+                        DetailSection(title: AppState.tr("🌿 The Wisdom"), content: entry.wisdom)
                     }
 
                     // Reflection
                     if !entry.reflection.isEmpty {
-                        DetailSection(title: "🪞 The Reflection", content: entry.reflection)
+                        DetailSection(title: AppState.tr("🪞 The Reflection"), content: entry.reflection)
                     }
 
                     // Way Forward
                     if !entry.way_forward.isEmpty {
-                        DetailSection(title: "💧 The Way Forward", content: entry.way_forward)
+                        DetailSection(title: AppState.tr("💧 The Way Forward"), content: entry.way_forward)
                     }
 
                     Divider()

@@ -27,28 +27,28 @@ struct WisdomResultView: View {
             // Passage
             WisdomSection(
                 icon: "📜",
-                title: "The Passage",
+                title: AppState.tr("The Passage"),
                 content: result.passage
             )
 
             // Wisdom
             WisdomSection(
                 icon: "🌿",
-                title: "The Wisdom",
+                title: AppState.tr("The Wisdom"),
                 content: result.wisdom
             )
 
             // Reflection
             WisdomSection(
                 icon: "🪞",
-                title: "The Reflection",
+                title: AppState.tr("The Reflection"),
                 content: result.reflection
             )
 
             // Way Forward
             WisdomSection(
                 icon: "💧",
-                title: "The Way Forward",
+                title: AppState.tr("The Way Forward"),
                 content: result.way_forward
             )
 
@@ -88,7 +88,7 @@ struct WisdomResultView: View {
 
             // Copied toast
             if showCopiedToast {
-                Text("Copied to clipboard ✨")
+                Text(AppState.tr("Copied to clipboard ✨"))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .transition(.opacity)

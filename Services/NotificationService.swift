@@ -49,7 +49,7 @@ final class NotificationService: NSObject, ObservableObject {
 
         // Build notification content
         let content = UNMutableNotificationContent()
-        content.title = "☯ Daily Wisdom"
+        content.title = AppState.tr("☯ Daily Wisdom")
         content.subtitle = "\(verse.source) · \(verse.chapter)"
         content.body = verse.verse_text
         content.sound = .default

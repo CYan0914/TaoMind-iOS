@@ -79,10 +79,10 @@ struct PaywallView: View {
 
                     // MARK: - Restore + Footer
                     VStack(spacing: 8) {
-                        Button("Restore Purchases") {
+                        Button(AppState.tr("Restore Purchases")) {
                             Task {
                                 let restored = await subscriptionManager.restore()
-                                restoreMessage = restored ? "Purchases restored! 🎉" : "No purchases found to restore."
+                                restoreMessage = restored ? AppState.tr("Purchases restored! 🎉") : AppState.tr("No purchases found to restore.")
                                 showRestoreAlert = true
                             }
                         }

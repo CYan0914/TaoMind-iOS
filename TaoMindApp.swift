@@ -19,6 +19,8 @@ struct TaoMindApp: App {
                 .environmentObject(appState)
                 .environmentObject(SubscriptionManager.shared)
                 .preferredColorScheme(.light)
+                // Make SwiftUI Text resolve in the selected language (auto-follows system)
+                .environment(\.locale, Locale(identifier: appState.language.localeId))
                 .task {
                     await loadDailyVerse()
                     // Schedule tomorrow's daily verse notification
@@ -59,8 +61,35 @@ struct TaoMindApp: App {
 
 @MainActor
 class AppState: ObservableObject {
-    @Published var language: Language = .english
+    /// 当前界面语言（默认跟随系统，可在设置中手动覆盖）
+    @Published var language: Language {
+        didSet {
+            Self.currentLocaleId = language.localeId
+            UserDefaults.standard.set(language.rawValue, forKey: Self.languageOverrideKey)
+        }
+    }
     @Published var dailyVerse: DailyVerse?
+
+    private static let languageOverrideKey = "languageOverride"
+
+    /// 当前语言对应的 locale（供 Bundle 查询与 SwiftUI 环境使用）
+    static var currentLocaleId = "en"
+
+    init() {
+        // 优先使用用户手动设置的覆盖语言，否则跟随系统语言
+        let saved = UserDefaults.standard.string(forKey: Self.languageOverrideKey)
+        let system = Locale.preferredLanguages.first ?? "en"
+        let detected: Language = saved.flatMap(Language.init(rawValue:)) ?? (system.hasPrefix("zh") ? .chinese : .english)
+        self.language = detected
+        Self.currentLocaleId = detected.localeId
+    }
+
+    /// 根据当前语言翻译字符串（键 = 英文原文，表 = Localizable.strings）
+    static func tr(_ key: String) -> String {
+        guard let path = Bundle.main.path(forResource: currentLocaleId, ofType: "lproj"),
+              let langBundle = Bundle(path: path) else { return key }
+        return langBundle.localizedString(forKey: key, value: key, table: "Localizable")
+    }
 
     // MARK: - Daily Usage Tracking
 
@@ -115,6 +144,14 @@ class AppState: ObservableObject {
             switch self {
             case .english: return "English"
             case .chinese: return "中文"
+            }
+        }
+
+        /// 用于 SwiftUI 环境 locale 与 Bundle 本地化目录
+        var localeId: String {
+            switch self {
+            case .english: return "en"
+            case .chinese: return "zh-Hans"
             }
         }
     }

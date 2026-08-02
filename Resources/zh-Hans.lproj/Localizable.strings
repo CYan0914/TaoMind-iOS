@@ -1,0 +1,93 @@
+/*
+  TaoMind 中文（简体）翻译
+  键 = 英文界面原文（即代码中的字符串字面量）
+*/
+
+/* ===== Tab 栏 ===== */
+"Wisdom" = "求取智慧";
+"Journal" = "修行日志";
+"Settings" = "设置";
+
+/* ===== 每日经文 ===== */
+"Daily Verse" = "每日经文";
+
+/* ===== 求取智慧页 ===== */
+"Seek Wisdom" = "求取智慧";
+"Describe your situation. Receive ancient guidance." = "描述你的处境，获取古老智慧的指引。";
+"Context" = "场景";
+"Your Situation" = "你的处境";
+"Describe what you're facing... e.g., \n\"My team is burning out from constant deadlines...\"" = "描述你面临的处境……例如：\n\"我的团队因无休止的截止日期而精疲力尽……\"";
+"Response Style" = "回复风格";
+"Consulting the Sage..." = "正在请教智者……";
+"The sage is silent. Check your connection and try again." = "智者没有回应，请检查网络后重试。";
+"Business Decision" = "商业决策";
+"Leadership" = "领导力";
+"Career" = "职业发展";
+"Personal" = "个人成长";
+"Conflict" = "人际冲突";
+"Unlimited free today" = "今日无限次";
+"free_today_fmt" = "今日剩余 %d 次";
+"Classic · Direct" = "经典 · 直接";
+"Balanced" = "平衡";
+"Reflective · Poetic" = "诗意 · 反思";
+
+/* ===== 智慧结果页 ===== */
+"The Sage Speaks" = "智者之言";
+"The Passage" = "经文";
+"The Wisdom" = "智慧解读";
+"The Reflection" = "反思";
+"The Way Forward" = "前进方向";
+"Share" = "分享";
+"Copy" = "复制";
+"Copied to clipboard ✨" = "已复制到剪贴板 ✨";
+
+/* ===== 修行日志页 ===== */
+"Loading your journal..." = "正在加载你的修行日志……";
+"Your Journal is Empty" = "你的修行日志还是空的";
+"Every wisdom session is saved here.\nGo seek wisdom to fill your journal." = "每一次求取智慧都会保存在这里。\n去求取智慧来充实你的日志吧。";
+
+/* ===== 日志详情页 ===== */
+"Your Question" = "你的问题";
+"📜 The Passage" = "📜 经文";
+"🌿 The Wisdom" = "🌿 智慧解读";
+"🪞 The Reflection" = "🪞 反思";
+"💧 The Way Forward" = "💧 前进方向";
+"My Notes" = "我的笔记";
+"Save Notes" = "保存笔记";
+"Journal Entry" = "日志详情";
+
+/* ===== 设置页 ===== */
+"Active" = "已激活";
+"Free Tier" = "免费版";
+"You have full access to all features. Thank you for supporting TaoMind!" = "你已解锁全部功能，感谢支持 TaoMind！";
+"Unlimited wisdom sessions, journal entries, and more." = "无限次求取智慧、无限条日志记录及更多功能。";
+"Restore Purchases" = "恢复购买";
+"Upgrade to Premium" = "升级到高级版";
+"TaoMind Premium" = "TaoMind 高级版";
+"Language" = "语言";
+"Responses will appear in your selected language when supported." = "回复将尽量以你选择的语言显示。";
+"Preferences" = "偏好设置";
+"Version" = "版本";
+"API Status" = "接口状态";
+"Connected" = "已连接";
+"Privacy Policy" = "隐私政策";
+"Terms of Service" = "服务条款";
+"About" = "关于";
+"TaoMind brings the wisdom of the Tao Te Ching and Diamond Sutra to your modern challenges." = "TaoMind 将《道德经》与《金刚经》的智慧带给你现代生活中的挑战。";
+"\nAll AI-generated content is reflective in nature and not a substitute for professional advice." = "\n所有 AI 生成的内容仅供参考，不能替代专业建议。";
+
+/* ===== 每日推送 ===== */
+"☯ Daily Wisdom" = "☯ 每日智慧";
+
+/* ===== 购买页 ===== */
+"Unlock TaoMind Premium" = "解锁 TaoMind 高级版";
+"Full access to ancient wisdom, unlimited" = "无限获取古老智慧";
+"Unlimited wisdom sessions" = "无限次求取智慧";
+"Unlimited journal entries" = "无限条日志记录";
+"Full response style tuning" = "完整回复风格调节";
+"Export your journal" = "导出你的日志";
+"Start Premium" = "开始订阅";
+"Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings." = "订阅会自动续费，除非在周期结束前至少 24 小时取消。可在 App Store 设置中管理。";
+"Close" = "关闭";
+"Purchases restored! 🎉" = "已恢复购买！🎉";
+"No purchases found to restore." = "没有找到可恢复的购买记录。";
