@@ -26,12 +26,20 @@ struct ContentView: View {
             .tag(1)
 
             NavigationStack {
+                PracticeView()
+            }
+            .tabItem {
+                Label("Practice", systemImage: "flame")
+            }
+            .tag(2)
+
+            NavigationStack {
                 SettingsView()
             }
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
             }
-            .tag(2)
+            .tag(3)
         }
         .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
     }

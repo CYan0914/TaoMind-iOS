@@ -50,6 +50,8 @@ targets:
           - ".github/"
           - "**/.gitkeep"
           - "README.md"
+    entitlements:
+      path: Resources/TaoMind.entitlements
     settings:
       base:
         PRODUCT_NAME: TaoMind

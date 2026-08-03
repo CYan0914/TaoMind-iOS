@@ -18,6 +18,7 @@ struct TaoMindApp: App {
             ContentView(dailyVerse: $dailyVerse)
                 .environmentObject(appState)
                 .environmentObject(SubscriptionManager.shared)
+                .environmentObject(AuthService.shared)
                 .preferredColorScheme(.light)
                 // Make SwiftUI Text resolve in the selected language (auto-follows system)
                 .environment(\.locale, Locale(identifier: appState.language.localeId))
@@ -89,6 +90,11 @@ class AppState: ObservableObject {
         guard let path = Bundle.main.path(forResource: currentLocaleId, ofType: "lproj"),
               let langBundle = Bundle(path: path) else { return key }
         return langBundle.localizedString(forKey: key, value: key, table: "Localizable")
+    }
+
+    /// 翻译带格式化参数的字符串，如 tr("total_checkins_fmt", 5)
+    static func tr(_ key: String, _ args: CVarArg...) -> String {
+        String(format: tr(key), arguments: args)
     }
 
     // MARK: - Daily Usage Tracking

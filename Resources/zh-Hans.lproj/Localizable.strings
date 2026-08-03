@@ -69,15 +69,6 @@
 "Restore Purchases" = "恢复购买";
 "Upgrade to Premium" = "升级到高级版";
 "TaoMind Premium" = "TaoMind 高级版";
-"trial_fmt" = "前 %d %@ 免费";
-"day" = "天";
-"days" = "天";
-"week" = "周";
-"weeks" = "周";
-"month" = "个月";
-"months" = "个月";
-"year" = "年";
-"years" = "年";
 "Monthly" = "每月";
 "Annual" = "每年";
 "Weekly" = "每周";
@@ -85,6 +76,31 @@
 "every_n_months_fmt" = "每 %d 个月";
 "Export Journal" = "导出日志";
 "Export" = "导出";
+
+/* ===== 每日功课页 ===== */
+"Practice" = "功课";
+"Daily Practice" = "每日功课";
+"Read today's verse, reflect, and keep your streak. Sign in to sync across devices." = "阅读今日经文、写下感悟、保持连续打卡。登录后可在多设备间同步。";
+"Sign in to Practice" = "登录以同步功课";
+"Your daily practice and streaks sync across devices." = "你的每日功课与连续打卡数据会在多设备间同步。";
+"Your Reflection" = "今日感悟";
+"streak_days" = "连续天数";
+"best_streak" = "最长记录";
+"total_checkins_fmt" = "共 %d 天";
+"days" = "天";
+"today" = "今天";
+"signed_in_as" = "已登录：%@";
+"read_verse" = "读了经文";
+"seek_wisdom_short" = "求取智慧";
+"write_once_daily" = "每天一次";
+"reflection_placeholder" = "写下这段智慧对你今天的意义……";
+"complete_practice" = "完成今日功课";
+"practice_done_today" = "今日功课已完成";
+"edit" = "修改";
+"master_guidance" = "名师指点";
+"ask_master" = "请名师指点";
+"master_locked" = "升级解锁名师指点";
+"recent_practice" = "近期功课";
 "Language" = "语言";
 "Responses will appear in your selected language when supported." = "回复将尽量以你选择的语言显示。";
 "Preferences" = "偏好设置";

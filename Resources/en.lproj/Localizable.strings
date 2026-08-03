@@ -6,5 +6,6 @@
 
 "free_today_fmt" = "%d remaining today";
 "free_journal_limit_fmt" = "Free plan keeps %d journal entries. Upgrade for unlimited.";
-"trial_fmt" = "First %d %@ free";
 "every_n_months_fmt" = "Every %d months";
+"total_checkins_fmt" = "%d total";
+"signed_in_as" = "Signed in as %@";

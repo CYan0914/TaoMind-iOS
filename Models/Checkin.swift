@@ -1,0 +1,64 @@
+import Foundation
+
+// MARK: - User
+
+struct User: Codable, Identifiable {
+    let id: Int
+    let provider: String
+    let provider_user_id: String
+    let email: String
+    let display_name: String
+}
+
+// MARK: - Auth Response
+
+struct AuthResponse: Codable {
+    let token: String
+    let user: User
+}
+
+// MARK: - Daily Check-in (每日功课)
+
+struct Checkin: Codable, Identifiable {
+    let id: Int
+    let user_id: Int
+    let checkin_date: String
+    let source: String        // "verse" | "wisdom"
+    let verse_text: String
+    let reflection: String
+    let master_feedback: String?
+    let created_at: String
+}
+
+struct CheckinSaveResponse: Codable {
+    let checkin: Checkin
+    let streak: Streak
+}
+
+struct CheckinListResponse: Codable {
+    let checkins: [Checkin]
+    let today: Checkin?
+    let streak: Streak
+}
+
+// MARK: - Streak
+
+struct Streak: Codable {
+    let current_streak: Int
+    let longest_streak: Int
+    let today_done: Bool
+    let total_checkins: Int
+    let last_checkin_date: String?
+
+    var currentStreak: Int { current_streak }
+    var longestStreak: Int { longest_streak }
+    var todayDone: Bool { today_done }
+    var totalCheckins: Int { total_checkins }
+}
+
+// MARK: - Feedback
+
+struct FeedbackResponse: Codable {
+    let feedback: String
+    let cached: Bool?
+}
