@@ -1,0 +1,10 @@
+/*
+  TaoMind English (en)
+  说明：显示类字符串的 key 即英文原文，未在此表中也会正确回退。
+  此表仅需要包含带格式的 key（否则英文用户会直接看到 key 本身）。
+*/
+
+"free_today_fmt" = "%d remaining today";
+"free_journal_limit_fmt" = "Free plan keeps %d journal entries. Upgrade for unlimited.";
+"trial_fmt" = "First %d %@ free";
+"every_n_months_fmt" = "Every %d months";

@@ -4,11 +4,13 @@ import SwiftUI
 
 struct JournalView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var entries: [JournalEntry] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var selectedEntry: JournalEntry?
     @State private var showDetail = false
+    @State private var showExport = false
 
     private let api = APIClient()
 
@@ -39,6 +41,28 @@ struct JournalView: View {
                 .padding()
             } else {
                 List {
+                    // Free tier: journal limit banner
+                    if !subscriptionManager.isPro {
+                        Section {
+                            Button(action: { subscriptionManager.showingPaywall = true }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "lock.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                    Text(String(format: AppState.tr("free_journal_limit_fmt"), SeekWisdomView.freeJournalLimit))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                    Spacer()
+                                    Text(AppState.tr("Upgrade"))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                }
+                            }
+                        }
+                    }
+
                     ForEach(entries) { entry in
                         JournalRow(entry: entry)
                             .contentShape(Rectangle())
@@ -49,21 +73,64 @@ struct JournalView: View {
                     }
                     .onDelete(perform: deleteEntries)
                 }
-                .listStyle(.plain)
+                .listStyle(.insetGrouped)
                 .refreshable {
                     await loadEntries()
                 }
             }
         }
         .navigationTitle("Journal")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // Export journal — Pro-only
+                Button {
+                    if subscriptionManager.isPro {
+                        showExport = true
+                    } else {
+                        subscriptionManager.showingPaywall = true
+                    }
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel(AppState.tr("Export Journal"))
+            }
+        }
         .sheet(isPresented: $showDetail) {
             if let entry = selectedEntry {
                 JournalEntryDetailView(entry: entry)
             }
         }
+        .sheet(isPresented: $showExport) {
+            ShareSheet(activityItems: [exportText])
+        }
         .task {
             await loadEntries()
         }
+    }
+
+    /// Build a plain-text export of the journal (Pro feature)
+    private var exportText: String {
+        var text = "☯ TaoMind Journal\n"
+        text += "\(entries.count) entries\n"
+        text += "──────────────\n\n"
+        for (index, entry) in entries.enumerated() {
+            text += "\(index + 1). \(entry.question)\n"
+            text += "   \(entry.formattedDate)\n"
+            if !entry.passage.isEmpty {
+                text += "   📜 \(entry.passage)\n"
+            }
+            if !entry.wisdom.isEmpty {
+                text += "   🌿 \(entry.wisdom)\n"
+            }
+            if !entry.reflection.isEmpty {
+                text += "   🪞 \(entry.reflection)\n"
+            }
+            if !entry.way_forward.isEmpty {
+                text += "   💧 \(entry.way_forward)\n"
+            }
+            text += "\n"
+        }
+        return text
     }
 
     private func loadEntries() async {

@@ -99,7 +99,7 @@ struct SeekWisdomView: View {
                 }
                 .padding(.horizontal, 4)
 
-                // MARK: - Temperature Slider
+                // MARK: - Response Style (full tuning is Pro-only)
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("Response Style")
@@ -113,8 +113,30 @@ struct SeekWisdomView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Slider(value: $temperature, in: 0.3...1.0, step: 0.1)
-                        .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
+                    if subscriptionManager.isPro {
+                        Slider(value: $temperature, in: 0.3...1.0, step: 0.1)
+                            .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
+                    } else {
+                        // Free tier: classic style only — tap to upgrade
+                        Button(action: { subscriptionManager.showingPaywall = true }) {
+                            HStack(spacing: 8) {
+                                Text(AppState.tr("Classic · Direct"))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Image(systemName: "lock.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                        }
+                        Text(AppState.tr("upgrade_for_styles"))
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
+                    }
                 }
                 .padding(.horizontal, 4)
 
@@ -205,6 +227,8 @@ struct SeekWisdomView: View {
 
         let apiQuestion = question
         let apiScenario = selectedScenario.apiValue
+        // Free tier is locked to the classic (direct) style
+        let apiTemperature = subscriptionManager.isPro ? temperature : 0.4
 
         Task {
             do {
@@ -212,7 +236,7 @@ struct SeekWisdomView: View {
                 let response = try await client.seekWisdom(
                     question: apiQuestion,
                     scenarioType: apiScenario,
-                    temperature: temperature,
+                    temperature: apiTemperature,
                     language: appState.language.rawValue
                 )
 
@@ -233,9 +257,24 @@ struct SeekWisdomView: View {
         }
     }
 
+    /// Free tier journal entry cap (Pro is unlimited)
+    static let freeJournalLimit = 20
+
     private func saveToJournal(response: WisdomResponse) {
         Task {
             do {
+                // Free tier: cap journal at freeJournalLimit entries — prompt upgrade when full
+                if !subscriptionManager.isPro {
+                    let existing = try await api.listJournal(limit: 50)
+                    if existing.count >= Self.freeJournalLimit {
+                        await MainActor.run {
+                            subscriptionManager.showingPaywall = true
+                        }
+                        print("[Journal] Free tier limit reached (\(Self.freeJournalLimit)) — entry not saved")
+                        return
+                    }
+                }
+
                 let client = APIClient()
                 _ = try await client.saveJournal(
                     question: question,

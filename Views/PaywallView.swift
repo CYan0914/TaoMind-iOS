@@ -177,6 +177,19 @@ private struct PlanCard: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+
+                    // Free-trial badge (configured in App Store Connect as intro offer)
+                    if let trial = trialText {
+                        Text(trial)
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.green.opacity(0.12))
+                            .cornerRadius(6)
+                            .padding(.top, 2)
+                    }
                 }
 
                 Spacer()
@@ -202,15 +215,33 @@ private struct PlanCard: View {
         guard let period = package.storeProduct.subscriptionPeriod else { return "" }
         switch period.unit {
         case .month:
-            return period.value == 1 ? "Monthly" : "Every \(period.value) months"
+            return period.value == 1 ? AppState.tr("Monthly") : String(format: AppState.tr("every_n_months_fmt"), period.value)
         case .year:
-            return "Annual"
+            return AppState.tr("Annual")
         case .week:
-            return "Weekly"
+            return AppState.tr("Weekly")
         case .day:
-            return "Daily"
+            return AppState.tr("Daily")
         @unknown default:
             return ""
         }
+    }
+
+    /// Trial banner text, e.g. "First 7 days free" — only when a free intro offer exists
+    private var trialText: String? {
+        guard let discount = package.storeProduct.introductoryDiscount,
+              discount.price.doubleValue == 0 else { return nil }
+        let period = discount.subscriptionPeriod
+        let count = period.value
+        let unitKey: String
+        switch period.unit {
+        case .day: unitKey = count == 1 ? "day" : "days"
+        case .week: unitKey = count == 1 ? "week" : "weeks"
+        case .month: unitKey = count == 1 ? "month" : "months"
+        case .year: unitKey = count == 1 ? "year" : "years"
+        @unknown default: return nil
+        }
+        let unit = AppState.tr(unitKey)
+        return String(format: AppState.tr("trial_fmt"), count, unit)
     }
 }

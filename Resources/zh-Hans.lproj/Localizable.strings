@@ -30,6 +30,11 @@
 "Classic · Direct" = "经典 · 直接";
 "Balanced" = "平衡";
 "Reflective · Poetic" = "诗意 · 反思";
+"upgrade_for_styles" = "免费版使用经典风格，升级解锁全部风格。";
+
+/* ===== 免费版日志限制 ===== */
+"free_journal_limit_fmt" = "免费版最多保存 %d 条日志，升级解锁无限条。";
+"Upgrade" = "升级";
 
 /* ===== 智慧结果页 ===== */
 "The Sage Speaks" = "智者之言";
@@ -64,6 +69,22 @@
 "Restore Purchases" = "恢复购买";
 "Upgrade to Premium" = "升级到高级版";
 "TaoMind Premium" = "TaoMind 高级版";
+"trial_fmt" = "前 %d %@ 免费";
+"day" = "天";
+"days" = "天";
+"week" = "周";
+"weeks" = "周";
+"month" = "个月";
+"months" = "个月";
+"year" = "年";
+"years" = "年";
+"Monthly" = "每月";
+"Annual" = "每年";
+"Weekly" = "每周";
+"Daily" = "每天";
+"every_n_months_fmt" = "每 %d 个月";
+"Export Journal" = "导出日志";
+"Export" = "导出";
 "Language" = "语言";
 "Responses will appear in your selected language when supported." = "回复将尽量以你选择的语言显示。";
 "Preferences" = "偏好设置";
