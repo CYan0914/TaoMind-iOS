@@ -148,8 +148,13 @@ jobs:
           ls -la /Applications/Xcode*.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport/ 2>/dev/null | head -5 || echo "No DeviceSupport found"
           echo "=== Done ==="
 
-      - name: Archive (ad-hoc signed — retains entitlements, real sign at export)
+      - name: Archive (automatic signing — retains entitlements)
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
         run: |
+          printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           xcodebuild \
             archive \
             -project TaoMind.xcodeproj \
@@ -158,10 +163,12 @@ jobs:
             -destination generic/platform=iOS \
             -sdk iphoneos \
             -archivePath TaoMind.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=YES \
-            CODE_SIGNING_ALLOWED=YES
+            -allowProvisioningUpdates \
+            -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
+            -authenticationKeyID "$APPSTORE_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=H4VQ9X6KYK
         working-directory: .
 
       - name: Export IPA
