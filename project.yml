@@ -16,7 +16,7 @@ settings:
     ALWAYS_SEARCH_USER_PATHS: NO
     DEVELOPMENT_TEAM: H4VQ9X6KYK
     MARKETING_VERSION: "1.2.0"
-    CURRENT_PROJECT_VERSION: "17"
+    CURRENT_PROJECT_VERSION: "18"
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
     INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
@@ -43,13 +43,12 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: .
-        excludes:
-          - "project.yml"
-          - ".git/"
-          - ".github/"
-          - "**/.gitkeep"
-          - "README.md"
+      - path: TaoMindApp.swift
+      - path: ContentView.swift
+      - path: Models
+      - path: Services
+      - path: Views
+      - path: Resources
     entitlements:
       path: Resources/TaoMind.entitlements
     settings:
