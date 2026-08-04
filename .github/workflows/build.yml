@@ -171,14 +171,16 @@ jobs:
             DEVELOPMENT_TEAM=H4VQ9X6KYK
         working-directory: .
 
-      - name: Inspect archive signing & entitlements
+      - name: Ensure archive carries the SWA entitlement
         run: |
-          echo "=== archive root ==="
-          ls -la TaoMind.xcarchive/ | head -20
-          echo "=== archived-expanded-entitlements.xcent ==="
-          cat TaoMind.xcarchive/archived-expanded-entitlements.xcent 2>/dev/null || echo "(missing — export will re-sign from scratch)"
-          echo "=== archive app codesign entitlements ==="
-          codesign -d --entitlements :- TaoMind.xcarchive/Products/Applications/TaoMind.app 2>&1 | head -30
+          # xcodebuild fails to write archived-expanded-entitlements.xcent here,
+          # so the export re-sign drops the applesignin entitlement. Inject it.
+          cp Resources/TaoMind.entitlements TaoMind.xcarchive/archived-expanded-entitlements.xcent
+          echo "=== injected archived-expanded-entitlements.xcent ==="
+          cat TaoMind.xcarchive/archived-expanded-entitlements.xcent
+          echo ""
+          echo "=== archive app codesign entitlements (before export) ==="
+          codesign -d --entitlements :- TaoMind.xcarchive/Products/Applications/TaoMind.app 2>&1 | head -5
         working-directory: .
 
       - name: Export IPA
