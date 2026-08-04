@@ -13,6 +13,7 @@ final class AuthService: NSObject, ObservableObject {
     @Published private(set) var user: User?
     @Published private(set) var token: String?
     @Published var isAuthenticating = false
+    @Published var authError: String?
 
     private let userKey = "authUser"
     private let tokenKey = "authToken"
@@ -40,15 +41,22 @@ final class AuthService: NSObject, ObservableObject {
     /// Complete a Sign in with Apple result: extract the identity token and
     /// exchange it with the backend for a TaoMind session.
     func handleSignIn(_ result: Result<ASAuthorization, Error>) async -> Bool {
+        authError = nil
         switch result {
         case .failure(let error):
             print("[Auth] Sign in failed: \(error)")
+            authError = "Sign in failed: \(error.localizedDescription)"
             return false
         case .success(let authorization):
-            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let tokenData = credential.identityToken,
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                print("[Auth] Unexpected credential type: \(type(of: authorization.credential))")
+                authError = "Unexpected Apple credential"
+                return false
+            }
+            guard let tokenData = credential.identityToken,
                   let identityToken = String(data: tokenData, encoding: .utf8) else {
                 print("[Auth] No identity token from Apple")
+                authError = "Could not obtain an Apple identity token"
                 return false
             }
 
@@ -84,7 +92,10 @@ final class AuthService: NSObject, ObservableObject {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                print("[Auth] Backend rejected: \(response)")
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                let detail = String(data: data, encoding: .utf8) ?? ""
+                print("[Auth] Backend rejected: HTTP \(code) \(detail)")
+                authError = "Server rejected sign-in (HTTP \(code))"
                 return false
             }
             let auth = try JSONDecoder().decode(AuthResponse.self, from: data)
@@ -95,6 +106,7 @@ final class AuthService: NSObject, ObservableObject {
             return true
         } catch {
             print("[Auth] Network error: \(error)")
+            authError = "Network error: \(error.localizedDescription)"
             return false
         }
     }
@@ -104,6 +116,7 @@ final class AuthService: NSObject, ObservableObject {
     func signOut() {
         user = nil
         token = nil
+        authError = nil
         UserDefaults.standard.removeObject(forKey: userKey)
         UserDefaults.standard.removeObject(forKey: tokenKey)
     }

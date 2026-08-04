@@ -16,7 +16,7 @@ settings:
     ALWAYS_SEARCH_USER_PATHS: NO
     DEVELOPMENT_TEAM: H4VQ9X6KYK
     MARKETING_VERSION: "1.2.0"
-    CURRENT_PROJECT_VERSION: "9"
+    CURRENT_PROJECT_VERSION: "11"
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
     INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
@@ -58,6 +58,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.cyan0914.taomind
         INFOPLIST_FILE: Resources/Info.plist
         GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Resources/TaoMind.entitlements
       configs:
         Release: {}
     dependencies:

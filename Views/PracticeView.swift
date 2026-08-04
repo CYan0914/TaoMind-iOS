@@ -78,6 +78,14 @@ struct PracticeView: View {
                 if authService.isAuthenticating {
                     ProgressView()
                 }
+
+                if let err = authService.authError {
+                    Text(err)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
             }
             .padding(.top, 40)
         }

@@ -49,6 +49,14 @@ struct LoginView: View {
                     .padding(.top, 8)
             }
 
+            if let err = authService.authError {
+                Text(err)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
             Spacer()
         }
         .padding(.vertical, 20)
