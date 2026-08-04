@@ -168,7 +168,18 @@ jobs:
             -authenticationKeyID "$APPSTORE_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=H4VQ9X6KYK
+            DEVELOPMENT_TEAM=H4VQ9X6KYK \
+            CODE_SIGN_IDENTITY="Apple Distribution"
+        working-directory: .
+
+      - name: Inspect archive signing & entitlements
+        run: |
+          echo "=== archive root ==="
+          ls -la TaoMind.xcarchive/ | head -20
+          echo "=== archived-expanded-entitlements.xcent ==="
+          cat TaoMind.xcarchive/archived-expanded-entitlements.xcent 2>/dev/null || echo "(missing — export will re-sign from scratch)"
+          echo "=== archive app codesign entitlements ==="
+          codesign -d --entitlements :- TaoMind.xcarchive/Products/Applications/TaoMind.app 2>&1 | head -30
         working-directory: .
 
       - name: Export IPA
