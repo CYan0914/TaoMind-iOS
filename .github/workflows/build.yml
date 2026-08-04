@@ -148,7 +148,7 @@ jobs:
           ls -la /Applications/Xcode*.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport/ 2>/dev/null | head -5 || echo "No DeviceSupport found"
           echo "=== Done ==="
 
-      - name: Archive (unsigned — sign at export)
+      - name: Archive (ad-hoc signed — retains entitlements, real sign at export)
         run: |
           xcodebuild \
             archive \
@@ -159,9 +159,9 @@ jobs:
             -sdk iphoneos \
             -archivePath TaoMind.xcarchive \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES
         working-directory: .
 
       - name: Export IPA
