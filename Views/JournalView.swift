@@ -137,10 +137,15 @@ struct JournalView: View {
         await MainActor.run { isLoading = true }
         do {
             let result = try await api.listJournal()
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 entries = result
                 isLoading = false
             }
+        } catch is CancellationError {
+            return
+        } catch let error as URLError where error.code == .cancelled {
+            return
         } catch {
             await MainActor.run {
                 errorMessage = error.localizedDescription

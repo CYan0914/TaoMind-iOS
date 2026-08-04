@@ -8,7 +8,6 @@ struct LibraryView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var selectedEntry: LibraryEntry?
-    @State private var showDetail = false
 
     private let api = APIClient()
     /// Free tier can read the first 5 chapters of each source as a taste.
@@ -38,8 +37,8 @@ struct LibraryView: View {
             .navigationTitle(AppState.tr("Library"))
             .task { await load() }
         }
-        .sheet(isPresented: $showDetail) {
-            if let entry = selectedEntry {
+        .sheet(item: $selectedEntry) { entry in
+            NavigationStack {
                 LibraryDetailView(entry: entry)
             }
         }
@@ -104,17 +103,21 @@ struct LibraryView: View {
             return
         }
         selectedEntry = entry
-        showDetail = true
     }
 
     private func load() async {
         await MainActor.run { isLoading = true }
         do {
             let result = try await api.fetchLibrary()
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 entries = result.entries
                 isLoading = false
             }
+        } catch is CancellationError {
+            return
+        } catch let error as URLError where error.code == .cancelled {
+            return
         } catch {
             await MainActor.run {
                 errorMessage = error.localizedDescription

@@ -94,6 +94,9 @@ struct CheckinService {
         }
         guard (200...299).contains(http.statusCode) else {
             if http.statusCode == 401 {
+                // Token no longer valid — clear the local session so the user
+                // is taken back to the login screen and can re-authenticate.
+                AuthService.shared.forceSignOut(message: "Session expired — please sign in again")
                 throw APIError.serverError("Session expired")
             }
             throw APIError.serverError("Server error: \(http.statusCode)")

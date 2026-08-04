@@ -121,6 +121,16 @@ final class AuthService: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: tokenKey)
     }
 
+    /// Force sign-out when the backend rejects the session (401). Keeps the
+    /// message so the login screen can explain why re-auth is needed.
+    func forceSignOut(message: String?) {
+        user = nil
+        token = nil
+        authError = message
+        UserDefaults.standard.removeObject(forKey: userKey)
+        UserDefaults.standard.removeObject(forKey: tokenKey)
+    }
+
     private func persist() {
         if let data = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(data, forKey: userKey)
