@@ -2,6 +2,7 @@ import Foundation
 
 // MARK: - Check-in API Client (每日功课)
 
+@MainActor
 struct CheckinService {
     private let apiBaseURL = "https://observant-prosperity-production-92d3.up.railway.app"
 
