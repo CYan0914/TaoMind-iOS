@@ -148,7 +148,7 @@ jobs:
           ls -la /Applications/Xcode*.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport/ 2>/dev/null | head -5 || echo "No DeviceSupport found"
           echo "=== Done ==="
 
-      - name: Archive (automatic signing — retains entitlements)
+      - name: Archive (manual App Store signing — keeps applesignin)
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
@@ -167,20 +167,16 @@ jobs:
             -authenticationKeyPath /tmp/AuthKey_${APPSTORE_KEY_ID}.p8 \
             -authenticationKeyID "$APPSTORE_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=H4VQ9X6KYK
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=H4VQ9X6KYK \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="iOS Team Store Provisioning Profile: com.cyan0914.taomind"
         working-directory: .
 
-      - name: Ensure archive carries the SWA entitlement
+      - name: Inspect archive signature (verify applesignin is embedded)
         run: |
-          # xcodebuild fails to write archived-expanded-entitlements.xcent here,
-          # so the export re-sign drops the applesignin entitlement. Inject it.
-          cp Resources/TaoMind.entitlements TaoMind.xcarchive/archived-expanded-entitlements.xcent
-          echo "=== injected archived-expanded-entitlements.xcent ==="
-          cat TaoMind.xcarchive/archived-expanded-entitlements.xcent
-          echo ""
-          echo "=== archive app codesign entitlements (before export) ==="
-          codesign -d --entitlements :- TaoMind.xcarchive/Products/Applications/TaoMind.app 2>&1 | head -5
+          echo "=== archive app code signature entitlements ==="
+          codesign -d --entitlements :- TaoMind.xcarchive/Products/Applications/TaoMind.app 2>&1 | head -20
         working-directory: .
 
       - name: Export IPA
