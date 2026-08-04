@@ -56,6 +56,32 @@ struct BackfillResponse: Codable {
     let streak: Streak
 }
 
+// MARK: - Monthly Report (月报)
+
+struct MonthlyReportResponse: Codable {
+    let month: String
+    let report: String
+    let count: Int
+}
+
+// MARK: - Library (经藏)
+
+struct LibraryEntry: Codable, Identifiable {
+    let source: String
+    let chapter: String
+    let verse_text: String
+    let commentary: String
+    let reflection: String
+    let display_order: Int
+
+    var id: Int { display_order }
+}
+
+struct LibraryResponse: Codable {
+    let entries: [LibraryEntry]
+    let total: Int
+}
+
 // MARK: - Streak
 
 struct Streak: Codable {

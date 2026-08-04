@@ -34,12 +34,20 @@ struct ContentView: View {
             .tag(2)
 
             NavigationStack {
+                LibraryView()
+            }
+            .tabItem {
+                Label(AppState.tr("Library"), systemImage: "books.vertical")
+            }
+            .tag(3)
+
+            NavigationStack {
                 SettingsView()
             }
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
             }
-            .tag(3)
+            .tag(4)
         }
         .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
     }

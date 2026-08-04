@@ -39,6 +39,14 @@ struct CheckinService {
         return try await perform(request)
     }
 
+    // MARK: - Monthly report (月报, Pro)
+
+    func fetchMonthlyReport(month: String) async throws -> MonthlyReportResponse {
+        var request = makeRequest(path: "/report/monthly?month=\(month)", method: "GET")
+        request.timeoutInterval = 60
+        return try await perform(request)
+    }
+
     // MARK: - Master feedback (名师指点, Pro)
 
     func requestFeedback(checkinId: Int, language: String) async throws -> FeedbackResponse {

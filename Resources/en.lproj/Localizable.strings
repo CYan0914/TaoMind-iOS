@@ -34,3 +34,7 @@
 "backfill_placeholder" = "Briefly write what you realized that day...";
 "streak_days_fmt" = "%d-day streak";
 "share_card_subtitle" = "TaoMind · Daily Practice";
+"monthly_report" = "Practice Report";
+"monthly_report_hint" = "AI master summarizes your growth this month";
+"monthly_report_locked" = "Unlock your monthly practice report";
+"monthly_report_empty" = "No practice recorded this month yet — start today's practice first";

@@ -109,6 +109,12 @@
 "backfill_placeholder" = "简短写一句这一天你领悟了什么……";
 "streak_days_fmt" = "连续打卡 %d 天";
 "share_card_subtitle" = "TaoMind · 每日功课";
+"Library" = "经藏";
+"Commentary" = "白话精讲";
+"monthly_report" = "修习月报";
+"monthly_report_hint" = "复盘本月修习，AI 名师为你总结成长";
+"monthly_report_locked" = "升级解锁修习月报";
+"monthly_report_empty" = "本月还没有打卡记录，先去完成每日功课吧";
 "Language" = "语言";
 "Responses will appear in your selected language when supported." = "回复将尽量以你选择的语言显示。";
 "Preferences" = "偏好设置";
@@ -134,6 +140,8 @@
 "pw_master" = "AI 名师逐句点评你的每日感悟";
 "Streak milestones & share cards" = "连续打卡里程碑与分享卡片";
 "Monthly backfill to heal your streak" = "每月 1 次补卡，修复连续打卡";
+"Monthly practice report" = "每月修习月报，复盘你的成长";
+"Full library of the Tao Te Ching & Diamond Sutra" = "《道德经》81 章 + 《金刚经》32 品全文精读";
 "Start Premium" = "开始订阅";
 "Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings." = "订阅会自动续费，除非在周期结束前至少 24 小时取消。可在 App Store 设置中管理。";
 "Close" = "关闭";

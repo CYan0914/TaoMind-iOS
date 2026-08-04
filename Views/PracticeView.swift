@@ -23,6 +23,7 @@ struct PracticeView: View {
     @State private var showBackfill = false
     @State private var milestone: MilestoneInfo?
     @State private var shareCardContent: ShareCardContent?
+    @State private var showMonthlyReport = false
 
     private let service = CheckinService()
 
@@ -60,6 +61,9 @@ struct PracticeView: View {
         }
         .sheet(item: $shareCardContent) { content in
             ShareCardPreviewSheet(content: content)
+        }
+        .sheet(isPresented: $showMonthlyReport) {
+            MonthlyReportView(month: currentMonthString)
         }
     }
 
@@ -124,6 +128,9 @@ struct PracticeView: View {
                 // Streak actions (backfill + share card)
                 streakActions
 
+                // Monthly report (Pro)
+                monthlyReportCard
+
                 // Today's verse
                 if let verse = appState.dailyVerse {
                     DailyVerseCard(verse: verse)
@@ -157,6 +164,13 @@ struct PracticeView: View {
         .overlay(alignment: .top) {
             if errorMessage != nil {
                 errorBanner
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { dismissKeyboard() }
+                    .fontWeight(.semibold)
             }
         }
     }
@@ -293,6 +307,54 @@ struct PracticeView: View {
             note: zh ? m.titleZh : m.titleEn,
             subtitle: AppState.tr("share_card_subtitle")
         )
+    }
+
+    private var monthlyReportCard: some View {
+        Button {
+            if subscriptionManager.isPro {
+                showMonthlyReport = true
+            } else {
+                subscriptionManager.showingPaywall = true
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.title3)
+                    .foregroundColor(Color(red: 0.4, green: 0.3, blue: 0.18))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(AppState.tr("monthly_report"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    Text(subscriptionManager.isPro
+                         ? AppState.tr("monthly_report_hint")
+                         : AppState.tr("monthly_report_locked"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+                if !subscriptionManager.isPro {
+                    Image(systemName: "lock.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(14)
+            .background(Color.white.opacity(0.6))
+            .cornerRadius(14)
+        }
+    }
+
+    private var currentMonthString: String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f.string(from: Date())
     }
 
     private var sourcePicker: some View {
@@ -661,6 +723,10 @@ struct PracticeView: View {
 
     // MARK: - Actions
 
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     private func loadStatus() async {
         isLoading = true
         defer { isLoading = false }
@@ -693,7 +759,7 @@ struct PracticeView: View {
                     reflection: text
                 )
                 await MainActor.run {
-                    status = CheckinListResponse(checkins: status?.checkins ?? [], today: result.checkin, streak: result.streak)
+                    status = CheckinListResponse(checkins: status?.checkins ?? [], today: result.checkin, streak: result.streak, backfill: status?.backfill)
                     reflection = ""
                     isEditingToday = false
                     errorMessage = nil

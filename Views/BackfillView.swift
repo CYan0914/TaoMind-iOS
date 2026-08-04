@@ -88,8 +88,17 @@ struct BackfillView: View {
                     Button(AppState.tr("Close")) { dismiss() }
                         .foregroundColor(.secondary)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { dismissKeyboard() }
+                        .fontWeight(.semibold)
+                }
             }
         }
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func save() {

@@ -98,6 +98,7 @@ struct ShareCardPreviewSheet: View {
 
 // MARK: - Share Card Renderer
 
+@MainActor
 enum ShareCardRenderer {
     /// Render a ShareCardView to a UIImage for the share sheet (iOS 16+).
     static func image(for content: ShareCardContent) -> UIImage? {

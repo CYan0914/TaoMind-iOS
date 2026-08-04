@@ -75,6 +75,15 @@ class APIClient {
         return try decoder.decode(WisdomResponse.self, from: data)
     }
 
+    // MARK: - Library
+
+    func fetchLibrary() async throws -> LibraryResponse {
+        let url = try makeURL("/library")
+        let (data, response) = try await session.data(from: url)
+        try validate(response)
+        return try decoder.decode(LibraryResponse.self, from: data)
+    }
+
     // MARK: - Journal
 
     func saveJournal(
