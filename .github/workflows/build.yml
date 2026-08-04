@@ -171,13 +171,21 @@ jobs:
             DEVELOPMENT_TEAM=H4VQ9X6KYK
         working-directory: .
 
-      - name: Inspect archive signature & profile
+      - name: Re-sign archive app with full profile entitlements (carry applesignin)
         run: |
           APP=TaoMind.xcarchive/Products/Applications/TaoMind.app
-          echo "=== archive app code signature entitlements ==="
-          codesign -d --entitlements :- $APP 2>&1 | head -12
-          echo "=== archive app embedded profile entitlements ==="
-          security cms -D -i $APP/embedded.mobileprovision 2>/dev/null | plutil -extract Entitlements xml1 -o - - 2>/dev/null | grep -E "applesignin|application-identifier|get-task-allow" || echo "(could not parse profile)"
+          # The archive's xcent drops applesignin. Re-sign with the profile's
+          # full entitlements (which include applesignin) so the export
+          # re-sign preserves it.
+          security cms -D -i $APP/embedded.mobileprovision 2>/dev/null | plutil -extract Entitlements xml1 -o /tmp/ents.plist - 2>/dev/null
+          echo "=== entitlements to apply ==="
+          cat /tmp/ents.plist 2>/dev/null || echo "(no entitlements extracted)"
+          IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep -i "Apple Development" | head -1 | grep -oE '"[^"]+"' | tr -d '"')
+          echo "=== signing identity ==="
+          echo "$IDENTITY"
+          codesign --force --sign "$IDENTITY" --entitlements /tmp/ents.plist "$APP" 2>&1
+          echo "=== archive app signature after re-sign ==="
+          codesign -d --entitlements :- "$APP" 2>&1 | tail -3
         working-directory: .
 
       - name: Export IPA
