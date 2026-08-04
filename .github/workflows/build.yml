@@ -168,8 +168,7 @@ jobs:
             -authenticationKeyID "$APPSTORE_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=H4VQ9X6KYK \
-            CODE_SIGN_IDENTITY="Apple Distribution"
+            DEVELOPMENT_TEAM=H4VQ9X6KYK
         working-directory: .
 
       - name: Inspect archive signing & entitlements
