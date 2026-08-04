@@ -32,6 +32,8 @@ struct PaywallView: View {
                     // MARK: - Features
                     VStack(spacing: 14) {
                         FeatureRow(icon: "🧘", text: AppState.tr("pw_master"))
+                        FeatureRow(icon: "🩹", text: AppState.tr("Monthly backfill to heal your streak"))
+                        FeatureRow(icon: "🎋", text: AppState.tr("Streak milestones & share cards"))
                         FeatureRow(icon: "∞", text: AppState.tr("Unlimited wisdom sessions"))
                         FeatureRow(icon: "📓", text: AppState.tr("Unlimited journal entries"))
                         FeatureRow(icon: "🎨", text: AppState.tr("Full response style tuning"))

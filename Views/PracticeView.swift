@@ -20,6 +20,9 @@ struct PracticeView: View {
     @State private var chatMessages: [ChatMessage] = []
     @State private var chatInput: String = ""
     @State private var isSendingChat = false
+    @State private var showBackfill = false
+    @State private var milestone: MilestoneInfo?
+    @State private var shareCardContent: ShareCardContent?
 
     private let service = CheckinService()
 
@@ -41,6 +44,22 @@ struct PracticeView: View {
             if signedIn {
                 Task { await loadStatus() }
             }
+        }
+        .sheet(isPresented: $showBackfill) {
+            if let date = status?.backfill?.targetDate {
+                BackfillView(targetDate: date) {
+                    Task { await loadStatus() }
+                }
+            }
+        }
+        .sheet(item: $milestone) { m in
+            MilestoneCelebrationView(milestone: m, isChinese: appState.language == .chinese) {
+                shareMilestone(m)
+            }
+            .presentationDetents([.medium])
+        }
+        .sheet(item: $shareCardContent) { content in
+            ShareCardPreviewSheet(content: content)
         }
     }
 
@@ -101,6 +120,9 @@ struct PracticeView: View {
             VStack(spacing: 20) {
                 // Streak header
                 streakHeader
+
+                // Streak actions (backfill + share card)
+                streakActions
 
                 // Today's verse
                 if let verse = appState.dailyVerse {
@@ -190,6 +212,87 @@ struct PracticeView: View {
         .padding(.vertical, 12)
         .background(Color.white.opacity(0.6))
         .cornerRadius(14)
+    }
+
+    // MARK: - Streak actions (补卡 + 分享)
+
+    private var streakActions: some View {
+        HStack(spacing: 12) {
+            if let bf = status?.backfill, bf.available, !(status?.streak.todayDone ?? false) {
+                Button(action: openBackfill) {
+                    Label(AppState.tr("Backfill"), systemImage: "calendar.badge.plus")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(20)
+                }
+            }
+            Button(action: shareStreak) {
+                Label(AppState.tr("Share"), systemImage: "square.and.arrow.up")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(20)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+    }
+
+    private func openBackfill() {
+        guard subscriptionManager.isPro else {
+            subscriptionManager.showingPaywall = true
+            return
+        }
+        showBackfill = true
+    }
+
+    private func shareStreak() {
+        guard subscriptionManager.isPro else {
+            subscriptionManager.showingPaywall = true
+            return
+        }
+        let days = status?.streak.currentStreak ?? 0
+        let verse = appState.dailyVerse.map { $0.verse_text } ?? ""
+        shareCardContent = ShareCardContent(
+            title: String(format: AppState.tr("streak_days_fmt"), days),
+            verse: verse,
+            note: "",
+            subtitle: AppState.tr("share_card_subtitle")
+        )
+    }
+
+    // MARK: - Milestone detection
+
+    private func checkMilestone() {
+        guard let streak = status?.streak else { return }
+        let current = streak.currentStreak
+        guard current > 0 else { return }
+        let shown = Set(UserDefaults.standard.array(forKey: "shownMilestones") as? [Int] ?? [])
+        guard let reached = MilestoneInfo.all.filter({ $0.days <= current }).last,
+              !shown.contains(reached.days) else { return }
+        milestone = reached
+        var updated = shown
+        updated.insert(reached.days)
+        UserDefaults.standard.set(Array(updated), forKey: "shownMilestones")
+    }
+
+    private func shareMilestone(_ m: MilestoneInfo) {
+        guard subscriptionManager.isPro else {
+            subscriptionManager.showingPaywall = true
+            return
+        }
+        let zh = appState.language == .chinese
+        shareCardContent = ShareCardContent(
+            title: String(format: AppState.tr("streak_days_fmt"), m.days),
+            verse: zh ? m.quoteZh : m.quoteEn,
+            note: zh ? m.titleZh : m.titleEn,
+            subtitle: AppState.tr("share_card_subtitle")
+        )
     }
 
     private var sourcePicker: some View {
@@ -569,6 +672,7 @@ struct PracticeView: View {
                 feedback = fb
                 loadChat(for: today.id)
             }
+            checkMilestone()
         } catch {
             errorMessage = error.localizedDescription
         }

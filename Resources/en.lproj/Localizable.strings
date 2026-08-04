@@ -30,3 +30,7 @@
 "master_followup_locked" = "Unlock follow-ups and go deeper with your master";
 "recent_practice" = "Recent Practice";
 "pw_master" = "AI master reviews your daily reflection";
+"backfill_explain" = "Write a short reflection for the missed day to heal your streak. Pro: 1 backfill per month.";
+"backfill_placeholder" = "Briefly write what you realized that day...";
+"streak_days_fmt" = "%d-day streak";
+"share_card_subtitle" = "TaoMind · Daily Practice";

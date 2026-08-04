@@ -26,6 +26,19 @@ struct CheckinService {
         return try await perform(request)
     }
 
+    // MARK: - Backfill (补卡, Pro — 每月 1 次)
+
+    func backfill(reflection: String, verseText: String, source: String) async throws -> BackfillResponse {
+        var request = makeRequest(path: "/checkin/backfill", method: "POST")
+        let body: [String: Any] = [
+            "reflection": reflection,
+            "verse_text": verseText,
+            "source": source,
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        return try await perform(request)
+    }
+
     // MARK: - Master feedback (名师指点, Pro)
 
     func requestFeedback(checkinId: Int, language: String) async throws -> FeedbackResponse {

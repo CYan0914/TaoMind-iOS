@@ -39,6 +39,21 @@ struct CheckinListResponse: Codable {
     let checkins: [Checkin]
     let today: Checkin?
     let streak: Streak
+    let backfill: BackfillInfo?
+}
+
+// MARK: - Backfill (补卡)
+
+struct BackfillInfo: Codable {
+    let available: Bool
+    let target_date: String?
+
+    var targetDate: String? { target_date }
+}
+
+struct BackfillResponse: Codable {
+    let checkin: Checkin
+    let streak: Streak
 }
 
 // MARK: - Streak
