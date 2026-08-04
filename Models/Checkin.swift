@@ -62,3 +62,22 @@ struct FeedbackResponse: Codable {
     let feedback: String
     let cached: Bool?
 }
+
+// MARK: - Master Follow-up Chat (名师追问)
+
+struct MasterChatResponse: Codable {
+    let reply: String
+}
+
+/// One message in the follow-up conversation with the master.
+struct ChatMessage: Identifiable, Codable {
+    let id: UUID
+    let role: String       // "user" | "master"
+    let content: String
+
+    init(role: String, content: String) {
+        self.id = UUID()
+        self.role = role
+        self.content = content
+    }
+}

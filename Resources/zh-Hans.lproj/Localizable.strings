@@ -100,6 +100,9 @@
 "master_guidance" = "名师指点";
 "ask_master" = "请名师指点";
 "master_locked" = "升级解锁名师指点";
+"master_free_try" = "试一次名师指点 · 本周免费";
+"master_followup_placeholder" = "向名师追问……";
+"master_followup_locked" = "解锁追问，与名师深谈你的感悟";
 "recent_practice" = "近期功课";
 "Language" = "语言";
 "Responses will appear in your selected language when supported." = "回复将尽量以你选择的语言显示。";
@@ -123,6 +126,7 @@
 "Unlimited journal entries" = "无限条日志记录";
 "Full response style tuning" = "完整回复风格调节";
 "Export your journal" = "导出你的日志";
+"pw_master" = "AI 名师逐句点评你的每日感悟";
 "Start Premium" = "开始订阅";
 "Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings." = "订阅会自动续费，除非在周期结束前至少 24 小时取消。可在 App Store 设置中管理。";
 "Close" = "关闭";

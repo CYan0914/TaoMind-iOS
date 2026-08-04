@@ -31,10 +31,11 @@ struct PaywallView: View {
 
                     // MARK: - Features
                     VStack(spacing: 14) {
-                        FeatureRow(icon: "∞", text: "Unlimited wisdom sessions")
-                        FeatureRow(icon: "📓", text: "Unlimited journal entries")
-                        FeatureRow(icon: "🎨", text: "Full response style tuning")
-                        FeatureRow(icon: "📤", text: "Export your journal")
+                        FeatureRow(icon: "🧘", text: AppState.tr("pw_master"))
+                        FeatureRow(icon: "∞", text: AppState.tr("Unlimited wisdom sessions"))
+                        FeatureRow(icon: "📓", text: AppState.tr("Unlimited journal entries"))
+                        FeatureRow(icon: "🎨", text: AppState.tr("Full response style tuning"))
+                        FeatureRow(icon: "📤", text: AppState.tr("Export your journal"))
                     }
                     .padding(.horizontal, 4)
 

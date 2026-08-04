@@ -9,3 +9,24 @@
 "every_n_months_fmt" = "Every %d months";
 "total_checkins_fmt" = "%d total";
 "signed_in_as" = "Signed in as %@";
+
+/* ===== Daily Practice (slug keys need explicit English — no fallback) ===== */
+"streak_days" = "days";
+"best_streak" = "Best";
+"days" = "days";
+"today" = "Today";
+"read_verse" = "Verse";
+"seek_wisdom_short" = "Wisdom";
+"write_once_daily" = "Once daily";
+"reflection_placeholder" = "Write what this wisdom means for you today...";
+"complete_practice" = "Complete Today's Practice";
+"practice_done_today" = "Today's practice complete";
+"edit" = "Edit";
+"master_guidance" = "Master Guidance";
+"ask_master" = "Ask the Master";
+"master_locked" = "Unlock master guidance";
+"master_free_try" = "Try Master Guidance · Free this week";
+"master_followup_placeholder" = "Ask the master a follow-up...";
+"master_followup_locked" = "Unlock follow-ups and go deeper with your master";
+"recent_practice" = "Recent Practice";
+"pw_master" = "AI master reviews your daily reflection";

@@ -38,6 +38,19 @@ struct CheckinService {
         return try await perform(request)
     }
 
+    // MARK: - Master follow-up chat (名师追问, Pro)
+
+    func sendMasterChat(checkinId: Int, message: String, history: [ChatMessage], language: String) async throws -> MasterChatResponse {
+        var request = makeRequest(path: "/checkin/\(checkinId)/chat", method: "POST")
+        let body: [String: Any] = [
+            "message": message,
+            "history": history.map { ["role": $0.role, "content": $0.content] },
+            "language": language,
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        return try await perform(request)
+    }
+
     // MARK: - Helpers
 
     private func makeRequest(path: String, method: String) -> URLRequest {

@@ -17,6 +17,9 @@ struct PracticeView: View {
     @State private var isAskingMaster = false
     @State private var isEditingToday = false
     @State private var errorMessage: String?
+    @State private var chatMessages: [ChatMessage] = []
+    @State private var chatInput: String = ""
+    @State private var isSendingChat = false
 
     private let service = CheckinService()
 
@@ -319,51 +322,147 @@ struct PracticeView: View {
                 }
             }
 
-            if let feedbackText = feedback {
-                Text(feedbackText)
-                    .font(.custom("Georgia", size: 15, relativeTo: .body))
-                    .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
-                    .lineSpacing(6)
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.7))
-                    .cornerRadius(10)
-            } else if !(today.master_feedback ?? "").isEmpty {
-                // Already has feedback from the server
-                Text(today.master_feedback ?? "")
-                    .font(.custom("Georgia", size: 15, relativeTo: .body))
-                    .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
-                    .lineSpacing(6)
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.7))
-                    .cornerRadius(10)
-            } else if subscriptionManager.isPro {
-                Button(action: askMaster) {
-                    HStack(spacing: 10) {
-                        if isAskingMaster {
+            // Master's guidance (current session or persisted)
+            if let current = currentFeedback {
+                masterBubble(current)
+            }
+
+            // Ask button — only when no guidance yet
+            if currentFeedback == nil {
+                if subscriptionManager.isPro {
+                    askMasterButton(title: AppState.tr("ask_master"), showsTaste: false)
+                } else if !weeklyFreeMasterUsed {
+                    askMasterButton(title: AppState.tr("master_free_try"), showsTaste: true)
+                } else {
+                    lockedMasterButton
+                }
+            }
+
+            // Follow-up conversation — appears once guidance exists
+            if currentFeedback != nil {
+                followUpSection
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    // MARK: - Master guidance helpers
+
+    private var currentFeedback: String? {
+        if let f = feedback, !f.isEmpty { return f }
+        if let mf = status?.today?.master_feedback, !mf.isEmpty { return mf }
+        return nil
+    }
+
+    private func masterBubble(_ text: String) -> some View {
+        Text(text)
+            .font(.custom("Georgia", size: 15, relativeTo: .body))
+            .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+            .lineSpacing(6)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.7))
+            .cornerRadius(10)
+    }
+
+    private func askMasterButton(title: String, showsTaste: Bool) -> some View {
+        Button(action: askMaster) {
+            HStack(spacing: 10) {
+                if isAskingMaster {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(.white)
+                } else {
+                    Image(systemName: showsTaste ? "sparkles" : "wand.and.stars")
+                }
+                Text(title)
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 13)
+            .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+        .disabled(isAskingMaster)
+    }
+
+    private var lockedMasterButton: some View {
+        Button(action: { subscriptionManager.showingPaywall = true }) {
+            HStack(spacing: 10) {
+                Image(systemName: "lock.fill")
+                    .font(.caption)
+                Text(AppState.tr("master_locked"))
+                    .font(.subheadline)
+                Spacer()
+                Text(AppState.tr("Upgrade"))
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+            .padding(14)
+            .background(Color(.systemGray6))
+            .foregroundColor(.secondary)
+            .cornerRadius(12)
+        }
+    }
+
+    // MARK: - Free tier master taste (每周 1 次免费名师指点)
+
+    private var weeklyMasterKey: String {
+        let comps = Calendar(identifier: .gregorian).dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        return "\(comps.yearForWeekOfYear ?? 0)-\(comps.weekOfYear ?? 0)"
+    }
+
+    private var weeklyFreeMasterUsed: Bool {
+        UserDefaults.standard.string(forKey: "weeklyFreeMasterUsedKey") == weeklyMasterKey
+    }
+
+    private func markWeeklyFreeMasterUsed() {
+        UserDefaults.standard.set(weeklyMasterKey, forKey: "weeklyFreeMasterUsedKey")
+    }
+
+    // MARK: - Follow-up chat (名师追问)
+
+    @ViewBuilder
+    private var followUpSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if subscriptionManager.isPro {
+                ForEach(chatMessages) { msg in
+                    chatBubble(msg)
+                }
+                HStack(spacing: 8) {
+                    TextField(AppState.tr("master_followup_placeholder"), text: $chatInput, axis: .vertical)
+                        .font(.body)
+                        .lineLimit(1...4)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    Button(action: sendChat) {
+                        if isSendingChat {
                             ProgressView()
                                 .progressViewStyle(.circular)
                                 .tint(.white)
+                                .frame(width: 36, height: 36)
                         } else {
-                            Image(systemName: "wand.and.stars")
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(
+                                    chatInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                        ? Color.gray.opacity(0.4)
+                                        : Color(red: 0.17, green: 0.14, blue: 0.09)
+                                )
                         }
-                        Text(AppState.tr("ask_master"))
-                            .fontWeight(.semibold)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
-                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .disabled(chatInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingChat)
                 }
-                .disabled(isAskingMaster)
             } else {
+                // Locked follow-up — the conversion moment
                 Button(action: { subscriptionManager.showingPaywall = true }) {
                     HStack(spacing: 10) {
-                        Image(systemName: "lock.fill")
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
                             .font(.caption)
-                        Text(AppState.tr("master_locked"))
+                        Text(AppState.tr("master_followup_locked"))
                             .font(.subheadline)
                         Spacer()
                         Text(AppState.tr("Upgrade"))
@@ -377,7 +476,37 @@ struct PracticeView: View {
                 }
             }
         }
-        .padding(.vertical, 6)
+    }
+
+    private func chatBubble(_ msg: ChatMessage) -> some View {
+        let isUser = msg.role == "user"
+        return HStack(spacing: 10) {
+            if isUser { Spacer(minLength: 48) }
+            Text(msg.content)
+                .font(.custom("Georgia", size: 15, relativeTo: .body))
+                .foregroundColor(isUser ? .white : Color(red: 0.25, green: 0.22, blue: 0.16))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(isUser ? Color(red: 0.17, green: 0.14, blue: 0.09) : Color.white.opacity(0.7))
+                .cornerRadius(14)
+            if !isUser { Spacer(minLength: 48) }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func persistChat(for checkinId: Int) {
+        let key = "masterChat.\(checkinId)"
+        if let data = try? JSONEncoder().encode(chatMessages) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private func loadChat(for checkinId: Int) {
+        let key = "masterChat.\(checkinId)"
+        if let data = UserDefaults.standard.data(forKey: key),
+           let saved = try? JSONDecoder().decode([ChatMessage].self, from: data) {
+            chatMessages = saved
+        }
     }
 
     private func historySection(_ checkins: [Checkin]) -> some View {
@@ -438,6 +567,7 @@ struct PracticeView: View {
             // Sync the persisted feedback into today's checkin if present
             if let today = status?.today, let fb = today.master_feedback, !fb.isEmpty {
                 feedback = fb
+                loadChat(for: today.id)
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -473,6 +603,11 @@ struct PracticeView: View {
 
     private func askMaster() {
         guard let today = status?.today else { return }
+        // Free tier: one free master guidance per week — beyond that, paywall
+        if !subscriptionManager.isPro && weeklyFreeMasterUsed {
+            subscriptionManager.showingPaywall = true
+            return
+        }
         isAskingMaster = true
         Task {
             do {
@@ -480,12 +615,45 @@ struct PracticeView: View {
                 let result = try await service.requestFeedback(checkinId: today.id, language: language)
                 await MainActor.run {
                     feedback = result.feedback
+                    // Only consume the free taste when the server actually generated
+                    // new feedback (not a cached replay of a previous guidance).
+                    if !subscriptionManager.isPro && result.cached != true {
+                        markWeeklyFreeMasterUsed()
+                    }
                     errorMessage = nil
                 }
             } catch {
                 await MainActor.run { errorMessage = error.localizedDescription }
             }
             isAskingMaster = false
+        }
+    }
+
+    private func sendChat() {
+        guard let today = status?.today else { return }
+        let text = chatInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !isSendingChat else { return }
+        chatInput = ""
+        chatMessages.append(ChatMessage(role: "user", content: text))
+        isSendingChat = true
+        Task {
+            do {
+                let history = Array(chatMessages.dropLast())
+                let result = try await service.sendMasterChat(
+                    checkinId: today.id,
+                    message: text,
+                    history: history,
+                    language: appState.language.rawValue
+                )
+                await MainActor.run {
+                    chatMessages.append(ChatMessage(role: "master", content: result.reply))
+                    persistChat(for: today.id)
+                    errorMessage = nil
+                }
+            } catch {
+                await MainActor.run { errorMessage = error.localizedDescription }
+            }
+            isSendingChat = false
         }
     }
 }
