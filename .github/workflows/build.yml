@@ -177,7 +177,7 @@ jobs:
               return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
           now = int(time.time())
           header = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
-          payload = {"iss": issuer, "iat": now, "exp": now + 1800, "aud": "appstoreconnect-v1"}
+          payload = {"iss": issuer, "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"}  # exp 必须 ≤20 分钟，+1800 会 401
           h = b64(json.dumps(header, separators=(",", ":")).encode())
           p = b64(json.dumps(payload, separators=(",", ":")).encode())
           # ES256 JWT 需要 raw R||S（64 字节），cryptography 默认返回 DER（~71 字节）→ 必须转换
