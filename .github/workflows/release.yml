@@ -1,0 +1,168 @@
+name: Publish to App Store
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Fill What's New & Submit Review
+    runs-on: ubuntu-latest
+    env:
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
+    steps:
+      - name: Prepare App Store Connect API key
+        run: |
+          printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
+          python3 -m pip install --quiet cryptography
+
+      - name: Fill What's New + associate build + submit review
+        run: |
+          python3 - <<'EOF'
+          import base64, json, os, sys, time, urllib.request, urllib.error
+
+          key_id = os.environ["APPSTORE_KEY_ID"]
+          issuer = os.environ["APPSTORE_ISSUER_ID"]
+          p8 = f"/tmp/AuthKey_{key_id}.p8"
+          from cryptography.hazmat.primitives import hashes, serialization
+          from cryptography.hazmat.primitives.asymmetric import ec
+          with open(p8, "rb") as f:
+              key = serialization.load_pem_private_key(f.read(), password=None)
+
+          def b64(raw):
+              return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+          now = int(time.time())
+          header = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
+          payload = {"iss": issuer, "iat": now, "exp": now + 1800, "aud": "appstoreconnect-v1"}
+          h = b64(json.dumps(header, separators=(",", ":")).encode())
+          p = b64(json.dumps(payload, separators=(",", ":")).encode())
+          sig = key.sign((h + "." + p).encode(), ec.ECDSA(hashes.SHA256()))
+          token = f"{h}.{p}.{b64(sig)}"
+
+          def api(method, path, body=None):
+              url = "https://api.appstoreconnect.apple.com/v1" + path
+              data = json.dumps(body).encode() if body else None
+              for attempt in range(4):
+                  req = urllib.request.Request(url, data=data, method=method,
+                      headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as resp:
+                          return json.load(resp)
+                  except urllib.error.HTTPError as e:
+                      err = e.read().decode()[:800]
+                      print(f"  API {method} {path} -> {e.code}: {err}")
+                      if e.code in (409, 404):
+                          raise
+                      time.sleep(10)  # 429 / 5xx retry
+              raise RuntimeError(f"API failed after retries: {path}")
+
+          BUNDLE = "com.cyan0914.taomind"
+          VERSION = "1.3.0"
+          BUILD = "24"
+
+          WHATS_NEW_EN = (
+              "**Voice Input ✨**\n"
+              "Speak your question instead of typing it. Tap the microphone in the "
+              "\"Your Situation\" field and describe what you're facing out loud — "
+              "TaoMind transcribes your words and brings you the wisdom you seek. "
+              "Works in both English and Chinese."
+          )
+          WHATS_NEW_ZH = (
+              "**语音输入 ✨**\n"
+              "不再打字，直接说出你的问题。点击“你的处境”输入框里的麦克风，"
+              "开口描述你的境况即可——TaoMind 会自动将你的话转为文字，"
+              "并为你带来古人的智慧。支持中文和英文。"
+          )
+
+          # 1) Find app
+          apps = api("GET", f"/apps?filter[bundleId]={BUNDLE}")["data"]
+          if not apps:
+              sys.exit("app not found by bundle id")
+          app_id = apps[0]["id"]
+          print("app:", app_id)
+
+          # 2) Wait for build 24 to finish Apple processing
+          build_id = None
+          for i in range(80):
+              builds = api("GET", f"/apps/{app_id}/builds?filter[preReleaseVersion.version]={VERSION}&filter[buildNumber]={BUILD}")["data"]
+              if builds:
+                  attrs = builds[0]["attributes"]
+                  st = attrs.get("processingState", "UNKNOWN")
+                  print(f"  build poll {i}: {st}")
+                  if st == "VALID":
+                      build_id = builds[0]["id"]
+                      break
+              time.sleep(15)
+          if not build_id:
+              sys.exit("build 1.3.0(24) not VALID within timeout")
+
+          # 3) Find or create App Store version 1.3.0
+          vers = api("GET", f"/apps/{app_id}/appStoreVersions?filter[platform]=IOS&filter[versionString]={VERSION}")["data"]
+          if vers:
+              ver_id = vers[0]["id"]
+              print("version:", ver_id)
+          else:
+              created = api("POST", "/appStoreVersions", {"data": {
+                  "type": "appStoreVersions",
+                  "attributes": {"platform": "IOS", "versionString": VERSION},
+                  "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+              }})
+              ver_id = created["data"]["id"]
+              print("created version:", ver_id)
+
+          # 4) Associate build with the version
+          api("PATCH", f"/appStoreVersions/{ver_id}", {"data": {
+              "type": "appStoreVersions", "id": ver_id,
+              "relationships": {"build": {"data": {"type": "builds", "id": build_id}}},
+          }})
+          print("build associated:", build_id)
+
+          # 5) Fill What's New for en-US and zh-Hans
+          locs = api("GET", f"/appStoreVersions/{ver_id}/appStoreVersionLocalizations")["data"]
+          print("existing localizations:", [(l["id"], l["attributes"].get("locale")) for l in locs])
+          have = {l["attributes"].get("locale"): l["id"] for l in locs}
+
+          def set_whats_new(locale, text):
+              if locale in have:
+                  lid = have[locale]
+                  api("PATCH", f"/appStoreVersionLocalizations/{lid}", {"data": {
+                      "type": "appStoreVersionLocalizations", "id": lid,
+                      "attributes": {"whatsNew": text},
+                  }})
+                  print("whatsNew set:", locale)
+              else:
+                  created = api("POST", "/appStoreVersionLocalizations", {"data": {
+                      "type": "appStoreVersionLocalizations",
+                      "attributes": {"locale": locale, "whatsNew": text},
+                      "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}}},
+                  }})
+                  print("localization created:", locale)
+
+          set_whats_new("en-US", WHATS_NEW_EN)
+          set_whats_new("zh-Hans", WHATS_NEW_ZH)
+
+          # 6) Submit for App Store review
+          try:
+              api("POST", f"/appStoreVersions/{ver_id}/appStoreVersionSubmissions", {"data": {
+                  "type": "appStoreVersionSubmissions",
+                  "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}}},
+              }})
+              print("SUBMITTED for review")
+          except urllib.error.HTTPError as e:
+              body = e.read().decode()[:500]
+              print("submit error:", e.code, body)
+              if "already" in body.lower() or e.code == 409:
+                  print("version already submitted — ok")
+              else:
+                  raise
+          EOF
+
+      - name: Summary
+        run: |
+          gh run view ${{ github.run_id }} --json status,conclusion,url
+          echo "Published 1.3.0 (24) — What's New filled, submitted for App Store review."
