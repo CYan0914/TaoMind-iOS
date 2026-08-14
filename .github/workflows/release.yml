@@ -132,22 +132,72 @@ jobs:
           print("build associated:", build_id)
 
           # 5) Fill What's New for en-US and zh-Hans
+          # 新建版本时 ASC 自动为 en-US 创建本地化（含 description 等元数据），但 zh-Hans 不会自动创建
+          # → 新建时必须补全提交审核所需的必填字段；已存在的只补缺失字段（不覆盖已有 description）
+          LOCALE_META = {
+              "en-US": {
+                  "description": (
+                      "TaoMind - Wisdom for the Modern Journey\n\n"
+                      "Discover timeless wisdom from the Tao Te Ching and Diamond Sutra, "
+                      "reimagined through AI to guide your daily life.\n\n"
+                      "WHY TAOMIND?\n"
+                      "Life presents complex challenges - career crossroads, leadership dilemmas, "
+                      "personal struggles, difficult relationships. Ancient philosophers faced the same "
+                      "human questions. TaoMind bridges their wisdom to your modern context.\n\n"
+                      "CORE FEATURES\n"
+                      "* Seek Wisdom: describe your situation and receive a relevant verse, a clear "
+                      "interpretation, a reflection prompt, and practical guidance.\n"
+                      "* Daily Verse: start each day with a curated verse paired with a reflection question.\n"
+                      "* Journal: every session is saved automatically so you can revisit past insights.\n"
+                      "* Bilingual: full support for English and Chinese (Simplified)."
+                  ),
+                  "keywords": "wisdom,taoism,reflection,buddhism,meditation,mindfulness,zen,dao,AI,philosophy,sutra,tao te ching",
+                  "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
+              },
+              "zh-Hans": {
+                  "description": (
+                      "TaoMind · 现代旅途的智慧\n\n"
+                      "从《道德经》与《金刚经》中汲取永恒的智慧，经由 AI 重新诠释，指引你的日常生活。\n\n"
+                      "核心功能\n"
+                      "* 寻求智慧：描述你的处境，获得应景经文、白话诠释、反思与可行指引。\n"
+                      "* 每日一签：每天一句经文配一道反思题，伴你度过一天。\n"
+                      "* 修习日志：每次修习自动保存，回看洞见、追踪成长。\n"
+                      "* 双语支持：完整支持英文与简体中文。\n"
+                      "* 语音输入：说出你的问题，自动转成文字。"
+                  ),
+                  "keywords": "智慧,道家,反思,佛教,冥想,正念,禅,道,AI,哲学,佛经,道德经,金刚经,语音",
+                  "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
+              },
+          }
+
           locs = api("GET", f"/appStoreVersions/{ver_id}/appStoreVersionLocalizations")["data"]
           print("existing localizations:", [(l["id"], l["attributes"].get("locale")) for l in locs])
           have = {l["attributes"].get("locale"): l["id"] for l in locs}
 
           def set_whats_new(locale, text):
+              meta = LOCALE_META[locale]
               if locale in have:
                   lid = have[locale]
+                  cur = api("GET", f"/appStoreVersionLocalizations/{lid}")["data"]["attributes"]
+                  attrs = {"whatsNew": text}
+                  for f in ("description", "keywords", "supportUrl"):
+                      if not cur.get(f):
+                          attrs[f] = meta[f]
                   api("PATCH", f"/appStoreVersionLocalizations/{lid}", {"data": {
                       "type": "appStoreVersionLocalizations", "id": lid,
-                      "attributes": {"whatsNew": text},
+                      "attributes": attrs,
                   }})
-                  print("whatsNew set:", locale)
+                  print("whatsNew set:", locale, "(missing fields filled:", [f for f in ("description", "keywords", "supportUrl") if not cur.get(f)], ")")
               else:
                   created = api("POST", "/appStoreVersionLocalizations", {"data": {
                       "type": "appStoreVersionLocalizations",
-                      "attributes": {"locale": locale, "whatsNew": text},
+                      "attributes": {
+                          "locale": locale,
+                          "whatsNew": text,
+                          "description": meta["description"],
+                          "keywords": meta["keywords"],
+                          "supportUrl": meta["supportUrl"],
+                      },
                       "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}}},
                   }})
                   print("localization created:", locale)
@@ -155,20 +205,31 @@ jobs:
           set_whats_new("en-US", WHATS_NEW_EN)
           set_whats_new("zh-Hans", WHATS_NEW_ZH)
 
-          # 6) Submit for App Store review
-          try:
-              api("POST", f"/appStoreVersions/{ver_id}/appStoreVersionSubmissions", {"data": {
-                  "type": "appStoreVersionSubmissions",
-                  "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}}},
-              }})
-              print("SUBMITTED for review")
-          except urllib.error.HTTPError as e:
-              body = e.read().decode()[:500]
-              print("submit error:", e.code, body)
-              if "already" in body.lower() or e.code == 409:
-                  print("version already submitted — ok")
-              else:
-                  raise
+          # 6) Submit for App Store review（modern reviewSubmissions flow, API v1.7+）
+          # appStoreVersionSubmissions 已不允许 CREATE（403），需三步：
+          #   创建 submission → 添加 appStoreVersion item → PATCH submitted=true
+          sub = api("POST", "/reviewSubmissions", {"data": {
+              "type": "reviewSubmissions",
+              "attributes": {"platform": "IOS"},
+              "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+          }})
+          sub_id = sub["data"]["id"]
+          print("review submission:", sub_id, "state:", sub["data"]["attributes"].get("state"))
+
+          api("POST", "/reviewSubmissionItems", {"data": {
+              "type": "reviewSubmissionItems",
+              "relationships": {
+                  "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub_id}},
+                  "appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}},
+              },
+          }})
+          print("submission item added")
+
+          final = api("PATCH", f"/reviewSubmissions/{sub_id}", {"data": {
+              "type": "reviewSubmissions", "id": sub_id,
+              "attributes": {"submitted": True},
+          }})
+          print("SUBMITTED for review — state:", final["data"]["attributes"].get("state"))
           EOF
 
       - name: Summary
