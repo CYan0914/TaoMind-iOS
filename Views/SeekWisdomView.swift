@@ -12,6 +12,8 @@ struct SeekWisdomView: View {
     @State private var result: WisdomResponse?
     @State private var errorMessage: String?
     @State private var showDailyVerse = true
+    @State private var showSpeechPermissionDenied = false
+    @StateObject private var speechService = SpeechService()
 
     private let api = APIClient()
 
@@ -95,6 +97,28 @@ struct SeekWisdomView: View {
                             .scrollContentBackground(.hidden)
                             .background(Color(.systemGray6))
                             .cornerRadius(12)
+
+                        // Voice input button — bottom trailing of the editor
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                micButton
+                            }
+                        }
+                        .padding(10)
+                    }
+
+                    if speechService.isRecording {
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 8, height: 8)
+                            Text(AppState.tr("Recording…"))
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        .transition(.opacity)
                     }
                 }
                 .padding(.horizontal, 4)
@@ -204,10 +228,57 @@ struct SeekWisdomView: View {
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
             PaywallView()
         }
+        .alert(AppState.tr("Microphone access needed"), isPresented: $showSpeechPermissionDenied) {
+            Button(AppState.tr("OK"), role: .cancel) {}
+        } message: {
+            Text(AppState.tr("Allow microphone and speech recognition in Settings to use voice input."))
+        }
     }
 
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    // MARK: - Voice Input
+
+    private var micButton: some View {
+        Button(action: toggleRecording) {
+            Image(systemName: speechService.isRecording ? "stop.fill" : "mic.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(speechService.isRecording ? .white : Color(red: 0.4, green: 0.3, blue: 0.18))
+                .frame(width: 34, height: 34)
+                .background(
+                    Circle().fill(speechService.isRecording ? Color.red : Color(.systemGray5))
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(AppState.tr(speechService.isRecording ? "Stop recording" : "Voice input"))
+        .opacity(speechService.isAvailable ? 1 : 0.4)
+        .disabled(!speechService.isAvailable)
+    }
+
+    private func toggleRecording() {
+        if speechService.isRecording {
+            let transcript = speechService.stopRecording()
+            let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                if question.isEmpty {
+                    question = trimmed
+                } else {
+                    question += " " + trimmed
+                }
+            }
+        } else {
+            Task {
+                guard await SpeechService.requestPermission() else {
+                    showSpeechPermissionDenied = true
+                    return
+                }
+                if !speechService.startRecording(localeId: appState.language.localeId) {
+                    errorMessage = AppState.tr("Speech recognition isn't available here.")
+                }
+            }
+        }
     }
 
     // MARK: - Actions

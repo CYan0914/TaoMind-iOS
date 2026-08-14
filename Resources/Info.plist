@@ -55,6 +55,10 @@
     </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>TaoMind uses the microphone so you can speak your question instead of typing.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>TaoMind uses speech recognition to turn your spoken question into text.</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
