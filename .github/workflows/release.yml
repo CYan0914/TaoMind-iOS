@@ -91,16 +91,20 @@ jobs:
           print("app:", app_id)
 
           # 2) Wait for build 24 to finish Apple processing
+          # Build 资源的 attributes.version 是构建号（buildNumber），filter[buildNumber] 不是合法过滤器
+          # 需用 filter[preReleaseVersion.version]（App 版本）过滤后再在代码里匹配构建号
           build_id = None
           for i in range(80):
-              builds = api("GET", f"/apps/{app_id}/builds?filter[preReleaseVersion.version]={VERSION}&filter[buildNumber]={BUILD}")["data"]
-              if builds:
-                  attrs = builds[0]["attributes"]
-                  st = attrs.get("processingState", "UNKNOWN")
-                  print(f"  build poll {i}: {st}")
-                  if st == "VALID":
-                      build_id = builds[0]["id"]
+              builds = api("GET", f"/builds?filter[app]={app_id}&filter[preReleaseVersion.version]={VERSION}")["data"]
+              for b in builds:
+                  if b["attributes"].get("version") == BUILD:
+                      st = b["attributes"].get("processingState", "UNKNOWN")
+                      print(f"  build poll {i}: {st}")
+                      if st == "VALID":
+                          build_id = b["id"]
                       break
+              if build_id:
+                  break
               time.sleep(15)
           if not build_id:
               sys.exit("build 1.3.0(24) not VALID within timeout")
