@@ -24,6 +24,27 @@ struct JournalView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
+            } else if let err = errorMessage {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text(err)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button(AppState.tr("Retry")) {
+                        Task { await loadEntries() }
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .padding()
             } else if entries.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "book")

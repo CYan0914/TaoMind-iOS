@@ -28,6 +28,16 @@ struct LibraryView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
+                        Button(AppState.tr("Retry")) {
+                            Task { await load() }
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                     }
                     .padding()
                 } else {

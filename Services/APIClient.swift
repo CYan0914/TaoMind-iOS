@@ -79,7 +79,9 @@ class APIClient {
 
     func fetchLibrary() async throws -> LibraryResponse {
         let url = try makeURL("/library")
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30
+        let (data, response) = try await session.data(for: request)
         try validate(response)
         return try decoder.decode(LibraryResponse.self, from: data)
     }
@@ -121,7 +123,9 @@ class APIClient {
 
     func listJournal(limit: Int = 50) async throws -> [JournalEntry] {
         let url = try makeURL("/journal", params: ["limit": "\(limit)"])
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30
+        let (data, response) = try await session.data(for: request)
         try validate(response)
 
         struct JournalResponse: Codable {
