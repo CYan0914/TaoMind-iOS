@@ -13,6 +13,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# GITHUB_TOKEN 需要 actions: write 才能在最后一步触发 release.yml（workflow_dispatch）
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   # ─── Build & Test (skipped when create_ipa=true) ────────
   build:
