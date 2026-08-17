@@ -8,7 +8,7 @@ final class NotificationService: NSObject, ObservableObject {
 
     static let shared = NotificationService()
 
-    private let apiBaseURL = "https://observant-prosperity-production-92d3.up.railway.app"
+    private let apiBaseURL = "https://taomindapp.com"
 
     // MARK: - Authorization
 

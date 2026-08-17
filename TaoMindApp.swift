@@ -5,8 +5,8 @@ struct TaoMindApp: App {
     @StateObject private var appState = AppState()
     @State private var dailyVerse: DailyVerse?
 
-    /// Change this to your deployed Railway URL
-    private let apiBaseURL = "https://observant-prosperity-production-92d3.up.railway.app"
+    /// Backend API base URL (Tencent Cloud, via Caddy HTTPS)
+    private let apiBaseURL = "https://taomindapp.com"
 
     init() {
         SubscriptionManager.configure()
