@@ -48,7 +48,7 @@ jobs:
 
           sub_id = "${{ github.event.inputs.submission_id }}"
           req = urllib.request.Request(
-              f"https://api.appstoreconnect.apple.com/v1/reviewSubmissions/{sub_id}?include=items,items.appStoreVersion,items.appStoreVersion.build",
+              f"https://api.appstoreconnect.apple.com/v1/reviewSubmissions/{sub_id}",
               headers={"Authorization": f"Bearer {token}"})
           try:
               with urllib.request.urlopen(req, timeout=30) as resp:
