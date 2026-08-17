@@ -8,7 +8,7 @@ final class AuthService: NSObject, ObservableObject {
 
     static let shared = AuthService()
 
-    private let apiBaseURL = "https://observant-prosperity-production-92d3.up.railway.app"
+    private let apiBaseURL = "https://taomindapp.com"
 
     @Published private(set) var user: User?
     @Published private(set) var token: String?

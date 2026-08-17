@@ -25,7 +25,7 @@ class APIClient {
     let session: URLSession
     let decoder: JSONDecoder
 
-    init(baseURL: String = "https://observant-prosperity-production-92d3.up.railway.app") {
+    init(baseURL: String = "https://taomindapp.com") {
         self.baseURL = baseURL
         self.session = URLSession.shared
         self.decoder = JSONDecoder()

@@ -67,7 +67,7 @@ jobs:
 
           BUNDLE = "com.cyan0914.taomind"
           VERSION = "1.3.0"
-          BUILD = "24"
+          BUILD = "26"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
           WHATS_NEW_EN = (
