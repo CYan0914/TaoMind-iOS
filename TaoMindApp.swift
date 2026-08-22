@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct TaoMindApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var appState = AppState()
     @State private var dailyVerse: DailyVerse?
 
@@ -10,7 +11,7 @@ struct TaoMindApp: App {
 
     init() {
         SubscriptionManager.configure()
-        NotificationService.shared.requestPermission()
+        // 通知权限改在首启 onboarding 第 3 屏请求（价值预告之后，转化更好）
     }
 
     var body: some Scene {
@@ -26,10 +27,18 @@ struct TaoMindApp: App {
                     await loadDailyVerse()
                     // Schedule tomorrow's daily verse notification
                     await NotificationService.shared.scheduleDailyVerse()
+                    // Schedule the habit loop (断签预警 / 召回 / 里程碑)
+                    await NotificationService.shared.scheduleHabitNotifications()
                 }
                 .task {
                     // Refresh subscription status on every cold launch
                     await SubscriptionManager.shared.refreshStatus()
+                }
+                .onChange(of: scenePhase) { phase in
+                    if phase == .active {
+                        // 回到前台时重排习惯通知（打卡状态可能已变）
+                        Task { await NotificationService.shared.scheduleHabitNotifications() }
+                    }
                 }
         }
     }
@@ -71,7 +80,20 @@ class AppState: ObservableObject {
     }
     @Published var dailyVerse: DailyVerse?
 
+    /// 是否已看过首启 onboarding（3 屏：价值预告 → 生活困惑 → 通知请求）
+    @Published var hasSeenOnboarding: Bool {
+        didSet { UserDefaults.standard.set(hasSeenOnboarding, forKey: Self.onboardingSeenKey) }
+    }
+
+    /// 首启 onboarding 选择的生活困惑方向（ScenarioType.apiValue，如 "career"）
+    /// 随当日打卡传给后端，决定第一天名师指点的回应方向。
+    @Published var userIntent: String? {
+        didSet { UserDefaults.standard.set(userIntent, forKey: Self.userIntentKey) }
+    }
+
     private static let languageOverrideKey = "languageOverride"
+    private static let onboardingSeenKey = "hasSeenOnboarding"
+    private static let userIntentKey = "userIntent"
 
     /// 当前语言对应的 locale（供 Bundle 查询与 SwiftUI 环境使用）
     static var currentLocaleId = "en"
@@ -83,6 +105,8 @@ class AppState: ObservableObject {
         let detected: Language = saved.flatMap(Language.init(rawValue:)) ?? (system.hasPrefix("zh") ? .chinese : .english)
         self.language = detected
         Self.currentLocaleId = detected.localeId
+        self.hasSeenOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingSeenKey)
+        self.userIntent = UserDefaults.standard.string(forKey: Self.userIntentKey)
     }
 
     /// 根据当前语言翻译字符串（键 = 英文原文，表 = Localizable.strings）

@@ -8,13 +8,17 @@ struct CheckinService {
 
     // MARK: - Save today's check-in
 
-    func saveCheckin(source: String, verseText: String, reflection: String) async throws -> CheckinSaveResponse {
+    func saveCheckin(source: String, verseText: String, reflection: String, intent: String? = nil) async throws -> CheckinSaveResponse {
         var request = makeRequest(path: "/checkin", method: "POST")
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "source": source,
             "verse_text": verseText,
             "reflection": reflection,
         ]
+        // 首启 onboarding 选择的生活困惑方向 → 影响第一天名师指点
+        if let intent = intent, !intent.isEmpty {
+            body["intent"] = intent
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return try await perform(request)
     }
@@ -68,6 +72,18 @@ struct CheckinService {
             "history": history.map { ["role": $0.role, "content": $0.content] },
             "language": language,
         ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        return try await perform(request)
+    }
+
+    // MARK: - Entitlement sync (权益上报, W1)
+
+    func syncEntitlement(isPro: Bool, proUntil: String?) async throws -> EntitlementSyncResponse {
+        var request = makeRequest(path: "/entitlement/sync", method: "POST")
+        var body: [String: Any] = ["is_pro": isPro]
+        if let proUntil = proUntil {
+            body["pro_until"] = proUntil
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return try await perform(request)
     }

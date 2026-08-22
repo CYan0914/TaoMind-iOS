@@ -7,6 +7,10 @@ on:
         description: 'Review submission ID'
         required: true
         default: '5e5866c0-9b73-4bf0-8d98-136c85191477'
+      build_number:
+        description: 'Build number to check'
+        required: false
+        default: '27'
 
 jobs:
   check:
@@ -48,7 +52,7 @@ jobs:
 
           sub_id = "${{ github.event.inputs.submission_id }}"
           req = urllib.request.Request(
-              f"https://api.appstoreconnect.apple.com/v1/reviewSubmissions/{sub_id}",
+              f"https://api.appstoreconnect.apple.com/v1/reviewSubmissions/{sub_id}?include=items,appStoreVersion",
               headers={"Authorization": f"Bearer {token}"})
           try:
               with urllib.request.urlopen(req, timeout=30) as resp:
@@ -58,10 +62,14 @@ jobs:
               sys.exit(1)
           attrs = data["data"]["attributes"]
           print("SUBMISSION_STATE:", attrs.get("state"))
-          print("ERRORS:", json.dumps(attrs.get("errorMessages") or []))
+          print("SUBMISSION_ID:", sub_id)
           for inc in data.get("included", []):
-              if inc.get("type") == "appStoreVersions":
+              it = inc.get("type")
+              if it == "appStoreVersions":
                   print("VERSION_STRING:", inc["attributes"].get("versionString"))
-              if inc.get("type") == "builds":
+              if it == "builds":
                   print("BUILD:", inc["attributes"].get("version"), inc["attributes"].get("processingState"))
+              if it == "appStoreVersionPhasedReleases":
+                  print("PHASED:", inc["attributes"].get("phasedReleaseState"))
+          print("ERRORS:", json.dumps(attrs.get("errorMessages") or []))
           EOF

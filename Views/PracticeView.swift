@@ -756,7 +756,8 @@ struct PracticeView: View {
                 let result = try await service.saveCheckin(
                     source: source,
                     verseText: verseText,
-                    reflection: text
+                    reflection: text,
+                    intent: appState.userIntent
                 )
                 await MainActor.run {
                     status = CheckinListResponse(checkins: status?.checkins ?? [], today: result.checkin, streak: result.streak, backfill: status?.backfill)
@@ -764,6 +765,8 @@ struct PracticeView: View {
                     isEditingToday = false
                     errorMessage = nil
                 }
+                // 打卡成功后重排习惯通知（今日已完成 → 18:00 预警/19:00 激励应取消）
+                await NotificationService.shared.scheduleHabitNotifications()
             } catch {
                 await MainActor.run { errorMessage = error.localizedDescription }
             }

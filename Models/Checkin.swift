@@ -110,6 +110,12 @@ struct MasterChatResponse: Codable {
     let reply: String
 }
 
+// MARK: - Entitlement Sync (权益上报, W1)
+
+struct EntitlementSyncResponse: Codable {
+    let ok: Bool
+}
+
 /// One message in the follow-up conversation with the master.
 struct ChatMessage: Identifiable, Codable {
     let id: UUID

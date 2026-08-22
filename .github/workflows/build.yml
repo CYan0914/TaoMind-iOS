@@ -8,6 +8,11 @@ on:
         required: false
         default: false
         type: boolean
+      submit_review:
+        description: 'Auto-submit to App Store review after TestFlight upload'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -335,9 +340,9 @@ jobs:
         working-directory: .
 
       - name: Auto-trigger App Store release (What's New + submit review)
-        if: success()
+        if: success() && github.event.inputs.submit_review == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh workflow run release.yml -R "$GITHUB_REPOSITORY"
-          echo "Triggered release.yml — will fill What's New and submit 1.3.0 for review once build 24 is processed."
+          echo "Triggered release.yml — will fill What's New and submit ${VERSION:-1.3.0} (${BUILD:-28}) for review once the build is processed."

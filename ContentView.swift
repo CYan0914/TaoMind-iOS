@@ -6,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @Binding var dailyVerse: DailyVerse?
     @State private var selectedTab = 0
+    @State private var showOnboarding = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -50,5 +51,14 @@ struct ContentView: View {
             .tag(4)
         }
         .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
+        .onAppear {
+            // 首启 onboarding（3 屏，仅一次）
+            if !appState.hasSeenOnboarding {
+                showOnboarding = true
+            }
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView()
+        }
     }
 }

@@ -137,6 +137,13 @@
 /* ===== 每日推送 ===== */
 "☯ Daily Wisdom" = "☯ 每日智慧";
 
+/* ===== 习惯闭环推送 ===== */
+"miss_checkin_warning" = "今日一经还差一步——完成今天的感悟，别让连击断掉。";
+"churn_recall_title" = "你的连击快回来了";
+"churn_recall_body" = "还差一天，你的连击就能恢复——道在等你。";
+"milestone_incentive_title" = "里程碑就在前方";
+"milestone_incentive_body_fmt" = "再坚持一天，就是你的第 %d 天里程碑。";
+
 /* ===== 购买页 ===== */
 "Unlock TaoMind Premium" = "解锁 TaoMind 高级版";
 "Full access to ancient wisdom, unlimited" = "无限获取古老智慧";
@@ -155,3 +162,19 @@
 "Purchases restored! 🎉" = "已恢复购买！🎉";
 "No purchases found to restore." = "没有找到可恢复的购买记录。";
 "Retry" = "重试";
+
+/* ===== 首启 Onboarding ===== */
+"Ancient wisdom for today" = "古老智慧，为你今日所用";
+"A new verse every day" = "每天一章经文";
+"Tao Te Ching and Diamond Sutra, one chapter at a time" = "道德经与金刚经，一章一章品读";
+"Ask the sage about anything" = "向智者请教任何困惑";
+"Get guidance rooted in 2,500-year-old wisdom" = "获得源自两千五百年智慧的指引";
+"Build a practice that sticks" = "打卡连击，养成持久修行";
+"Daily check-ins, streaks and gentle reminders" = "每日打卡、连击与温柔的提醒";
+"What do you most want to solve right now?" = "你现在最想解决什么？";
+"Your choice shapes your first day's guidance." = "你的选择将决定第一天名师指点的方向。";
+"One verse, every morning" = "每天早晨，一章经文";
+"Get your daily verse, and a gentle nudge when your practice is slipping." = "每天接收经文，修行快断线时收到温柔的提醒。";
+"Continue" = "继续";
+"Enable Notifications" = "开启通知";
+"Not now" = "暂不开启";

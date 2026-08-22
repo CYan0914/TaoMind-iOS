@@ -54,13 +54,18 @@ class APIClient {
         question: String,
         scenarioType: String = "business_decision",
         temperature: Double = 0.7,
-        language: String = "en"
+        language: String = "en",
+        authToken: String? = nil
     ) async throws -> WisdomResponse {
         let url = try makeURL("/seek-wisdom")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 30
+        // 登录用户带上 session token → 后端按用户级限额（免费 3/天，Pro 50/天）而非匿名单 IP 上限
+        if let authToken = authToken, !authToken.isEmpty {
+            request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        }
 
         let body: [String: Any] = [
             "question": question,

@@ -37,6 +37,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
                 let customerInfo = try await Purchases.shared.customerInfo()
                 isPro = customerInfo.entitlements["pro"]?.isActive == true
                 if isPro { print("[RevenueCat] Premium active ✅") }
+                Task { await syncEntitlementToBackend() }
                 return
             } catch {
                 print("[RevenueCat] Refresh attempt \(attempt)/3 failed: \(error)")
@@ -46,6 +47,24 @@ final class SubscriptionManager: NSObject, ObservableObject {
             }
         }
         print("[RevenueCat] All refresh attempts exhausted — isPro stays false")
+    }
+
+    // MARK: - Entitlement sync to backend (W1 服务端权益校验骨架)
+
+    /// 把 RevenueCat 权益状态上报给服务端，使 require_pro 端点可用。
+    /// 未登录时跳过（服务端按 session 归户）。
+    func syncEntitlementToBackend() async {
+        guard AuthService.shared.isSignedIn else { return }
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            let isPro = customerInfo.entitlements["pro"]?.isActive == true
+            let proUntil = customerInfo.entitlements["pro"]?.expirationDate
+                .map { ISO8601DateFormatter().string(from: $0) }
+            _ = try await CheckinService().syncEntitlement(isPro: isPro, proUntil: proUntil)
+            print("[RevenueCat] Entitlement synced: isPro=\(isPro)")
+        } catch {
+            print("[RevenueCat] Entitlement sync failed: \(error)")
+        }
     }
 
     func fetchOfferings() async {
@@ -67,6 +86,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
             let result = try await Purchases.shared.purchase(package: package)
             isPro = result.customerInfo.entitlements["pro"]?.isActive == true
             if isPro { showingPaywall = false }
+            Task { await syncEntitlementToBackend() }
             return isPro
         } catch {
             print("[RevenueCat] Purchase failed: \(error)")
@@ -82,6 +102,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
             isPro = customerInfo.entitlements["pro"]?.isActive == true
+            Task { await syncEntitlementToBackend() }
             return isPro
         } catch {
             print("[RevenueCat] Restore failed: \(error)")
@@ -96,6 +117,7 @@ extension SubscriptionManager: PurchasesDelegate {
     nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
             isPro = customerInfo.entitlements["pro"]?.isActive == true
+            Task { await syncEntitlementToBackend() }
         }
     }
 }

@@ -308,7 +308,8 @@ struct SeekWisdomView: View {
                     question: apiQuestion,
                     scenarioType: apiScenario,
                     temperature: apiTemperature,
-                    language: appState.language.rawValue
+                    language: appState.language.rawValue,
+                    authToken: AuthService.shared.token
                 )
 
                 await MainActor.run {
