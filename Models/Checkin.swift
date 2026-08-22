@@ -95,6 +95,7 @@ struct Streak: Codable {
     var longestStreak: Int { longest_streak }
     var todayDone: Bool { today_done }
     var totalCheckins: Int { total_checkins }
+    var lastCheckinDate: String? { last_checkin_date }
 }
 
 // MARK: - Feedback
