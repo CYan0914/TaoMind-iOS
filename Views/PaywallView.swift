@@ -11,6 +11,19 @@ struct PaywallView: View {
     @State private var showRestoreAlert = false
     @State private var restoreMessage = ""
 
+    /// 合并 current offering 与 "lifetime" offering 的所有 package。
+    /// Lifetime 买断挂在独立 offering（identifier="lifetime"）上，
+    /// 只读 current 的话审核员在 paywall 上看不到 Lifetime 选项（Guideline 2.1(b) 风险）。
+    private var mergedPackages: [Package]? {
+        guard let offerings = subscriptionManager.offerings else { return nil }
+        var pkgs = offerings.current?.availablePackages ?? []
+        if let lifetimeOffering = offerings.offering(identifier: "lifetime") {
+            let existing = Set(pkgs.map { $0.identifier })
+            pkgs += lifetimeOffering.availablePackages.filter { !existing.contains($0.identifier) }
+        }
+        return pkgs
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -47,7 +60,7 @@ struct PaywallView: View {
                     if subscriptionManager.isLoading && subscriptionManager.offerings == nil {
                         ProgressView()
                             .padding(.vertical, 30)
-                    } else if let packages = subscriptionManager.offerings?.current?.availablePackages {
+                    } else if let packages = mergedPackages, !packages.isEmpty {
                         VStack(spacing: 12) {
                             ForEach(packages) { pkg in
                                 PlanCard(
@@ -58,6 +71,20 @@ struct PaywallView: View {
                             }
                         }
                         .padding(.horizontal, 4)
+                    } else {
+                        // Offerings 加载失败/为空：给审核员和用户一个明确的重试入口，而不是空白 paywall
+                        VStack(spacing: 12) {
+                            Text(AppState.tr("Unable to load purchase options. Please check your connection."))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button(AppState.tr("Retry")) {
+                                Task { await subscriptionManager.fetchOfferings() }
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        }
+                        .padding(.vertical, 20)
                     }
 
                     // MARK: - Subscribe Button
@@ -122,7 +149,7 @@ struct PaywallView: View {
                 }
                 await subscriptionManager.fetchOfferings()
                 // Auto-select first (usually yearly — best value)
-                if let first = subscriptionManager.offerings?.current?.availablePackages.first {
+                if let first = mergedPackages?.first {
                     selectedPackage = first
                 }
             }
@@ -177,7 +204,11 @@ private struct PlanCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
 
-                    if package.storeProduct.subscriptionPeriod != nil {
+                    if package.packageType == .lifetime {
+                        Text(AppState.tr("One-time purchase"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else if package.storeProduct.subscriptionPeriod != nil {
                         Text(periodDetail)
                             .font(.caption)
                             .foregroundColor(.secondary)

@@ -70,10 +70,19 @@ final class SubscriptionManager: NSObject, ObservableObject {
     func fetchOfferings() async {
         isLoading = true
         defer { isLoading = false }
-        do {
-            offerings = try await Purchases.shared.offerings()
-        } catch {
-            print("[RevenueCat] Failed to fetch offerings: \(error)")
+        // Retry up to 3 times — a failed load leaves the paywall with no purchase
+        // options at all (App Store review Guideline 2.1(b) risk).
+        for attempt in 1...3 {
+            do {
+                offerings = try await Purchases.shared.offerings()
+                if offerings != nil { return }
+                print("[RevenueCat] Offerings empty on attempt \(attempt)/3")
+            } catch {
+                print("[RevenueCat] Offerings attempt \(attempt)/3 failed: \(error)")
+            }
+            if attempt < 3 {
+                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * Double(attempt)))
+            }
         }
     }
 

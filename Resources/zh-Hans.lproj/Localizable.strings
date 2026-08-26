@@ -178,3 +178,8 @@
 "Continue" = "继续";
 "Enable Notifications" = "开启通知";
 "Not now" = "暂不开启";
+
+/* ===== Paywall: lifetime + offerings fallback ===== */
+"One-time purchase" = "一次性买断";
+"Unable to load purchase options. Please check your connection." = "无法加载购买选项，请检查网络后重试。";
+"Retry" = "重试";

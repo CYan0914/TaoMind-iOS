@@ -50,3 +50,8 @@
 "Continue" = "Continue";
 "Enable Notifications" = "Enable Notifications";
 "Not now" = "Not now";
+
+/* ===== Paywall: lifetime + offerings fallback ===== */
+"One-time purchase" = "One-time purchase";
+"Unable to load purchase options. Please check your connection." = "Unable to load purchase options. Please check your connection.";
+"Retry" = "Retry";
