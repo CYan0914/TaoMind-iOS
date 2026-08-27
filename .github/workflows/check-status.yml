@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       submission_id:
-        description: 'Review submission ID'
-        required: true
-        default: '5e5866c0-9b73-4bf0-8d98-136c85191477'
+        description: 'Review submission ID (optional)'
+        required: false
+        default: ''
       build_number:
         description: 'Build number to check'
         required: false
-        default: '27'
+        default: '30'
 
 jobs:
   check:
@@ -50,26 +50,35 @@ jobs:
           sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
           token = f"{h}.{p}.{b64(sig)}"
 
+          def get(path):
+              req = urllib.request.Request(
+                  "https://api.appstoreconnect.apple.com/v1" + path,
+                  headers={"Authorization": f"Bearer {token}"})
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      return json.load(resp)
+              except urllib.error.HTTPError as e:
+                  print("ERROR_HTTP", e.code, path, e.read().decode()[:600])
+                  return None
+
+          # 全量扫描：最近版本状态 + 对应审核意见
+          apps = get("/apps?filter[bundleId]=com.cyan0914.taomind")
+          app_id = apps["data"][0]["id"]
+          vers = get(f"/apps/{app_id}/appStoreVersions?filter[platform]=IOS&limit=5")
+          for v in vers["data"]:
+              a = v["attributes"]
+              print("VERSION:", a.get("versionString"), "| state:", a.get("appStoreState"),
+                    "| id:", v["id"])
+          # submission 状态（可选）
           sub_id = "${{ github.event.inputs.submission_id }}"
-          req = urllib.request.Request(
-              f"https://api.appstoreconnect.apple.com/v1/reviewSubmissions/{sub_id}?include=items,appStoreVersion",
-              headers={"Authorization": f"Bearer {token}"})
-          try:
-              with urllib.request.urlopen(req, timeout=30) as resp:
-                  data = json.load(resp)
-          except urllib.error.HTTPError as e:
-              print("ERROR_HTTP", e.code, e.read().decode()[:500])
-              sys.exit(1)
-          attrs = data["data"]["attributes"]
-          print("SUBMISSION_STATE:", attrs.get("state"))
-          print("SUBMISSION_ID:", sub_id)
-          for inc in data.get("included", []):
-              it = inc.get("type")
-              if it == "appStoreVersions":
-                  print("VERSION_STRING:", inc["attributes"].get("versionString"))
-              if it == "builds":
-                  print("BUILD:", inc["attributes"].get("version"), inc["attributes"].get("processingState"))
-              if it == "appStoreVersionPhasedReleases":
-                  print("PHASED:", inc["attributes"].get("phasedReleaseState"))
-          print("ERRORS:", json.dumps(attrs.get("errorMessages") or []))
+          if sub_id:
+              sub = get(f"/reviewSubmissions/{sub_id}")
+              if sub:
+                  print("SUBMISSION_STATE:", sub["data"]["attributes"].get("state"))
+          # build 状态
+          builds = get(f"/apps/{app_id}/builds?limit=5&sort=-uploadedDate")
+          for b in (builds or {}).get("data", []):
+              print("BUILD:", b["attributes"].get("version"),
+                    b["attributes"].get("processingState"),
+                    b["attributes"].get("uploadedDate"))
           EOF
