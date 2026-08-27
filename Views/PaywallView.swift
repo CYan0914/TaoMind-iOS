@@ -44,8 +44,7 @@ struct PaywallView: View {
         case .twoMonth: return 4
         case .monthly: return 5
         case .weekly: return 6
-        case .daily: return 7
-        default: return 8   // .custom / .unknown
+        default: return 7   // .custom / .unknown（PackageType 无 daily）
         }
     }
 
