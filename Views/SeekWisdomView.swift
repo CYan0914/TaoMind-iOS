@@ -142,7 +142,7 @@ struct SeekWisdomView: View {
                             .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
                     } else {
                         // Free tier: classic style only — tap to upgrade
-                        Button(action: { subscriptionManager.showingPaywall = true }) {
+                        Button(action: { subscriptionManager.openPaywall(.styleTuning) }) {
                             HStack(spacing: 8) {
                                 Text(AppState.tr("Classic · Direct"))
                                     .font(.subheadline)
@@ -226,7 +226,7 @@ struct SeekWisdomView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: result != nil)
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
-            PaywallView()
+            PaywallView(context: subscriptionManager.paywallContext)
         }
         .alert(AppState.tr("Microphone access needed"), isPresented: $showSpeechPermissionDenied) {
             Button(AppState.tr("OK"), role: .cancel) {}
@@ -288,7 +288,7 @@ struct SeekWisdomView: View {
 
         // Check daily usage limit for free tier
         guard appState.canSeekWisdom else {
-            subscriptionManager.showingPaywall = true
+            subscriptionManager.openPaywall(.seekLimitToday)
             return
         }
 
@@ -340,7 +340,7 @@ struct SeekWisdomView: View {
                     let existing = try await api.listJournal(limit: 50)
                     if existing.count >= Self.freeJournalLimit {
                         await MainActor.run {
-                            subscriptionManager.showingPaywall = true
+                            subscriptionManager.openPaywall(.journalFull)
                         }
                         print("[Journal] Free tier limit reached (\(Self.freeJournalLimit)) — entry not saved")
                         return

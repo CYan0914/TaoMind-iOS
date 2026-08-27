@@ -24,6 +24,8 @@ struct PracticeView: View {
     @State private var milestone: MilestoneInfo?
     @State private var shareCardContent: ShareCardContent?
     @State private var showMonthlyReport = false
+    @State private var newCard: CommemorativeCard?
+    @State private var showCardCollection = false
 
     private let service = CheckinService()
 
@@ -49,7 +51,10 @@ struct PracticeView: View {
         .sheet(isPresented: $showBackfill) {
             if let date = status?.backfill?.targetDate {
                 BackfillView(targetDate: date) {
-                    Task { await loadStatus() }
+                    Task {
+                        await loadStatus()
+                        presentNewCardIfUnlocked()
+                    }
                 }
             }
         }
@@ -61,6 +66,13 @@ struct PracticeView: View {
         }
         .sheet(item: $shareCardContent) { content in
             ShareCardPreviewSheet(content: content)
+        }
+        .sheet(item: $newCard) { card in
+            CommemorativeCardUnlockView(card: card, totalCheckins: card.number, isChinese: appState.language == .chinese)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showCardCollection) {
+            CardCollectionView(totalCheckins: status?.streak.totalCheckins ?? 0, isChinese: appState.language == .chinese)
         }
         .sheet(isPresented: $showMonthlyReport) {
             MonthlyReportView(month: currentMonthString)
@@ -127,6 +139,9 @@ struct PracticeView: View {
 
                 // Streak actions (backfill + share card)
                 streakActions
+
+                // 修行纪念册入口（打卡收集 81 张道德经卡）
+                cardCollectionEntry
 
                 // Monthly report (Pro)
                 monthlyReportCard
@@ -257,19 +272,58 @@ struct PracticeView: View {
         .padding(.vertical, 4)
     }
 
+    // MARK: - 纪念册入口（打卡收集 81 张道德经卡）
+
+    private var cardCollectionEntry: some View {
+        let unlocked = CommemorativeCardSeries.unlockedCount(totalCheckins: status?.streak.totalCheckins ?? 0)
+        return Button(action: { showCardCollection = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .font(.title3)
+                    .foregroundColor(Color(red: 0.72, green: 0.45, blue: 0.20))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(AppState.tr("card_collection"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    Text(AppState.tr("card_collection_progress_fmt", unlocked, CommemorativeCardSeries.total))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+            .padding(14)
+            .background(Color.white.opacity(0.6))
+            .cornerRadius(14)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 本次打卡/补卡若解锁了新纪念卡（且未曾弹过）→ 立即揭示。
+    /// 同一天编辑感悟（total 不变）不会重复弹；只从用户主动动作的回调里调用，
+    /// 避免与 loadStatus 触发的 milestone sheet 同帧争抢 present。
+    private func presentNewCardIfUnlocked() {
+        guard let total = status?.streak.totalCheckins else { return }
+        guard (1...CommemorativeCardSeries.total).contains(total),
+              !CommemorativeCardSeries.isRevealed(total),
+              let card = CommemorativeCardSeries.card(total) else { return }
+        CommemorativeCardSeries.markRevealed(total)
+        newCard = card
+    }
+
     private func openBackfill() {
         guard subscriptionManager.isPro else {
-            subscriptionManager.showingPaywall = true
+            subscriptionManager.openPaywall(.backfill)
             return
         }
         showBackfill = true
     }
 
     private func shareStreak() {
-        guard subscriptionManager.isPro else {
-            subscriptionManager.showingPaywall = true
-            return
-        }
+        // 分享对全部用户开放：连击卡是最强裂变素材，卡内已画下载二维码（ShareCardView）
         let days = status?.streak.currentStreak ?? 0
         let verse = appState.dailyVerse.map { $0.verse_text } ?? ""
         shareCardContent = ShareCardContent(
@@ -296,10 +350,7 @@ struct PracticeView: View {
     }
 
     private func shareMilestone(_ m: MilestoneInfo) {
-        guard subscriptionManager.isPro else {
-            subscriptionManager.showingPaywall = true
-            return
-        }
+        // 分享对全部用户开放：里程碑庆祝的自然转发不设 Pro 门槛（卡内含下载二维码）
         let zh = appState.language == .chinese
         shareCardContent = ShareCardContent(
             title: String(format: AppState.tr("streak_days_fmt"), m.days),
@@ -314,7 +365,7 @@ struct PracticeView: View {
             if subscriptionManager.isPro {
                 showMonthlyReport = true
             } else {
-                subscriptionManager.showingPaywall = true
+                subscriptionManager.openPaywall(.monthlyReport)
             }
         } label: {
             HStack(spacing: 12) {
@@ -553,7 +604,7 @@ struct PracticeView: View {
     }
 
     private var lockedMasterButton: some View {
-        Button(action: { subscriptionManager.showingPaywall = true }) {
+        Button(action: { subscriptionManager.openPaywall(.masterFeedback) }) {
             HStack(spacing: 10) {
                 Image(systemName: "lock.fill")
                     .font(.caption)
@@ -623,7 +674,7 @@ struct PracticeView: View {
                 }
             } else {
                 // Locked follow-up — the conversion moment
-                Button(action: { subscriptionManager.showingPaywall = true }) {
+                Button(action: { subscriptionManager.openPaywall(.masterFollowup) }) {
                     HStack(spacing: 10) {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
                             .font(.caption)
@@ -764,6 +815,8 @@ struct PracticeView: View {
                     reflection = ""
                     isEditingToday = false
                     errorMessage = nil
+                    // 打卡成功随即揭示新纪念卡（第 N 次打卡 = 第 N 章）
+                    presentNewCardIfUnlocked()
                 }
                 // 打卡成功后重排习惯通知（今日已完成 → 18:00 预警/19:00 激励应取消）
                 await NotificationService.shared.scheduleHabitNotifications()
@@ -778,7 +831,7 @@ struct PracticeView: View {
         guard let today = status?.today else { return }
         // Free tier: one free master guidance per week — beyond that, paywall
         if !subscriptionManager.isPro && weeklyFreeMasterUsed {
-            subscriptionManager.showingPaywall = true
+            subscriptionManager.openPaywall(.masterFeedback)
             return
         }
         isAskingMaster = true

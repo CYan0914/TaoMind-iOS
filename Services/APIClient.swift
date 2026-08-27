@@ -86,6 +86,8 @@ class APIClient {
         let url = try makeURL("/library")
         var request = URLRequest(url: url)
         request.timeoutInterval = 30
+        // 带登录态 → 服务端按 Pro 下发完整精讲（免费用户仅前 5 章，服务端 gate）
+        attachAuth(&request)
         let (data, response) = try await session.data(for: request)
         try validate(response)
         return try decoder.decode(LibraryResponse.self, from: data)
@@ -105,6 +107,8 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // 带登录态 → 服务端按用户归户存储并执行免费 20 条上限
+        attachAuth(&request)
 
         let body: [String: Any] = [
             "question": question,
@@ -130,6 +134,8 @@ class APIClient {
         let url = try makeURL("/journal", params: ["limit": "\(limit)"])
         var request = URLRequest(url: url)
         request.timeoutInterval = 30
+        // 带登录态 → 服务端只返回本人日志（含历史公共条目，逐步收敛归户）
+        attachAuth(&request)
         let (data, response) = try await session.data(for: request)
         try validate(response)
 
@@ -142,6 +148,14 @@ class APIClient {
     }
 
     // MARK: - Helpers
+
+    /// 登录态注入：有 session token 就带 Bearer header（服务端据此归户/校验权益）。
+    private func attachAuth(_ request: inout URLRequest) {
+        let token = AuthService.shared.token
+        if let token = token, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+    }
 
     private func makeURL(_ path: String, params: [String: String] = [:]) throws -> URL {
         guard var components = URLComponents(string: "\(baseURL)\(path)") else {

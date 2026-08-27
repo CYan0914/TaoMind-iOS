@@ -26,7 +26,7 @@
 "Microphone access needed" = "需要麦克风权限";
 "Allow microphone and speech recognition in Settings to use voice input." = "请在设置中允许使用麦克风和语音识别，即可用语音输入问题。";
 "Speech recognition isn't available here." = "当前设备或语言暂不支持语音识别。";
-"OK" = "好";;
+"OK" = "好";
 "Business Decision" = "商业决策";
 "Leadership" = "领导力";
 "Career" = "职业发展";
@@ -183,3 +183,29 @@
 "One-time purchase" = "一次性买断";
 "Unable to load purchase options. Please check your connection." = "无法加载购买选项，请检查网络后重试。";
 "Retry" = "重试";
+"Restore" = "恢复购买";
+
+/* ===== 付费墙场景条 ===== */
+"pw_ctx_generic" = "解锁 TaoMind 全部能力";
+"pw_ctx_seek_limit" = "今日 3 次免费求取智慧已用完";
+"pw_ctx_journal_full" = "免费版日志已存满 20 条";
+"pw_ctx_library_locked" = "免费试读已结束，全部 113 章精读等你解锁";
+"pw_ctx_backfill" = "补卡修复连击——Pro 每月 1 次";
+"pw_ctx_monthly_report" = "你的修习月报已就绪";
+"pw_ctx_master_feedback" = "本周免费名师指点已用完";
+"pw_ctx_master_followup" = "与名师继续深谈你的感悟";
+"pw_ctx_journal_export" = "把修行日志导出为文本";
+"pw_ctx_style_tuning" = "调节智者的回复风格";
+"share_card_download_hint" = "扫码下载 TaoMind";
+
+/* ===== 价格锚点 ===== */
+"pw_monthly_equiv_fmt" = "%@/月";
+"pw_save_fmt" = "省 %d%%";
+"pw_best_value" = "超值之选";
+
+/* ===== 修行纪念卡 ===== */
+"card_unlock_title" = "收藏到新纪念卡";
+"card_unlocked_fmt" = "修行第 %d 天 · 收藏第 %d/%d 张";
+"card_collection" = "修行纪念册";
+"card_collection_hint" = "每天打卡收藏一张，集齐《道德经》81 章";
+"card_collection_progress_fmt" = "已收藏 %d / %d 张";

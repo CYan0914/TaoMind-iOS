@@ -7,6 +7,13 @@ struct PaywallView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.dismiss) private var dismiss
 
+    /// 弹墙场景（决定顶部场景条文案；触发点通过 openPaywall(_:) 传入）
+    let context: PaywallContext
+
+    init(context: PaywallContext = .generic) {
+        self.context = context
+    }
+
     @State private var selectedPackage: Package?
     @State private var showRestoreAlert = false
     @State private var restoreMessage = ""
@@ -21,7 +28,30 @@ struct PaywallView: View {
             let existing = Set(pkgs.map { $0.identifier })
             pkgs += lifetimeOffering.availablePackages.filter { !existing.contains($0.identifier) }
         }
+        // 价格锚点：展示顺序不赌 RevenueCat 后台排列——年档（性价比最高）置顶、终身档第二，
+        // 其余按周期从长到短，月/周档垫底，让用户第一眼看到的就是最划算的选项。
+        pkgs.sort { Self.anchorRank($0.packageType) < Self.anchorRank($1.packageType) }
         return pkgs
+    }
+
+    /// 周期越长性价比越高 → 排序越靠前。
+    private static func anchorRank(_ type: PackageType) -> Int {
+        switch type {
+        case .annual: return 0
+        case .lifetime: return 1
+        case .sixMonth: return 2
+        case .threeMonth: return 3
+        case .twoMonth: return 4
+        case .monthly: return 5
+        case .weekly: return 6
+        case .daily: return 7
+        default: return 8   // .custom / .unknown
+        }
+    }
+
+    /// 月档价格（Save % 折算基准）；无月档包时为 nil。
+    private var monthlyBaseline: Decimal? {
+        mergedPackages?.first(where: { $0.packageType == .monthly })?.storeProduct.price
     }
 
     var body: some View {
@@ -32,25 +62,45 @@ struct PaywallView: View {
                     VStack(spacing: 12) {
                         Text("☯")
                             .font(.system(size: 56))
-                        Text("Unlock TaoMind Premium")
+                        Text(AppState.tr("Unlock TaoMind Premium"))
                             .font(.custom("Georgia", size: 26, relativeTo: .title))
                             .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
-                        Text("Full access to ancient wisdom, unlimited")
+                        Text(AppState.tr("Full access to ancient wisdom, unlimited"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .padding(.top, 20)
 
-                    // MARK: - Features
+                    // MARK: - Context Banner（场景条：为什么此刻弹墙）
+                    if context != .generic {
+                        HStack(spacing: 10) {
+                            Image(systemName: context.icon)
+                                .font(.subheadline)
+                                .foregroundColor(Color(red: 0.4, green: 0.3, blue: 0.18))
+                            Text(AppState.tr(context.headlineKey))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                .multilineTextAlignment(.leading)
+                            Spacer()
+                        }
+                        .padding(12)
+                        .background(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.08))
+                        .cornerRadius(12)
+                    }
+
+                    // MARK: - Features（前 3 条为核心价值 hero，其余为完整清单）
                     VStack(spacing: 14) {
-                        FeatureRow(icon: "🧘", text: AppState.tr("pw_master"))
-                        FeatureRow(icon: "🩹", text: AppState.tr("Monthly backfill to heal your streak"))
+                        HeroFeatureRow(icon: "🧘", text: AppState.tr("pw_master"))
+                        HeroFeatureRow(icon: "∞", text: AppState.tr("Unlimited wisdom sessions"))
+                        HeroFeatureRow(icon: "🩹", text: AppState.tr("Monthly backfill to heal your streak"))
+                        Divider()
+                            .padding(.vertical, 2)
+                        FeatureRow(icon: "📓", text: AppState.tr("Unlimited journal entries"))
+                        FeatureRow(icon: "📚", text: AppState.tr("Full library of the Tao Te Ching & Diamond Sutra"))
                         FeatureRow(icon: "🎋", text: AppState.tr("Streak milestones & share cards"))
                         FeatureRow(icon: "📈", text: AppState.tr("Monthly practice report"))
-                        FeatureRow(icon: "📚", text: AppState.tr("Full library of the Tao Te Ching & Diamond Sutra"))
-                        FeatureRow(icon: "∞", text: AppState.tr("Unlimited wisdom sessions"))
-                        FeatureRow(icon: "📓", text: AppState.tr("Unlimited journal entries"))
                         FeatureRow(icon: "🎨", text: AppState.tr("Full response style tuning"))
                         FeatureRow(icon: "📤", text: AppState.tr("Export your journal"))
                     }
@@ -66,6 +116,8 @@ struct PaywallView: View {
                                 PlanCard(
                                     package: pkg,
                                     isSelected: selectedPackage?.identifier == pkg.identifier,
+                                    monthlyBaseline: monthlyBaseline,
+                                    showBestValue: packages.count > 1 && pkg.packageType == .annual,
                                     onTap: { selectedPackage = pkg }
                                 )
                             }
@@ -96,7 +148,7 @@ struct PaywallView: View {
                                         .progressViewStyle(.circular)
                                         .tint(.white)
                                 } else {
-                                    Text("Start Premium")
+                                    Text(AppState.tr("Start Premium"))
                                         .fontWeight(.semibold)
                                 }
                             }
@@ -121,7 +173,18 @@ struct PaywallView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                        Text("Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings.")
+                        // Terms/Privacy 挂 paywall 底部（Guideline 3.1.2 惯例，提升审核稳健性）
+                        HStack(spacing: 14) {
+                            Link(AppState.tr("Privacy Policy"),
+                                 destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
+                            Text("·")
+                            Link(AppState.tr("Terms of Service"),
+                                 destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
+                        }
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+
+                        Text(AppState.tr("Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings."))
                             .font(.caption2)
                             .foregroundColor(.secondary.opacity(0.7))
                             .multilineTextAlignment(.center)
@@ -132,12 +195,12 @@ struct PaywallView: View {
             .background(Color(red: 0.98, green: 0.97, blue: 0.95))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close") { dismiss() }
+                    Button(AppState.tr("Close")) { dismiss() }
                         .foregroundColor(.secondary)
                 }
             }
-            .alert("Restore", isPresented: $showRestoreAlert) {
-                Button("OK") {}
+            .alert(AppState.tr("Restore"), isPresented: $showRestoreAlert) {
+                Button(AppState.tr("OK")) {}
             } message: {
                 Text(restoreMessage)
             }
@@ -148,9 +211,10 @@ struct PaywallView: View {
                     return
                 }
                 await subscriptionManager.fetchOfferings()
-                // Auto-select first (usually yearly — best value)
-                if let first = mergedPackages?.first {
-                    selectedPackage = first
+                // 默认选中年档（价格锚点：把用户的起点放在最划算的选项上）；
+                // 年档不存在（RC 后台配置异常）才退回第一顺位。
+                if let packages = mergedPackages, !packages.isEmpty {
+                    selectedPackage = packages.first(where: { $0.packageType == .annual }) ?? packages.first
                 }
             }
             // Auto-dismiss when purchase succeeds
@@ -188,21 +252,80 @@ private struct FeatureRow: View {
     }
 }
 
+// MARK: - Hero Feature Row（前 3 条核心价值，卡片强调样式）
+
+private struct HeroFeatureRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(icon)
+                .font(.title3)
+                .frame(width: 32)
+            Text(text)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+            Spacer()
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .background(Color.white.opacity(0.65))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - PaywallContext icon（场景条用 SF Symbol）
+
+private extension PaywallContext {
+    var icon: String {
+        switch self {
+        case .generic: return "crown"
+        case .seekLimitToday: return "sparkles"
+        case .journalFull: return "note.text"
+        case .libraryLocked: return "books.vertical"
+        case .backfill: return "calendar.badge.plus"
+        case .monthlyReport: return "chart.line.uptrend.xyaxis"
+        case .masterFeedback: return "person.wave.2"
+        case .masterFollowup: return "bubble.left.and.text.bubble.right"
+        case .journalExport: return "square.and.arrow.up"
+        case .styleTuning: return "paintbrush"
+        }
+    }
+}
+
 // MARK: - Plan Card
 
 private struct PlanCard: View {
     let package: Package
     let isSelected: Bool
+    /// 月档价格（Save % 折算基准）；无月档包时为 nil。
+    let monthlyBaseline: Decimal?
+    /// 是否显示 Best Value 徽章（只有年档且列表里有多个选项时才有意义）。
+    let showBestValue: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(package.storeProduct.localizedTitle)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    HStack(spacing: 6) {
+                        Text(package.storeProduct.localizedTitle)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+
+                        if showBestValue {
+                            Text(AppState.tr("pw_best_value"))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(Color(red: 0.72, green: 0.45, blue: 0.20))
+                                .clipShape(Capsule())
+                        }
+                    }
 
                     if package.packageType == .lifetime {
                         Text(AppState.tr("One-time purchase"))
@@ -212,6 +335,14 @@ private struct PlanCard: View {
                         Text(periodDetail)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    }
+
+                    // 价格锚点：长周期档折算月均价 + 相对月档省多少（"$3.33/mo · Save 58%"）
+                    if let anchor = priceAnchor {
+                        Text(anchor)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(red: 0.55, green: 0.35, blue: 0.10))
                     }
                 }
 
@@ -232,6 +363,49 @@ private struct PlanCard: View {
                     )
             )
         }
+    }
+
+    /// 月均折算 + Save % 文案；只对 ≥3 个月的订阅档显示（月/周档无锚点意义，终身档不折算）。
+    private var priceAnchor: String? {
+        guard let period = package.storeProduct.subscriptionPeriod else { return nil }
+        let months: Int
+        switch period.unit {
+        case .month: months = period.value
+        case .year: months = period.value * 12
+        default: return nil   // 周/日档不折算
+        }
+        guard months >= 3 else { return nil }
+        let price = NSDecimalNumber(decimal: package.storeProduct.price)
+        guard price.doubleValue > 0 else { return nil }
+        let perMonth = price.doubleValue / Double(months)
+        let equiv = String(format: AppState.tr("pw_monthly_equiv_fmt"), currencySymbol + amountString(perMonth))
+        if let baseline = monthlyBaseline {
+            let baselineValue = NSDecimalNumber(decimal: baseline).doubleValue
+            if baselineValue > 0 && perMonth < baselineValue {
+                let save = Int(((1 - perMonth / baselineValue) * 100).rounded())
+                if save >= 5 {
+                    return equiv + " · " + String(format: AppState.tr("pw_save_fmt"), save)
+                }
+            }
+        }
+        return equiv
+    }
+
+    /// 从本地化价格串提取货币符号："$39.99"→"$"，"US$39.99"→"US$"，"39,99 €"→"€"。
+    private var currencySymbol: String {
+        let s = package.localizedPriceString
+        let numeric: Set<Character> = ["0","1","2","3","4","5","6","7","8","9",".",","," ","\u{00A0}"]
+        let prefix = String(s.prefix { !numeric.contains($0) })
+        if !prefix.isEmpty { return prefix }
+        return String(s.reversed().prefix { !numeric.contains($0) }.reversed())
+    }
+
+    private func amountString(_ value: Double) -> String {
+        let fmt = NumberFormatter()
+        fmt.numberStyle = .decimal
+        fmt.minimumFractionDigits = 2
+        fmt.maximumFractionDigits = 2
+        return fmt.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
     }
 
     private var periodDetail: String {

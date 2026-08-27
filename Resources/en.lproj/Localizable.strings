@@ -55,3 +55,30 @@
 "One-time purchase" = "One-time purchase";
 "Unable to load purchase options. Please check your connection." = "Unable to load purchase options. Please check your connection.";
 "Retry" = "Retry";
+"Restore" = "Restore";
+
+/* ===== Paywall context banners (弹墙场景条，slug keys need explicit English) ===== */
+"upgrade_for_styles" = "Free plan uses the classic style. Upgrade to unlock all styles.";
+"pw_ctx_generic" = "Unlock everything TaoMind has to offer";
+"pw_ctx_seek_limit" = "Today's 3 free wisdom sessions are used up";
+"pw_ctx_journal_full" = "Your free journal is full — 20 entries saved";
+"pw_ctx_library_locked" = "Free preview complete — the full 113-chapter library awaits";
+"pw_ctx_backfill" = "Heal your streak — backfill is a Pro feature";
+"pw_ctx_monthly_report" = "Your monthly practice report is ready";
+"pw_ctx_master_feedback" = "This week's free master guidance is used up";
+"pw_ctx_master_followup" = "Go deeper — keep talking with your master";
+"pw_ctx_journal_export" = "Export your journal as text";
+"pw_ctx_style_tuning" = "Tune the sage's response style";
+"share_card_download_hint" = "Scan to get TaoMind";
+
+/* ===== Paywall price anchors（价格锚点，slug keys need explicit English）===== */
+"pw_monthly_equiv_fmt" = "%@/mo";
+"pw_save_fmt" = "Save %d%%";
+"pw_best_value" = "Best Value";
+
+/* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
+"card_unlock_title" = "New card collected";
+"card_unlocked_fmt" = "Day %d · Card %d of %d";
+"card_collection" = "Commemorative Cards";
+"card_collection_hint" = "One card for every day of practice — all 81 chapters of the Tao Te Ching";
+"card_collection_progress_fmt" = "%d / %d collected";

@@ -109,7 +109,7 @@ struct LibraryView: View {
 
     private func open(_ entry: LibraryEntry) {
         if isLocked(entry) {
-            subscriptionManager.showingPaywall = true
+            subscriptionManager.openPaywall(.libraryLocked)
             return
         }
         selectedEntry = entry

@@ -65,7 +65,7 @@ struct JournalView: View {
                     // Free tier: journal limit banner
                     if !subscriptionManager.isPro {
                         Section {
-                            Button(action: { subscriptionManager.showingPaywall = true }) {
+                            Button(action: { subscriptionManager.openPaywall(.journalFull) }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "lock.fill")
                                         .font(.caption)
@@ -108,7 +108,7 @@ struct JournalView: View {
                     if subscriptionManager.isPro {
                         showExport = true
                     } else {
-                        subscriptionManager.showingPaywall = true
+                        subscriptionManager.openPaywall(.journalExport)
                     }
                 } label: {
                     Image(systemName: "square.and.arrow.up")

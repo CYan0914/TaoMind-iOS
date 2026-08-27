@@ -1,6 +1,38 @@
 import Foundation
 import RevenueCat
 
+// MARK: - Paywall Context (付费墙场景化：弹墙时刻 → 场景文案)
+
+/// 弹付费墙时的场景上下文。付费墙永远出现在用户刚被限制的那一秒，
+/// 场景条负责把"为什么现在弹墙"讲清楚（稀缺性文案，双语 key 见 Localizable.strings）。
+enum PaywallContext {
+    case generic            // 设置页升级入口等无特定场景
+    case seekLimitToday     // 今日 3 次免费求取智慧用完
+    case journalFull        // 免费版 20 条日志存满
+    case libraryLocked      // 经藏免费试读结束
+    case backfill           // 补卡（Pro）
+    case monthlyReport      // 修习月报（Pro）
+    case masterFeedback     // 本周免费名师指点已用完
+    case masterFollowup     // 名师追问（Pro）
+    case journalExport      // 导出日志（Pro）
+    case styleTuning        // 回复风格调节（Pro）
+
+    var headlineKey: String {
+        switch self {
+        case .generic: return "pw_ctx_generic"
+        case .seekLimitToday: return "pw_ctx_seek_limit"
+        case .journalFull: return "pw_ctx_journal_full"
+        case .libraryLocked: return "pw_ctx_library_locked"
+        case .backfill: return "pw_ctx_backfill"
+        case .monthlyReport: return "pw_ctx_monthly_report"
+        case .masterFeedback: return "pw_ctx_master_feedback"
+        case .masterFollowup: return "pw_ctx_master_followup"
+        case .journalExport: return "pw_ctx_journal_export"
+        case .styleTuning: return "pw_ctx_style_tuning"
+        }
+    }
+}
+
 // MARK: - Subscription Manager (RevenueCat wrapper)
 
 @MainActor
@@ -11,6 +43,13 @@ final class SubscriptionManager: NSObject, ObservableObject {
     @Published var offerings: Offerings?
     @Published var isLoading = false
     @Published var showingPaywall = false
+    @Published var paywallContext: PaywallContext = .generic
+
+    /// 弹付费墙的唯一入口：先记场景再弹墙，PaywallView 据此展示场景条。
+    func openPaywall(_ context: PaywallContext = .generic) {
+        paywallContext = context
+        showingPaywall = true
+    }
 
     override private init() {
         super.init()
@@ -60,7 +99,10 @@ final class SubscriptionManager: NSObject, ObservableObject {
             let isPro = customerInfo.entitlements["pro"]?.isActive == true
             let proUntil = customerInfo.entitlements["pro"]?.expirationDate
                 .map { ISO8601DateFormatter().string(from: $0) }
-            _ = try await CheckinService().syncEntitlement(isPro: isPro, proUntil: proUntil)
+            // 上报真实 appUserID：服务端用它向 RevenueCat REST 反查权益，
+            // 客户端上报的 isPro 仅作 RevenueCat 不可用时的回退（防伪造）。
+            let appUserID = Purchases.shared.appUserID
+            _ = try await CheckinService().syncEntitlement(isPro: isPro, proUntil: proUntil, appUserID: appUserID)
             print("[RevenueCat] Entitlement synced: isPro=\(isPro)")
         } catch {
             print("[RevenueCat] Entitlement sync failed: \(error)")

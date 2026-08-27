@@ -61,7 +61,7 @@ struct SettingsView: View {
                         }
                         .disabled(subscriptionManager.isLoading)
                     } else {
-                        Button(action: { subscriptionManager.showingPaywall = true }) {
+                        Button(action: { subscriptionManager.openPaywall(.generic) }) {
                             HStack {
                                 Text("Upgrade to Premium")
                                     .fontWeight(.semibold)
@@ -130,7 +130,7 @@ struct SettingsView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Settings")
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
-            PaywallView()
+            PaywallView(context: subscriptionManager.paywallContext)
         }
         .task {
             // Refresh subscription status when user opens Settings

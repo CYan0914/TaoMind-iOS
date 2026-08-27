@@ -78,11 +78,14 @@ struct CheckinService {
 
     // MARK: - Entitlement sync (权益上报, W1)
 
-    func syncEntitlement(isPro: Bool, proUntil: String?) async throws -> EntitlementSyncResponse {
+    func syncEntitlement(isPro: Bool, proUntil: String?, appUserID: String? = nil) async throws -> EntitlementSyncResponse {
         var request = makeRequest(path: "/entitlement/sync", method: "POST")
         var body: [String: Any] = ["is_pro": isPro]
         if let proUntil = proUntil {
             body["pro_until"] = proUntil
+        }
+        if let appUserID = appUserID, !appUserID.isEmpty {
+            body["app_user_id"] = appUserID
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return try await perform(request)
