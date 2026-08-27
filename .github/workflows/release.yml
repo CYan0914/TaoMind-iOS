@@ -243,6 +243,19 @@ jobs:
           print("submission items:", [(i["id"], list(i.get("relationships", {}).keys())) for i in items])
           ver_item = next((i for i in items if i.get("relationships", {})
                           .get("appStoreVersion", {}).get("data")), None)
+          if ver_item is None and not items:
+              # 全新 train 首提：新建的 submission 不含任何 item，必须显式创建版本 item
+              # （复用旧 submission 时 item 已存在，走不到这里）
+              created_item = api("POST", f"/reviewSubmissions/{sub_id}/items", {"data": {
+                  "type": "reviewSubmissionItems",
+                  "attributes": {},
+                  "relationships": {
+                      "appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver_id}},
+                      "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub_id}},
+                  },
+              }})
+              ver_item = created_item["data"]
+              print("version item created:", ver_item["id"])
           if ver_item is None and items:
               ver_item = items[0]  # 兜底：IOS 提交的第一个 item 即版本项
           if ver_item is None:
