@@ -69,7 +69,12 @@
 "pw_ctx_master_followup" = "Go deeper — keep talking with your master";
 "pw_ctx_journal_export" = "Export your journal as text";
 "pw_ctx_style_tuning" = "Tune the sage's response style";
+"pw_ctx_seek_result" = "You just received a full reading — keep the practice going";
 "share_card_download_hint" = "Scan to get TaoMind";
+"seek_banner_title" = "Unlock the full practice";
+"seek_banner_sub" = "Unlimited sessions, master's guidance & the full library";
+"journal_slots_left_fmt" = "Free plan: %d of %d journal slots left. Upgrade for unlimited.";
+"journal_full_now" = "Your journal is full — upgrade to keep saving sessions.";
 
 /* ===== Paywall price anchors（价格锚点，slug keys need explicit English）===== */
 "pw_monthly_equiv_fmt" = "%@/mo";

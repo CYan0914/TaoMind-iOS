@@ -147,11 +147,34 @@ class APIClient {
         return result.entries
     }
 
+    // MARK: - Analytics
+
+    /// 埋点上报（fire-and-forget，调用方用 try? 吞错）。只传事件名与非内容属性。
+    func trackEvent(event: String, properties: [String: String]) async throws {
+        let url = try makeURL("/analytics/track")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+        attachAuth(&request)
+        var body: [String: Any] = ["event": event]
+        if let propsData = try? JSONSerialization.data(withJSONObject: properties),
+           let propsJSON = String(data: propsData, encoding: .utf8) {
+            body["properties"] = propsJSON
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        _ = data
+    }
+
     // MARK: - Helpers
 
     /// 登录态注入：有 session token 就带 Bearer header（服务端据此归户/校验权益）。
+    /// token 从 UserDefaults 读（AuthService.persist/signOut 同步维护，线程安全）——
+    /// AuthService 是 @MainActor，这里可能在任意 executor 上被调，不能直接引用其隔离属性。
     private func attachAuth(_ request: inout URLRequest) {
-        let token = AuthService.shared.token
+        let token = UserDefaults.standard.string(forKey: "authToken")
         if let token = token, !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }

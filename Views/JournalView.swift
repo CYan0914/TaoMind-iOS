@@ -14,6 +14,18 @@ struct JournalView: View {
 
     private let api = APIClient()
 
+    /// 免费版剩余可存条数（0 = 已满；历史条目可能超 20，clamp 到 0）
+    private var journalSlotsLeft: Int {
+        max(SeekWisdomView.freeJournalLimit - entries.count, 0)
+    }
+
+    private var bannerText: String {
+        if journalSlotsLeft == 0 {
+            return AppState.tr("journal_full_now")
+        }
+        return String(format: AppState.tr("journal_slots_left_fmt"), journalSlotsLeft, SeekWisdomView.freeJournalLimit)
+    }
+
     var body: some View {
         Group {
             if isLoading {
@@ -62,15 +74,15 @@ struct JournalView: View {
                 .padding()
             } else {
                 List {
-                    // Free tier: journal limit banner
+                    // Free tier: journal limit banner（动态剩余额度——越接近上限越有紧迫感）
                     if !subscriptionManager.isPro {
                         Section {
                             Button(action: { subscriptionManager.openPaywall(.journalFull) }) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: "lock.fill")
+                                    Image(systemName: journalSlotsLeft == 0 ? "exclamationmark.triangle.fill" : "lock.fill")
                                         .font(.caption)
                                         .foregroundColor(.orange)
-                                    Text(String(format: AppState.tr("free_journal_limit_fmt"), SeekWisdomView.freeJournalLimit))
+                                    Text(bannerText)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                         .multilineTextAlignment(.leading)

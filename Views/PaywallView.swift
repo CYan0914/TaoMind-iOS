@@ -210,6 +210,7 @@ struct PaywallView: View {
                     dismiss()
                     return
                 }
+                Analytics.paywallView(context: context)
                 await subscriptionManager.fetchOfferings()
                 // 默认选中年档（价格锚点：把用户的起点放在最划算的选项上）；
                 // 年档不存在（RC 后台配置异常）才退回第一顺位。
@@ -291,6 +292,7 @@ private extension PaywallContext {
         case .masterFollowup: return "bubble.left.and.text.bubble.right"
         case .journalExport: return "square.and.arrow.up"
         case .styleTuning: return "paintbrush"
+        case .seekResult: return "crown"
         }
     }
 }

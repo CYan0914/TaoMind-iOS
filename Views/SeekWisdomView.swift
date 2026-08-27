@@ -211,6 +211,35 @@ struct SeekWisdomView: View {
                 if let result = result {
                     WisdomResultView(result: result, question: question, scenarioType: selectedScenario)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
+
+                    // Pro 横幅（心流转化位：用户刚收到一次完整的智慧回应，价值感最高的一刻）
+                    if !subscriptionManager.isPro {
+                        Button(action: { subscriptionManager.openPaywall(.seekResult) }) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "crown.fill")
+                                    .font(.subheadline)
+                                    .foregroundColor(Color(red: 0.72, green: 0.45, blue: 0.20))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(AppState.tr("seek_banner_title"))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                    Text(AppState.tr("seek_banner_sub"))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(14)
+                            .background(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.08))
+                            .cornerRadius(12)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
             .padding()
@@ -316,6 +345,7 @@ struct SeekWisdomView: View {
                     result = response
                     isSeeking = false
                     appState.incrementDailyUsage()
+                    Analytics.track("seek_completed", ["pro": subscriptionManager.isPro ? "1" : "0"])
 
                     // Auto-save to journal
                     saveToJournal(response: response)

@@ -16,6 +16,7 @@ enum PaywallContext {
     case masterFollowup     // 名师追问（Pro）
     case journalExport      // 导出日志（Pro）
     case styleTuning        // 回复风格调节（Pro）
+    case seekResult         // 求取智慧结果页（心流转化位）
 
     var headlineKey: String {
         switch self {
@@ -29,6 +30,7 @@ enum PaywallContext {
         case .masterFollowup: return "pw_ctx_master_followup"
         case .journalExport: return "pw_ctx_journal_export"
         case .styleTuning: return "pw_ctx_style_tuning"
+        case .seekResult: return "pw_ctx_seek_result"
         }
     }
 }
@@ -133,13 +135,18 @@ final class SubscriptionManager: NSObject, ObservableObject {
     func purchase(_ package: Package) async -> Bool {
         isLoading = true
         defer { isLoading = false }
+        Analytics.purchaseStart(packageID: package.identifier)
         do {
             let result = try await Purchases.shared.purchase(package: package)
             isPro = result.customerInfo.entitlements["pro"]?.isActive == true
-            if isPro { showingPaywall = false }
+            if isPro {
+                Analytics.purchaseSuccess(packageID: package.identifier)
+                showingPaywall = false
+            }
             Task { await syncEntitlementToBackend() }
             return isPro
         } catch {
+            Analytics.purchaseFail(packageID: package.identifier)
             print("[RevenueCat] Purchase failed: \(error)")
             return false
         }
@@ -153,6 +160,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
             isPro = customerInfo.entitlements["pro"]?.isActive == true
+            Analytics.track(isPro ? "restore_success" : "restore_empty")
             Task { await syncEntitlementToBackend() }
             return isPro
         } catch {

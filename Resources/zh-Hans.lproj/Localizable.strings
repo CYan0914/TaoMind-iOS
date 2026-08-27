@@ -196,7 +196,12 @@
 "pw_ctx_master_followup" = "与名师继续深谈你的感悟";
 "pw_ctx_journal_export" = "把修行日志导出为文本";
 "pw_ctx_style_tuning" = "调节智者的回复风格";
+"pw_ctx_seek_result" = "你刚完成一次完整的求取——让修行继续下去";
 "share_card_download_hint" = "扫码下载 TaoMind";
+"seek_banner_title" = "解锁完整修行";
+"seek_banner_sub" = "无限求取 · 名师指点 · 完整经藏";
+"journal_slots_left_fmt" = "免费版日志还可保存 %d / %d 条，升级解锁无限。";
+"journal_full_now" = "日志已存满——升级后可继续保存。";
 
 /* ===== 价格锚点 ===== */
 "pw_monthly_equiv_fmt" = "%@/月";

@@ -146,6 +146,7 @@ struct CommemorativeCardUnlockView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 0.98, green: 0.97, blue: 0.95))
         .onAppear {
+            Analytics.cardUnlocked(number: card.number)
             withAnimation(.spring(response: 0.55, dampingFraction: 0.75).delay(0.15)) {
                 revealed = true
             }
@@ -220,6 +221,7 @@ struct CardCollectionView: View {
             .sheet(item: $previewCard) { card in
                 CardDetailSheet(card: card, isChinese: isChinese)
             }
+            .onAppear { Analytics.collectionOpened() }
         }
     }
 
