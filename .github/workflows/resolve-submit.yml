@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   fix:
-    name: Copy screenshots to zh-Hans & submit 1.4.0(32)
+    name: Dedupe zh-Hans screenshots & submit 1.4.0(32)
     runs-on: ubuntu-latest
     env:
       APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -20,10 +20,10 @@ jobs:
           printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           python3 -m pip install --quiet cryptography
 
-      - name: Fix zh-Hans screenshots + submit
+      - name: Dedupe + submit
         run: |
           python3 - <<'EOF'
-          import base64, hashlib, json, os, sys, time, urllib.request, urllib.error
+          import base64, json, os, sys, time, urllib.request, urllib.error
 
           key_id = os.environ["APPSTORE_KEY_ID"]
           issuer = os.environ["APPSTORE_ISSUER_ID"]
@@ -46,7 +46,7 @@ jobs:
           sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
           token = f"{h}.{p}.{b64(sig)}"
 
-          def api(method, path, body=None, raw=False):
+          def api(method, path, body=None):
               url = "https://api.appstoreconnect.apple.com/v1" + path
               data = json.dumps(body).encode() if body else None
               for attempt in range(4):
@@ -54,110 +54,45 @@ jobs:
                       headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                   try:
                       with urllib.request.urlopen(req, timeout=60) as resp:
-                          payload_bytes = resp.read()
-                          return json.loads(payload_bytes) if not raw else payload_bytes
+                          return json.load(resp)
                   except urllib.error.HTTPError as e:
                       err = e.read().decode()
-                      print(f"  API {method} {path} -> {e.code}: {err[:500]}")
+                      print(f"  API {method} {path} -> {e.code}: {err[:400]}")
                       if e.code in (404, 409, 400):
                           raise
                       time.sleep(8)
               raise RuntimeError(f"API failed: {path}")
-
-          def dl(url):
-              req = urllib.request.Request(url)
-              with urllib.request.urlopen(req, timeout=120) as resp:
-                  return resp.read()
 
           VER_ID = "cc9212ed-75d3-4abb-8ed7-f60c17bc28cf"  # 1.4.0
           APP_ID = "6792008756"
 
           locs = api("GET", f"/appStoreVersions/{VER_ID}/appStoreVersionLocalizations")["data"]
           loc = {l["attributes"]["locale"]: l["id"] for l in locs}
-          print("locales:", list(loc))
-          en_id, zh_id = loc["en-US"], loc["zh-Hans"]
+          zh_id = loc["zh-Hans"]
 
-          # ---- 1) en-US 已有截图（全集复制）----
-          en_sets = api("GET", f"/appStoreVersionLocalizations/{en_id}/appScreenshotSets")["data"]
+          # ---- 1) zh-Hans 截图按 fileName 去重（保留首张，删多余）----
           zh_sets = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
-          zh_by_type = {s["attributes"].get("screenshotDisplayType"): s["id"] for s in zh_sets}
-
-          for es in en_sets:
-              dtype = es["attributes"].get("screenshotDisplayType")
-              shots = api("GET", f"/appScreenshotSets/{es['id']}/appScreenshots")["data"]
-              print(f"en set {dtype or es['attributes']}: {len(shots)} shots")
-              if not shots:
-                  continue
-
-              # zh-Hans 对应 displayType 的 set，没有则创建
-              zs_id = zh_by_type.get(dtype)
-              if not zs_id:
-                  created = api("POST", "/appScreenshotSets", {"data": {
-                      "type": "appScreenshotSets",
-                      "attributes": {"screenshotDisplayType": dtype},
-                      "relationships": {"appStoreVersionLocalization": {
-                          "data": {"type": "appStoreVersionLocalizations", "id": zh_id}}},
-                  }})
-                  zs_id = created["data"]["id"]
-                  print(f"  created zh set {dtype}: {zs_id}")
-
-              # 逐张下载 -> 上传 -> commit（下载 URL 在内联 imageAsset 对象里）
-              def find_urls(obj, path=""):
-                  out = []
-                  if isinstance(obj, dict):
-                      for k, v in obj.items():
-                          out += find_urls(v, f"{path}.{k}")
-                  elif isinstance(obj, str) and obj.startswith("http"):
-                      out.append((path, obj))
-                  return out
-
-              first = shots[0]
-              print("  sample shot attrs:", json.dumps({k: v for k, v in first["attributes"].items()
-                    if k not in ("uploadOperations",)}, default=str)[:800])
-
+          for s in zh_sets:
+              dtype = s["attributes"].get("screenshotDisplayType")
+              shots = api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"]
+              print(f"zh set {dtype}: {len(shots)} shots")
+              seen = set()
               for shot in shots:
-                  sa = shot["attributes"]
-                  ia = sa.get("imageAsset") or {}
-                  tpl = ia.get("templateUrl")
-                  url = (tpl.replace("{w}", str(ia.get("width", 0)))
-                            .replace("{h}", str(ia.get("height", 0)))
-                            .replace("{f}", "png")) if tpl else None
-                  fname = sa.get("fileName") or "shot.png"
-                  if not url:
-                      print(f"  !! no download url for {shot['id']}, keys={list(sa)}")
-                      continue
-                  blob = dl(url)
-                  print(f"  copied {fname} ({len(blob)} bytes)")
-                  new_shot = api("POST", "/appScreenshots", {"data": {
-                      "type": "appScreenshots",
-                      "attributes": {"fileName": fname, "fileSize": len(blob)},
-                      "relationships": {"appScreenshotSet": {
-                          "data": {"type": "appScreenshotSets", "id": zs_id}}},
-                  }})
-                  sid = new_shot["data"]["id"]
-                  for op in new_shot["data"]["attributes"]["uploadOperations"]:
-                      req = urllib.request.Request(op["url"], data=blob[op["offset"]:op["offset"]+op["length"]],
-                          method=op.get("method", "PUT"))
-                      with urllib.request.urlopen(req, timeout=120):
-                          pass
-                  api("PATCH", f"/appScreenshots/{sid}", {"data": {
-                      "type": "appScreenshots", "id": sid,
-                      "attributes": {
-                          "uploaded": True,
-                          "sourceFileChecksum": hashlib.md5(blob).hexdigest(),
-                      },
-                  }})
-                  print(f"  committed {fname} -> zh-Hans")
-              time.sleep(2)
+                  fn = shot["attributes"].get("fileName")
+                  if fn in seen:
+                      api("DELETE", f"/appScreenshots/{shot['id']}")
+                      print(f"  deleted dup {fn}")
+                  else:
+                      seen.add(fn)
+              print(f"  kept {len(seen)} unique")
 
-          # ---- 2) 确认 zh-Hans 截图就位 ----
-          zh_sets2 = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
-          for s in zh_sets2:
+          # 复核
+          zh_sets = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
+          for s in zh_sets:
               n = len(api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"])
-              print(f"zh set {s['attributes'].get('screenshotDisplayType')}: {n} shots")
+              print(f"final zh {s['attributes'].get('screenshotDisplayType')}: {n}")
 
-          # ---- 3) 提交审核（无活跃 submission 则新建）----
-          time.sleep(5)
+          # ---- 2) submission：有活跃的复用，没有新建 ----
           subs = api("GET", f"/reviewSubmissions?filter[app]={APP_ID}&filter[platform]=IOS")["data"]
           for s in subs:
               print("submission:", s["id"], "state:", s["attributes"].get("state"))
@@ -165,7 +100,7 @@ jobs:
                         ("UNRESOLVED_ISSUES", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW")), None)
           if target:
               sub_id = target["id"]
-              print("reusing submission:", sub_id)
+              print("reusing:", sub_id)
           else:
               created = api("POST", "/reviewSubmissions", {"data": {
                   "type": "reviewSubmissions",
@@ -175,7 +110,7 @@ jobs:
               sub_id = created["data"]["id"]
               print("created submission:", sub_id, "state:", created["data"]["attributes"].get("state"))
 
-          # item：清理无效 item，确保有一个指向 1.4.0 的版本 item
+          # ---- 3) item：清无效，保一个指向 1.4.0 ----
           items = api("GET", f"/reviewSubmissions/{sub_id}/items")["data"]
           for it in items:
               st = it["attributes"].get("state")
@@ -203,7 +138,7 @@ jobs:
               }})
               print("new item created:", created["data"]["id"], "state:", created["data"]["attributes"].get("state"))
 
-          # 提交（状态传播滞后时 409，可重跑本 workflow）
+          # ---- 4) 提交 ----
           time.sleep(5)
           try:
               final = api("PATCH", f"/reviewSubmissions/{sub_id}", {"data": {
