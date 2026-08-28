@@ -45,6 +45,7 @@ targets:
     sources:
       - path: TaoMindApp.swift
       - path: ContentView.swift
+      - path: DesignSystem.swift
       - path: Models
       - path: Services
       - path: Views
