@@ -101,10 +101,14 @@ jobs:
                   zs_id = created["data"]["id"]
                   print(f"  created zh set {dtype}: {zs_id}")
 
-              # 逐张下载 -> 上传 -> commit
+              # 逐张下载 -> 上传 -> commit（下载 URL 在 imageAsset 关系资源里）
+              inc = api("GET", f"/appScreenshotSets/{es['id']}/appScreenshots?include=imageAsset").get("included", [])
+              img_map = {i["id"]: i["attributes"].get("assetDownloadUrl")
+                         for i in inc if i["type"] == "imageAssets"}
               for shot in shots:
                   sa = shot["attributes"]
-                  url = (sa.get("assetDeliveryState") or {}).get("assetDownloadUrl") or sa.get("fileUrl")
+                  ia_rel = (shot.get("relationships", {}).get("imageAsset", {}) or {}).get("data") or {}
+                  url = img_map.get(ia_rel.get("id"))
                   fname = sa.get("fileName") or "shot.png"
                   if not url:
                       print(f"  !! no download url for {shot['id']}, keys={list(sa)}")
