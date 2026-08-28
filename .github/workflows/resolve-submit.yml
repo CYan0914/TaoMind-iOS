@@ -144,7 +144,7 @@ jobs:
                       "type": "appScreenshots", "id": sid,
                       "attributes": {
                           "uploaded": True,
-                          "sourceFileSha256": hashlib.sha256(blob).hexdigest(),
+                          "sourceFileChecksum": hashlib.md5(blob).hexdigest(),
                       },
                   }})
                   print(f"  committed {fname} -> zh-Hans")
