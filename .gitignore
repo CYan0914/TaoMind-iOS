@@ -21,3 +21,6 @@ Thumbs.db
 
 # xcodegen generated
 *.xcodeproj
+
+# Card art source images (kept locally, only compressed imagesets ship)
+Card/
