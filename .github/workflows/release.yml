@@ -67,29 +67,38 @@ jobs:
 
           BUNDLE = "com.cyan0914.taomind"
           VERSION = "1.4.0"
-          BUILD = "30"
+          BUILD = "31"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
           WHATS_NEW_EN = (
+              "**Digital Xuan Paper — A New Visual Identity**\n"
+              "TaoMind is now designed as digital xuan paper: a rice-paper ground "
+              "with subtle fiber texture, serif titles in Songti style, and a "
+              "cinnabar seal you press to seek the sage.\n\n"
+              "**7-Day Free Trial**\n"
+              "Yearly plans now start with a 7-day free trial — cancel anytime.\n\n"
               "**Commemorative Card Collection**\n"
               "Every day you check in unlocks a new card — 81 ink-wash cards in all, "
               "one for each chapter of the Tao Te Ching. View your collection, revisit "
               "each chapter's wisdom, and share a card with its quote and QR code.\n\n"
               "**A Clearer Upgrade Page**\n"
               "Plans are now sorted best-value first, with per-month pricing, savings, "
-              "and a Best Value badge so you can choose at a glance.\n\n"
-              "This update also includes minor refinements throughout the app."
+              "and a Best Value badge so you can choose at a glance."
           )
           WHATS_NEW_ZH = (
+              "**数字宣纸 · 全新视觉**\n"
+              "TaoMind 以数字宣纸重新设计：宣纸底色与纤维纹理、宋体标题，"
+              "按下朱砂印章，即可求取智慧。\n\n"
+              "**7 天免费试用**\n"
+              "年订阅现支持 7 天免费试用，到期前随时取消。\n\n"
               "**修行纪念卡**\n"
               "每天打卡解锁一张新卡——全套 81 张水墨卡，对应《道德经》81 章。"
               "可随时翻阅你的收藏、回看每章智慧，还能把卡片连同引文与二维码分享给朋友。\n\n"
               "**更清晰的订阅页**\n"
-              "套餐按性价比排序，展示月均折算、节省比例与“超值之选”标识，一眼选对。\n\n"
-              "本次更新还包含若干细节优化。"
+              "套餐按性价比排序，展示月均折算、节省比例与“荐”标识，一眼选对。"
           )
 
           # 1) Find app
