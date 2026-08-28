@@ -28,17 +28,24 @@ final class ReferralService: NSObject, ObservableObject {
     // MARK: - Load
 
     /// 拉取自己当前的邀请码 + 概况。登录后调用。
+    /// 错误不再静默：写到 lastError 让 ReferralView 看到。后端 404 时 myCode 保持 nil，
+    /// UI 显示 "••••••••" + 分享按钮置灰 + 顶部提示文案。
     func refresh() async {
-        guard let token = AuthService.shared.token, !token.isEmpty else { return }
+        guard let token = AuthService.shared.token, !token.isEmpty else {
+            self.lastError = "Sign in to get your invite code"
+            return
+        }
         do {
             let code = try await api.getMyReferralCode(authToken: token)
             self.myCode = code.code
             self.shareURL = code.shareURL
+            self.lastError = nil
             let st = try await api.getReferralStatus(authToken: token)
             self.inviteCount = st.inviteCount
             self.totalGrantedDays = st.totalGrantedDays
         } catch {
-            // 静默失败：不影响主流程；UI 暂保持上次值
+            let msg = (error as? APIError)?.errorDescription ?? error.localizedDescription
+            self.lastError = "Couldn't load invite code: \(msg)"
         }
     }
 

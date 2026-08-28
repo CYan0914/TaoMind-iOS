@@ -8,9 +8,12 @@ struct SettingsView: View {
     @State private var showReferral = false
 
     var body: some View {
-        // build 34: List 默认 systemBackground（白）与全站宣纸色不一致；
-        // scrollContentBackground(.hidden) 把默认白底抹掉，外层 background 再铺 DS.paper。
-        List {
+        // build 34 v2: List 默认 systemBackground（白）与全站宣纸色不一致。
+        // v1 用了 .scrollContentBackground(.hidden) + .background(DS.paper) 在 iOS 16
+        // 上对某些 insetGrouped List 不生效；v2 改用 ZStack 铺底，List 半透明覆盖其上。
+        ZStack {
+            DS.paper.ignoresSafeArea()
+            List {
             // MARK: - Subscription Section
             Section {
                 VStack(spacing: 12) {
@@ -160,15 +163,13 @@ struct SettingsView: View {
                 }
                 .padding(.top, 8)
             }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
         }
-        // build 34: 整个 List 默认 systemBackground（白）与全站宣纸色不一致；
-        // scrollContentBackground(.hidden) 抹掉默认白底，外层 background 再铺 DS.paper。
-        .scrollContentBackground(.hidden)
-        .background(DS.paper.ignoresSafeArea())
         .sheet(isPresented: $showReferral) {
             ReferralView()
         }
-        .listStyle(.insetGrouped)
         .navigationTitle("Settings")
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
             PaywallView(context: subscriptionManager.paywallContext)
