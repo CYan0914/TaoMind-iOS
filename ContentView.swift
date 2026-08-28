@@ -50,7 +50,7 @@ struct ContentView: View {
             }
             .tag(4)
         }
-        .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
+        .tint(DS.bronze)
         .onAppear {
             // 首启 onboarding（3 屏，仅一次）
             if !appState.hasSeenOnboarding {

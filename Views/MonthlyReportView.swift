@@ -35,7 +35,7 @@ struct MonthlyReportView: View {
                     } else if let report {
                         Text(report)
                             .font(.custom("Georgia", size: 16, relativeTo: .body))
-                            .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+                            .foregroundColor(DS.inkSoft)
                             .lineSpacing(7)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -44,7 +44,7 @@ struct MonthlyReportView: View {
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                .background(DS.ink)
                                 .foregroundColor(.white)
                                 .cornerRadius(14)
                         }
@@ -53,7 +53,7 @@ struct MonthlyReportView: View {
                 }
                 .padding()
             }
-            .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+            .paperBackground()
             .navigationTitle("\(monthLabel) · \(AppState.tr("monthly_report"))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

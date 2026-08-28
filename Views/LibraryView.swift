@@ -35,9 +35,9 @@ struct LibraryView: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
-                        .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .background(DS.ink)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(DS.Radius.small)
                     }
                     .padding()
                 } else {
@@ -80,7 +80,7 @@ struct LibraryView: View {
                     Text(entry.chapter)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text(entry.verse_text)
                         .font(.caption)
                         .foregroundColor(.secondary)

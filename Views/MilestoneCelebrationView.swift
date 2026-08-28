@@ -54,7 +54,7 @@ struct MilestoneCelebrationView: View {
             Text("\(milestone.days)")
                 .font(.custom("Georgia", size: 54, relativeTo: .largeTitle))
                 .fontWeight(.bold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
 
             Text(String(format: AppState.tr("streak_days_fmt"), milestone.days))
                 .font(.subheadline)
@@ -63,12 +63,12 @@ struct MilestoneCelebrationView: View {
             Text(isChinese ? milestone.titleZh : milestone.titleEn)
                 .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .fontWeight(.semibold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
 
             Text("“\(isChinese ? milestone.quoteZh : milestone.quoteEn)”")
                 .font(.custom("Georgia", size: 16, relativeTo: .body))
                 .italic()
-                .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+                .foregroundColor(DS.inkSoft)
                 .multilineTextAlignment(.center)
                 .lineSpacing(6)
                 .padding(.horizontal, 28)
@@ -78,7 +78,7 @@ struct MilestoneCelebrationView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .background(DS.ink)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }

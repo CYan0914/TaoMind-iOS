@@ -15,39 +15,39 @@ struct WisdomResultView: View {
         VStack(spacing: 24) {
             // Divider
             HStack {
-                VStack { Divider().frame(height: 1).background(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.3)) }
+                VStack { Divider().frame(height: 1).background(DS.bronze.opacity(0.3)) }
                 Text("The Sage Speaks")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
                     .textCase(.uppercase)
-                VStack { Divider().frame(height: 1).background(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.3)) }
+                VStack { Divider().frame(height: 1).background(DS.bronze.opacity(0.3)) }
             }
 
             // Passage
             WisdomSection(
-                icon: "📜",
+                icon: "经",
                 title: AppState.tr("The Passage"),
                 content: result.passage
             )
 
             // Wisdom
             WisdomSection(
-                icon: "🌿",
+                icon: "释",
                 title: AppState.tr("The Wisdom"),
                 content: result.wisdom
             )
 
             // Reflection
             WisdomSection(
-                icon: "🪞",
+                icon: "思",
                 title: AppState.tr("The Reflection"),
                 content: result.reflection
             )
 
             // Way Forward
             WisdomSection(
-                icon: "💧",
+                icon: "行",
                 title: AppState.tr("The Way Forward"),
                 content: result.way_forward
             )
@@ -60,8 +60,8 @@ struct WisdomResultView: View {
                         .font(.subheadline)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .background(DS.ink.opacity(0.045))
+                        .cornerRadius(DS.Radius.small)
                 }
 
                 // Copy
@@ -70,18 +70,24 @@ struct WisdomResultView: View {
                         .font(.subheadline)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .background(DS.ink.opacity(0.045))
+                        .cornerRadius(DS.Radius.small)
                 }
 
                 // Favorite
                 Button(action: { withAnimation { isFavorite.toggle() } }) {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
                         .font(.system(size: 18))
-                        .foregroundColor(isFavorite ? .red : .secondary)
+                        .foregroundColor(isFavorite ? DS.cinnabar : DS.inkFaint)
                         .frame(width: 44, height: 44)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: DS.Radius.small)
+                                .fill(DS.ink.opacity(0.045))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.small)
+                                .stroke(DS.bronze.opacity(0.25), lineWidth: 1)
+                        )
                 }
             }
             .padding(.top, 8)
@@ -136,26 +142,33 @@ struct WisdomSection: View {
     let content: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Text(icon)
-                    .font(.title3)
-                Text(title)
-                    .font(.custom("Georgia", size: 16, relativeTo: .headline))
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
-            }
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Rectangle()
+                        .fill(DS.cinnabar)
+                        .frame(width: 3, height: 14)
+                    Text(title)
+                        .font(DS.title(16))
+                        .foregroundColor(DS.ink)
+                }
 
-            Text(content)
-                .font(.custom("Georgia", size: 15, relativeTo: .body))
-                .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
-                .lineSpacing(6)
-                .multilineTextAlignment(.leading)
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white.opacity(0.7))
-                .cornerRadius(12)
+                Text(content)
+                    .font(DS.verse(15, relativeTo: .body))
+                    .foregroundColor(DS.inkSoft)
+                    .lineSpacing(6)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.trailing, 26)
+            }
+            // 竖排题字侧注（经/释/思/行）
+            Text(icon)
+                .font(DS.display(22, weight: .black, relativeTo: .title3))
+                .foregroundColor(DS.cinnabar.opacity(0.5))
+                .padding(.top, 2)
+                .padding(.trailing, 2)
         }
+        .paperCard()
     }
 }
 

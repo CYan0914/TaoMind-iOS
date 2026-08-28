@@ -32,7 +32,7 @@ struct BackfillView: View {
 
                 Label(formattedDate, systemImage: "calendar")
                     .font(.headline)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(DS.ink)
 
                 ZStack(alignment: .topLeading) {
                     if reflection.isEmpty {
@@ -46,14 +46,14 @@ struct BackfillView: View {
                         .frame(minHeight: 140)
                         .padding(8)
                         .scrollContentBackground(.hidden)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .background(DS.ink.opacity(0.045))
+                        .cornerRadius(DS.Radius.card)
                 }
 
                 if let err = errorMessage {
                     Text(err)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(DS.cinnabar)
                 }
 
                 Spacer()
@@ -74,7 +74,7 @@ struct BackfillView: View {
                     .padding(.vertical, 15)
                     .background(reflection.trimmingCharacters(in: .whitespaces).isEmpty
                                 ? Color.gray.opacity(0.3)
-                                : Color(red: 0.17, green: 0.14, blue: 0.09))
+                                : DS.ink)
                     .foregroundColor(reflection.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .white)
                     .cornerRadius(14)
                 }

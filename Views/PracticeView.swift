@@ -90,7 +90,7 @@ struct PracticeView: View {
                 Text("Daily Practice")
                     .font(.custom("Georgia", size: 24, relativeTo: .title2))
                     .fontWeight(.semibold)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(DS.ink)
                 Text("Read today's verse, reflect, and keep your streak. Sign in to sync across devices.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -120,7 +120,7 @@ struct PracticeView: View {
                 if let err = authService.authError {
                     Text(err)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(DS.cinnabar)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
@@ -200,7 +200,7 @@ struct PracticeView: View {
                 Text("\(status?.streak.currentStreak ?? 0)")
                     .font(.custom("Georgia", size: 32, relativeTo: .largeTitle))
                     .fontWeight(.bold)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(DS.ink)
                 Text(AppState.tr("streak_days"))
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -239,7 +239,7 @@ struct PracticeView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 12)
-        .background(Color.white.opacity(0.6))
+        .background(DS.paperHi)
         .cornerRadius(14)
     }
 
@@ -254,7 +254,7 @@ struct PracticeView: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray6))
+                        .background(DS.ink.opacity(0.045))
                         .cornerRadius(20)
                 }
             }
@@ -264,7 +264,7 @@ struct PracticeView: View {
                     .fontWeight(.semibold)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(Color(.systemGray6))
+                    .background(DS.ink.opacity(0.045))
                     .cornerRadius(20)
             }
         }
@@ -280,12 +280,12 @@ struct PracticeView: View {
             HStack(spacing: 12) {
                 Image(systemName: "square.grid.2x2.fill")
                     .font(.title3)
-                    .foregroundColor(Color(red: 0.72, green: 0.45, blue: 0.20))
+                    .foregroundColor(DS.cinnabar)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(AppState.tr("card_collection"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text(AppState.tr("card_collection_progress_fmt", unlocked, CommemorativeCardSeries.total))
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -296,7 +296,7 @@ struct PracticeView: View {
                     .foregroundColor(.secondary.opacity(0.5))
             }
             .padding(14)
-            .background(Color.white.opacity(0.6))
+            .background(DS.paperHi)
             .cornerRadius(14)
         }
         .buttonStyle(.plain)
@@ -371,12 +371,12 @@ struct PracticeView: View {
             HStack(spacing: 12) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.title3)
-                    .foregroundColor(Color(red: 0.4, green: 0.3, blue: 0.18))
+                    .foregroundColor(DS.bronze)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(AppState.tr("monthly_report"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text(subscriptionManager.isPro
                          ? AppState.tr("monthly_report_hint")
                          : AppState.tr("monthly_report_locked"))
@@ -396,7 +396,7 @@ struct PracticeView: View {
                 }
             }
             .padding(14)
-            .background(Color.white.opacity(0.6))
+            .background(DS.paperHi)
             .cornerRadius(14)
         }
     }
@@ -430,9 +430,9 @@ struct PracticeView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
-            .background(selected ? Color(red: 0.17, green: 0.14, blue: 0.09) : Color(.systemGray6))
+            .background(selected ? DS.ink : DS.ink.opacity(0.045))
             .foregroundColor(selected ? .white : .primary)
-            .cornerRadius(12)
+            .cornerRadius(DS.Radius.card)
         }
     }
 
@@ -462,8 +462,8 @@ struct PracticeView: View {
                     .frame(minHeight: 110)
                     .padding(8)
                     .scrollContentBackground(.hidden)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    .background(DS.ink.opacity(0.045))
+                    .cornerRadius(DS.Radius.card)
             }
         }
     }
@@ -485,7 +485,7 @@ struct PracticeView: View {
             .padding(.vertical, 15)
             .background(reflection.trimmingCharacters(in: .whitespaces).isEmpty
                         ? Color.gray.opacity(0.3)
-                        : Color(red: 0.17, green: 0.14, blue: 0.09))
+                        : DS.ink)
             .foregroundColor(reflection.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .white)
             .cornerRadius(14)
         }
@@ -512,11 +512,11 @@ struct PracticeView: View {
             }
             Text(today.reflection)
                 .font(.custom("Georgia", size: 15, relativeTo: .body))
-                .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+                .foregroundColor(DS.inkSoft)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white.opacity(0.7))
-                .cornerRadius(10)
+                .background(DS.paperHi)
+                .cornerRadius(DS.Radius.small)
         }
         .padding()
         .background(Color.green.opacity(0.06))
@@ -529,7 +529,7 @@ struct PracticeView: View {
             HStack {
                 Label(AppState.tr("master_guidance"), systemImage: "person.crop.circle.badge.questionmark")
                     .font(.headline)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(DS.ink)
                 Spacer()
                 if !subscriptionManager.isPro {
                     Image(systemName: "lock.fill")
@@ -573,12 +573,12 @@ struct PracticeView: View {
     private func masterBubble(_ text: String) -> some View {
         Text(text)
             .font(.custom("Georgia", size: 15, relativeTo: .body))
-            .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+            .foregroundColor(DS.inkSoft)
             .lineSpacing(6)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white.opacity(0.7))
-            .cornerRadius(10)
+            .background(DS.paperHi)
+            .cornerRadius(DS.Radius.small)
     }
 
     private func askMasterButton(title: String, showsTaste: Bool) -> some View {
@@ -596,9 +596,9 @@ struct PracticeView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
-            .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+            .background(DS.ink)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(DS.Radius.card)
         }
         .disabled(isAskingMaster)
     }
@@ -616,9 +616,9 @@ struct PracticeView: View {
                     .fontWeight(.semibold)
             }
             .padding(14)
-            .background(Color(.systemGray6))
+            .background(DS.ink.opacity(0.045))
             .foregroundColor(.secondary)
-            .cornerRadius(12)
+            .cornerRadius(DS.Radius.card)
         }
     }
 
@@ -652,8 +652,8 @@ struct PracticeView: View {
                         .lineLimit(1...4)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .background(DS.ink.opacity(0.045))
+                        .cornerRadius(DS.Radius.card)
                     Button(action: sendChat) {
                         if isSendingChat {
                             ProgressView()
@@ -666,7 +666,7 @@ struct PracticeView: View {
                                 .foregroundColor(
                                     chatInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                                         ? Color.gray.opacity(0.4)
-                                        : Color(red: 0.17, green: 0.14, blue: 0.09)
+                                        : DS.ink
                                 )
                         }
                     }
@@ -686,9 +686,9 @@ struct PracticeView: View {
                             .fontWeight(.semibold)
                     }
                     .padding(14)
-                    .background(Color(.systemGray6))
+                    .background(DS.ink.opacity(0.045))
                     .foregroundColor(.secondary)
-                    .cornerRadius(12)
+                    .cornerRadius(DS.Radius.card)
                 }
             }
         }
@@ -700,10 +700,10 @@ struct PracticeView: View {
             if isUser { Spacer(minLength: 48) }
             Text(msg.content)
                 .font(.custom("Georgia", size: 15, relativeTo: .body))
-                .foregroundColor(isUser ? .white : Color(red: 0.25, green: 0.22, blue: 0.16))
+                .foregroundColor(isUser ? .white : DS.inkSoft)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(isUser ? Color(red: 0.17, green: 0.14, blue: 0.09) : Color.white.opacity(0.7))
+                .background(isUser ? DS.ink : DS.paperHi)
                 .cornerRadius(14)
             if !isUser { Spacer(minLength: 48) }
         }
@@ -729,7 +729,7 @@ struct PracticeView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(AppState.tr("recent_practice"))
                 .font(.headline)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
 
             ForEach(Array(checkins.prefix(7))) { checkin in
                 HStack(spacing: 10) {
@@ -768,7 +768,7 @@ struct PracticeView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.08))
-        .cornerRadius(12)
+        .cornerRadius(DS.Radius.card)
         .padding(.horizontal)
     }
 

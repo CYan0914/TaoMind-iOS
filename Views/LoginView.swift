@@ -16,7 +16,7 @@ struct LoginView: View {
             Text("Sign in to Practice")
                 .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .fontWeight(.semibold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
             Text("Your daily practice and streaks sync across devices.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -52,7 +52,7 @@ struct LoginView: View {
             if let err = authService.authError {
                 Text(err)
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(DS.cinnabar)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }

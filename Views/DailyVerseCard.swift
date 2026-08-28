@@ -7,26 +7,18 @@ struct DailyVerseCard: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "sun.max")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Text("Daily Verse")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                    .textCase(.uppercase)
-            }
+            Text(AppState.tr("daily_verse_eyebrow"))
+                .eyebrowStyle()
 
             Text(verse.verse_text)
-                .font(.custom("Georgia", size: 16, relativeTo: .body))
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .font(DS.verse(16, relativeTo: .body))
+                .foregroundColor(DS.ink)
                 .lineSpacing(6)
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 4) {
                 Text("—")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DS.inkFaint)
                 Text(verse.source)
                     .fontWeight(.semibold)
                 if !verse.chapter.isEmpty {
@@ -34,26 +26,21 @@ struct DailyVerseCard: View {
                 }
             }
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DS.inkSoft)
 
             Text(verse.reflection)
-                .font(.custom("Georgia", size: 14, relativeTo: .footnote))
-                .foregroundColor(Color(red: 0.4, green: 0.35, blue: 0.25))
+                .font(DS.verse(14, relativeTo: .footnote))
+                .foregroundColor(DS.inkSoft)
                 .lineSpacing(4)
                 .multilineTextAlignment(.center)
                 .padding(12)
-                .background(Color(red: 0.95, green: 0.93, blue: 0.9))
-                .cornerRadius(10)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: DS.Radius.small)
+                        .fill(DS.ink.opacity(0.04))
+                )
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.15), lineWidth: 1)
-        )
+        .paperCard()
     }
 }

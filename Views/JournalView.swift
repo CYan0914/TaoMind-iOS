@@ -52,9 +52,9 @@ struct JournalView: View {
                     .fontWeight(.semibold)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
-                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .background(DS.ink)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(DS.Radius.small)
                 }
                 .padding()
             } else if entries.isEmpty {
@@ -65,7 +65,7 @@ struct JournalView: View {
                     Text("Your Journal is Empty")
                         .font(.custom("Georgia", size: 20, relativeTo: .title2))
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text("Every wisdom session is saved here.\nGo seek wisdom to fill your journal.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -90,7 +90,7 @@ struct JournalView: View {
                                     Text(AppState.tr("Upgrade"))
                                         .font(.caption)
                                         .fontWeight(.semibold)
-                                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                        .foregroundColor(DS.ink)
                                 }
                             }
                         }
@@ -204,7 +204,7 @@ struct JournalRow: View {
                 Text(entry.question)
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .foregroundColor(DS.ink)
                     .lineLimit(2)
 
                 Spacer()
@@ -212,7 +212,7 @@ struct JournalRow: View {
                 if entry.isFavorite {
                     Image(systemName: "heart.fill")
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(DS.cinnabar)
                 }
             }
 

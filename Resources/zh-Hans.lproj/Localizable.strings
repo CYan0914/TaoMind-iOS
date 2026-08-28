@@ -206,7 +206,7 @@
 /* ===== 价格锚点 ===== */
 "pw_monthly_equiv_fmt" = "%@/月";
 "pw_save_fmt" = "省 %d%%";
-"pw_best_value" = "超值之选";
+"pw_best_value" = "荐";
 
 /* ===== 修行纪念卡 ===== */
 "card_unlock_title" = "收藏到新纪念卡";
@@ -214,3 +214,13 @@
 "card_collection" = "修行纪念册";
 "card_collection_hint" = "每天打卡收藏一张，集齐《道德经》81 章";
 "card_collection_progress_fmt" = "已收藏 %d / %d 张";
+
+/* ===== 数字宣纸改版新增 ===== */
+"seek_eyebrow" = "求 · 观 · 思";
+"seal_seek_caption" = "按印 · 开始求取";
+"seal_seeking" = "推演中…";
+"daily_verse_eyebrow" = "每 日 经 文";
+
+/* ===== 付费墙夜底改版 ===== */
+"pw_eyebrow" = "入室弟子";
+"pw_trial_note" = "以免费试用开始——随时可取消";

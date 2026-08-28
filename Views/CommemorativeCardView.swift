@@ -26,8 +26,8 @@ struct CardFaceView: View {
 
                 // 底部渐隐衬底，保证任何艺术图上文字可读
                 LinearGradient(
-                    colors: [Color(red: 0.13, green: 0.11, blue: 0.08).opacity(0.0),
-                             Color(red: 0.13, green: 0.11, blue: 0.08).opacity(0.72)],
+                    colors: [DS.ink.opacity(0.0),
+                             DS.ink.opacity(0.72)],
                     startPoint: .top, endPoint: .bottom
                 )
                 .frame(height: compact ? 52 : 108)
@@ -38,7 +38,7 @@ struct CardFaceView: View {
         .clipShape(RoundedRectangle(cornerRadius: compact ? 10 : 18))
         .overlay(
             RoundedRectangle(cornerRadius: compact ? 10 : 18)
-                .stroke(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.35), lineWidth: 1)
+                .stroke(DS.bronze.opacity(0.35), lineWidth: 1)
         )
     }
 
@@ -50,11 +50,11 @@ struct CardFaceView: View {
         VStack(alignment: .leading, spacing: compact ? 2 : 5) {
             Text(chapterLabel)
                 .font(compact ? .system(size: 8, weight: .semibold) : .caption.weight(.semibold))
-                .foregroundColor(Color(red: 0.95, green: 0.90, blue: 0.80).opacity(0.85))
+                .foregroundColor(DS.paperHi.opacity(0.85))
             Text(card.title(isChinese: isChinese))
                 .font(compact ? .system(size: 9) : .custom("Georgia", size: 14, relativeTo: .footnote))
                 .italic(!isChinese)
-                .foregroundColor(Color(red: 0.97, green: 0.94, blue: 0.87))
+                .foregroundColor(DS.ink.opacity(0.04))
                 .lineLimit(compact ? 2 : 3)
                 .multilineTextAlignment(.leading)
         }
@@ -68,23 +68,23 @@ struct CardFaceView: View {
     private var fallbackArt: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.93, green: 0.89, blue: 0.82),
-                         Color(red: 0.88, green: 0.83, blue: 0.73)],
+                colors: [DS.ink.opacity(0.04),
+                         DS.ink.opacity(0.06)],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
 
             Text(String(card.number))
                 .font(.system(size: compact ? 44 : 88, weight: .light, design: .serif))
-                .foregroundColor(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.16))
+                .foregroundColor(DS.bronze.opacity(0.16))
 
             VStack {
                 HStack {
                     Spacer()
                     Text("☯")
                         .font(.system(size: compact ? 12 : 20))
-                        .foregroundColor(Color(red: 0.62, green: 0.18, blue: 0.13).opacity(0.8))
+                        .foregroundColor(DS.cinnabar.opacity(0.8))
                         .padding(compact ? 4 : 7)
-                        .background(Color(red: 0.95, green: 0.92, blue: 0.86).opacity(0.9))
+                        .background(DS.ink.opacity(0.04).opacity(0.9))
                         .cornerRadius(4)
                         .rotation3DEffect(.degrees(4), axis: (x: 0, y: 0, z: 1))
                         .padding(compact ? 7 : 14)
@@ -114,7 +114,7 @@ struct CommemorativeCardUnlockView: View {
             Text(AppState.tr("card_unlock_title"))
                 .font(.custom("Georgia", size: 20, relativeTo: .title3))
                 .fontWeight(.semibold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
                 .padding(.top, 24)
 
             CardFaceView(card: card, isChinese: isChinese)
@@ -132,7 +132,7 @@ struct CommemorativeCardUnlockView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .background(DS.ink)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }
@@ -144,7 +144,7 @@ struct CommemorativeCardUnlockView: View {
                 .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .paperBackground()
         .onAppear {
             Analytics.cardUnlocked(number: card.number)
             withAnimation(.spring(response: 0.55, dampingFraction: 0.75).delay(0.15)) {
@@ -183,9 +183,9 @@ struct CardCollectionView: View {
                         Text("\(unlocked) / \(CommemorativeCardSeries.total)")
                             .font(.custom("Georgia", size: 30, relativeTo: .title))
                             .fontWeight(.bold)
-                            .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                            .foregroundColor(DS.ink)
                         ProgressView(value: Double(unlocked), total: Double(CommemorativeCardSeries.total))
-                            .tint(Color(red: 0.72, green: 0.45, blue: 0.20))
+                            .tint(DS.cinnabar)
                             .padding(.horizontal, 48)
                         Text(AppState.tr("card_collection_hint"))
                             .font(.caption)
@@ -209,7 +209,7 @@ struct CardCollectionView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+            .paperBackground()
             .navigationTitle(AppState.tr("card_collection"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -228,7 +228,7 @@ struct CardCollectionView: View {
     private func lockedCell(number: Int) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.06))
+                .fill(DS.bronze.opacity(0.06))
             VStack(spacing: 6) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 15))
@@ -261,7 +261,7 @@ private struct CardDetailSheet: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .paperBackground()
         .presentationDetents([.medium])
     }
 }
@@ -292,7 +292,7 @@ private struct CommemorativeCardShareView: View {
                     Text(AppState.tr("share_card_subtitle"))
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text(AppState.tr("share_card_download_hint"))
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -303,11 +303,11 @@ private struct CommemorativeCardShareView: View {
         }
         .padding(24)
         .frame(width: 340)
-        .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .paperBackground()
         .cornerRadius(24)
         .overlay(
             RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.3), lineWidth: 1)
+                .stroke(DS.bronze.opacity(0.3), lineWidth: 1)
         )
     }
 }

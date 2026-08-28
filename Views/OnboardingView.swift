@@ -9,9 +9,9 @@ struct OnboardingView: View {
     @State private var page = 0
     @State private var selectedIntent: ScenarioType?
 
-    private let ink = Color(red: 0.17, green: 0.14, blue: 0.09)
-    private let paper = Color(red: 0.98, green: 0.97, blue: 0.95)
-    private let muted = Color(red: 0.25, green: 0.22, blue: 0.16)
+    private let ink = DS.ink
+    private let paper = DS.paper
+    private let muted = DS.inkSoft
 
     var body: some View {
         ZStack {
@@ -44,17 +44,22 @@ struct OnboardingView: View {
         VStack(spacing: 28) {
             Spacer()
 
-            Text("☯")
-                .font(.system(size: 64))
-
-            Text("TaoMind")
-                .font(.custom("Georgia", size: 40, relativeTo: .largeTitle))
-                .fontWeight(.semibold)
-                .foregroundColor(ink)
-
-            Text(AppState.tr("Ancient wisdom for today"))
-                .font(.title3)
-                .foregroundColor(muted)
+            ZStack {
+                // 竖排装饰题字（品牌元素：道法自然）
+                Text("道法自然")
+                    .font(DS.display(64, weight: .black, relativeTo: .largeTitle))
+                    .foregroundColor(DS.ink.opacity(0.07))
+                    .lineSpacing(10)
+                    .padding(.trailing, 18)
+                VStack(spacing: 10) {
+                    Text("TaoMind")
+                        .font(DS.display(42, weight: .black, relativeTo: .largeTitle))
+                        .foregroundColor(ink)
+                        .tracking(3)
+                    Text(AppState.tr("Ancient wisdom for today"))
+                        .eyebrowStyle()
+                }
+            }
 
             VStack(alignment: .leading, spacing: 18) {
                 valueRow(icon: "book", title: AppState.tr("A new verse every day"),
@@ -110,12 +115,11 @@ struct OnboardingView: View {
             Spacer()
 
             Image(systemName: "bell.badge")
-                .font(.system(size: 56))
-                .foregroundColor(ink)
+                .font(.system(size: 52, weight: .light))
+                .foregroundColor(DS.bronze)
 
             Text(AppState.tr("One verse, every morning"))
-                .font(.custom("Georgia", size: 28, relativeTo: .title2))
-                .fontWeight(.semibold)
+                .font(DS.display(28, weight: .bold, relativeTo: .title2))
                 .foregroundColor(ink)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -136,11 +140,12 @@ struct OnboardingView: View {
     private var pageIndicator: some View {
         HStack(spacing: 8) {
             ForEach(0..<3, id: \.self) { i in
-                Circle()
-                    .fill(i == page ? ink : ink.opacity(0.18))
-                    .frame(width: 8, height: 8)
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(i == page ? DS.cinnabar : DS.ink.opacity(0.15))
+                    .frame(width: i == page ? 18 : 6, height: 4)
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: page)
     }
 
     @ViewBuilder
@@ -175,14 +180,20 @@ struct OnboardingView: View {
 
     private func primaryButton(title: String, enabled: Bool = true,
                                action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
             Text(title)
                 .font(.headline)
-                .foregroundColor(.white)
+                .tracking(3)
+                .foregroundColor(enabled ? DS.paperHi : DS.inkFaint)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(enabled ? ink : ink.opacity(0.35))
-                .cornerRadius(14)
+                .background(
+                    RoundedRectangle(cornerRadius: DS.Radius.button)
+                        .fill(enabled ? DS.cinnabar : DS.ink.opacity(0.12))
+                )
         }
         .disabled(!enabled)
     }
@@ -215,22 +226,28 @@ struct OnboardingView: View {
             HStack(spacing: 14) {
                 Image(systemName: scenario.icon)
                     .font(.title3)
-                    .foregroundColor(isSelected ? .white : ink)
+                    .foregroundColor(isSelected ? DS.paperHi : DS.bronze)
                     .frame(width: 30)
                 Text(AppState.tr(scenario.rawValue))
                     .font(.body)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? .white : ink)
+                    .foregroundColor(isSelected ? DS.paperHi : ink)
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.white)
+                        .foregroundColor(DS.paperHi)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(isSelected ? ink : Color(red: 0.95, green: 0.93, blue: 0.88))
-            .cornerRadius(12)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.small)
+                    .fill(isSelected ? DS.ink : DS.paperHi)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.small)
+                    .stroke(isSelected ? Color.clear : DS.bronze.opacity(0.25), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
     }

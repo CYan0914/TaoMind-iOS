@@ -20,7 +20,7 @@ struct JournalEntryDetailView: View {
                             .textCase(.uppercase)
                         Text(entry.question)
                             .font(.custom("Georgia", size: 18, relativeTo: .title3))
-                            .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                            .foregroundColor(DS.ink)
 
                         HStack(spacing: 6) {
                             Image(systemName: "tag")
@@ -70,8 +70,8 @@ struct JournalEntryDetailView: View {
                             .frame(minHeight: 120)
                             .padding(8)
                             .scrollContentBackground(.hidden)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
+                            .background(DS.ink.opacity(0.045))
+                            .cornerRadius(DS.Radius.card)
 
                         Button("Save Notes") {
                             // Notes saving not yet implemented on backend
@@ -80,15 +80,15 @@ struct JournalEntryDetailView: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        .background(Color(red: 0.17, green: 0.14, blue: 0.09).opacity(0.5))
+                        .background(DS.ink.opacity(0.5))
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(DS.Radius.small)
                         .disabled(true)
                     }
                 }
                 .padding()
             }
-            .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+            .paperBackground()
             .navigationTitle("Journal Entry")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -110,15 +110,15 @@ struct DetailSection: View {
             Text(title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
             Text(content)
                 .font(.custom("Georgia", size: 15, relativeTo: .body))
-                .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+                .foregroundColor(DS.inkSoft)
                 .lineSpacing(6)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white.opacity(0.7))
-                .cornerRadius(10)
+                .background(DS.paperHi)
+                .cornerRadius(DS.Radius.small)
         }
     }
 }

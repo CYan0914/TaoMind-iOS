@@ -55,9 +55,9 @@ struct SettingsView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color(.systemGray6))
+                            .background(DS.ink.opacity(0.045))
                             .foregroundColor(.primary)
-                            .cornerRadius(12)
+                            .cornerRadius(DS.Radius.card)
                         }
                         .disabled(subscriptionManager.isLoading)
                     } else {
@@ -69,9 +69,9 @@ struct SettingsView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                            .background(DS.ink)
                             .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .cornerRadius(DS.Radius.card)
                         }
                     }
                 }

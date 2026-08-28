@@ -26,17 +26,17 @@ struct ShareCardView: View {
             Text(content.title)
                 .font(.custom("Georgia", size: 26, relativeTo: .title))
                 .fontWeight(.bold)
-                .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                .foregroundColor(DS.ink)
                 .multilineTextAlignment(.center)
 
             if !content.verse.isEmpty {
                 Rectangle()
-                    .fill(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.25))
+                    .fill(DS.bronze.opacity(0.25))
                     .frame(width: 44, height: 1)
                 Text(content.verse)
                     .font(.custom("Georgia", size: 16, relativeTo: .body))
                     .italic()
-                    .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16))
+                    .foregroundColor(DS.inkSoft)
                     .multilineTextAlignment(.center)
                     .lineSpacing(5)
             }
@@ -44,7 +44,7 @@ struct ShareCardView: View {
             if !content.note.isEmpty {
                 Text(content.note)
                     .font(.custom("Georgia", size: 14, relativeTo: .caption))
-                    .foregroundColor(Color(red: 0.25, green: 0.22, blue: 0.16).opacity(0.75))
+                    .foregroundColor(DS.inkSoft.opacity(0.75))
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
             }
@@ -66,7 +66,7 @@ struct ShareCardView: View {
                     Text(content.subtitle)
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .foregroundColor(DS.ink)
                     Text(AppState.tr("share_card_download_hint"))
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -77,11 +77,11 @@ struct ShareCardView: View {
         }
         .padding(28)
         .frame(width: 340, height: 480)
-        .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .paperBackground()
         .cornerRadius(24)
         .overlay(
             RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.3), lineWidth: 1)
+                .stroke(DS.bronze.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -101,7 +101,7 @@ struct ShareCardPreviewSheet: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(red: 0.17, green: 0.14, blue: 0.09))
+                    .background(DS.ink)
                     .foregroundColor(.white)
                     .cornerRadius(14)
             }

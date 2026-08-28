@@ -79,7 +79,7 @@
 /* ===== Paywall price anchors（价格锚点，slug keys need explicit English）===== */
 "pw_monthly_equiv_fmt" = "%@/mo";
 "pw_save_fmt" = "Save %d%%";
-"pw_best_value" = "Best Value";
+"pw_best_value" = "荐";
 
 /* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
 "card_unlock_title" = "New card collected";
@@ -89,3 +89,13 @@
 "card_collection_progress_fmt" = "%d / %d collected";
 "Share" = "Share";
 "OK" = "OK";
+
+/* ===== Digital Xuan Paper（数字宣纸改版新增）===== */
+"seek_eyebrow" = "Seek · Observe · Reflect";
+"seal_seek_caption" = "Press the seal · Seek";
+"seal_seeking" = "Consulting the sage…";
+"daily_verse_eyebrow" = "Daily Verse";
+
+/* ===== Paywall 夜底改版 ===== */
+"pw_eyebrow" = "Disciple's Path";
+"pw_trial_note" = "Starting with a free trial — cancel anytime";

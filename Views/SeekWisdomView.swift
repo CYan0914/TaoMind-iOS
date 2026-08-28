@@ -28,16 +28,16 @@ struct SeekWisdomView: View {
                 }
 
                 // MARK: - Header
-                VStack(spacing: 4) {
-                    Text("☯")
-                        .font(.system(size: 40))
+                VStack(spacing: 6) {
+                    Text(AppState.tr("seek_eyebrow"))
+                        .eyebrowStyle()
                     Text("Seek Wisdom")
-                        .font(.custom("Georgia", size: 28, relativeTo: .title))
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                        .font(DS.display(30, weight: .black, relativeTo: .title))
+                        .foregroundColor(DS.ink)
+                        .tracking(5)
                     Text("Describe your situation. Receive ancient guidance.")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DS.inkSoft)
 
                     // Free tier usage indicator
                     if !subscriptionManager.isPro {
@@ -95,8 +95,15 @@ struct SeekWisdomView: View {
                             .frame(minHeight: 120)
                             .padding(8)
                             .scrollContentBackground(.hidden)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .fill(DS.ink.opacity(0.045))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .stroke(DS.bronze.opacity(0.25), lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.small))
 
                         // Voice input button — bottom trailing of the editor
                         VStack {
@@ -112,11 +119,11 @@ struct SeekWisdomView: View {
                     if speechService.isRecording {
                         HStack(spacing: 6) {
                             Circle()
-                                .fill(Color.red)
+                                .fill(DS.cinnabar)
                                 .frame(width: 8, height: 8)
                             Text(AppState.tr("Recording…"))
                                 .font(.caption)
-                                .foregroundColor(.red)
+                                .foregroundColor(DS.cinnabar)
                         }
                         .transition(.opacity)
                     }
@@ -139,7 +146,7 @@ struct SeekWisdomView: View {
 
                     if subscriptionManager.isPro {
                         Slider(value: $temperature, in: 0.3...1.0, step: 0.1)
-                            .tint(Color(red: 0.4, green: 0.3, blue: 0.18))
+                            .tint(DS.bronze)
                     } else {
                         // Free tier: classic style only — tap to upgrade
                         Button(action: { subscriptionManager.openPaywall(.styleTuning) }) {
@@ -154,8 +161,14 @@ struct SeekWisdomView: View {
                             }
                             .padding(.vertical, 10)
                             .padding(.horizontal, 12)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(10)
+                            .background(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .fill(DS.ink.opacity(0.045))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .stroke(DS.bronze.opacity(0.25), lineWidth: 1)
+                            )
                         }
                         Text(AppState.tr("upgrade_for_styles"))
                             .font(.caption2)
@@ -164,53 +177,41 @@ struct SeekWisdomView: View {
                 }
                 .padding(.horizontal, 4)
 
-                // MARK: - Seek Button
-                Button(action: seekWisdom) {
-                    HStack(spacing: 12) {
-                        if isSeeking {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(.white)
-                        } else {
-                            Image(systemName: "wand.and.stars")
-                        }
-                        Text(isSeeking ? "Consulting the Sage..." : "Seek Wisdom")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        question.trimmingCharacters(in: .whitespaces).isEmpty || isSeeking
-                            ? Color.gray.opacity(0.3)
-                            : Color(red: 0.17, green: 0.14, blue: 0.09)
-                    )
-                    .foregroundColor(
-                        question.trimmingCharacters(in: .whitespaces).isEmpty || isSeeking
-                            ? .secondary
-                            : .white
-                    )
-                    .cornerRadius(14)
-                }
-                .disabled(question.trimmingCharacters(in: .whitespaces).isEmpty || isSeeking)
+                // MARK: - Seek Button（朱砂印章）
+                SealButton(
+                    character: "求",
+                    caption: isSeeking ? AppState.tr("seal_seeking") : AppState.tr("seal_seek_caption"),
+                    enabled: !question.trimmingCharacters(in: .whitespaces).isEmpty && !isSeeking,
+                    busy: isSeeking,
+                    action: seekWisdom
+                )
+                .frame(maxWidth: .infinity)
 
                 // MARK: - Error
                 if let error = errorMessage {
                     HStack {
                         Image(systemName: "exclamationmark.triangle")
-                            .foregroundColor(.orange)
+                            .foregroundColor(DS.cinnabar)
                         Text(error)
                             .font(.callout)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DS.inkSoft)
                     }
                     .padding()
-                    .background(Color.orange.opacity(0.08))
-                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: DS.Radius.small)
+                            .fill(DS.cinnabar.opacity(0.07))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.small)
+                            .stroke(DS.cinnabar.opacity(0.25), lineWidth: 1)
+                    )
                 }
 
                 // MARK: - Result
                 if let result = result {
                     WisdomResultView(result: result, question: question, scenarioType: selectedScenario)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .transition(.opacity.combined(with: .scale(scale: 0.97)).combined(with: .move(edge: .bottom)))
 
                     // Pro 横幅（心流转化位：用户刚收到一次完整的智慧回应，价值感最高的一刻）
                     if !subscriptionManager.isPro {
@@ -218,25 +219,30 @@ struct SeekWisdomView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "crown.fill")
                                     .font(.subheadline)
-                                    .foregroundColor(Color(red: 0.72, green: 0.45, blue: 0.20))
+                                    .foregroundColor(DS.cinnabar)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(AppState.tr("seek_banner_title"))
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(Color(red: 0.17, green: 0.14, blue: 0.09))
+                                        .font(DS.title(16))
+                                        .foregroundColor(DS.ink)
                                     Text(AppState.tr("seek_banner_sub"))
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DS.inkSoft)
                                         .multilineTextAlignment(.leading)
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DS.inkFaint)
                             }
                             .padding(14)
-                            .background(Color(red: 0.4, green: 0.3, blue: 0.18).opacity(0.08))
-                            .cornerRadius(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .fill(DS.bronze.opacity(0.10))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DS.Radius.small)
+                                    .stroke(DS.bronze.opacity(0.35), lineWidth: 1)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
@@ -244,7 +250,7 @@ struct SeekWisdomView: View {
             }
             .padding()
         }
-        .background(Color(red: 0.98, green: 0.97, blue: 0.95))
+        .paperBackground()
         .scrollDismissesKeyboard(.immediately)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -274,10 +280,13 @@ struct SeekWisdomView: View {
         Button(action: toggleRecording) {
             Image(systemName: speechService.isRecording ? "stop.fill" : "mic.fill")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(speechService.isRecording ? .white : Color(red: 0.4, green: 0.3, blue: 0.18))
+                .foregroundColor(speechService.isRecording ? DS.paperHi : DS.bronze)
                 .frame(width: 34, height: 34)
                 .background(
-                    Circle().fill(speechService.isRecording ? Color.red : Color(.systemGray5))
+                    Circle().fill(speechService.isRecording ? DS.cinnabar : DS.paperHi)
+                )
+                .overlay(
+                    Circle().stroke(DS.bronze.opacity(0.35), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -428,12 +437,15 @@ struct ScenarioChip: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .background(
-                isSelected
-                    ? Color(red: 0.17, green: 0.14, blue: 0.09)
-                    : Color(.systemGray6)
+                RoundedRectangle(cornerRadius: DS.Radius.small)
+                    .fill(isSelected ? DS.ink : DS.paperHi)
             )
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.small)
+                    .stroke(isSelected ? Color.clear : DS.bronze.opacity(0.30), lineWidth: 1)
+            )
+            .foregroundColor(isSelected ? DS.paperHi : DS.ink)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.small))
         }
     }
 }
