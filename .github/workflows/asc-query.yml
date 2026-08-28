@@ -91,4 +91,47 @@ jobs:
                   print(f"IAP: {ia.get('productId')}  type={ia.get('inAppPurchaseType')}  state={ia.get('state')}")
           except Exception as e:
               print("IAP query failed:", repr(e))
+
+          # ===== 提交诊断：为什么 "appStoreVersions is not in valid state" =====
+          print("---- submission diagnosis ----")
+          subs = api("GET", f"/reviewSubmissions?filter[app]={APP_ID}&filter[platform]=IOS")["data"]
+          for s in subs:
+              print("submission:", s["id"], "state:", s["attributes"].get("state"))
+          target = next((s for s in subs if s["attributes"].get("state") in
+                        ("UNRESOLVED_ISSUES", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW")), None)
+          if not target:
+              print("no active submission")
+              sys.exit(0)
+          sub_id = target["id"]
+          items = api("GET", f"/reviewSubmissions/{sub_id}/items?include=issues")["data"]
+          for it in items:
+              it_attrs = it["attributes"]
+              print("item:", it["id"], "type:", it_attrs.get("itemType"), "state:", it_attrs.get("state"))
+              rel_issues = it.get("relationships", {}).get("issues", {}).get("data") or []
+              incl = api("GET", f"/reviewSubmissions/{sub_id}/items?include=issues").get("included", [])
+              issue_ids = {i["id"] for i in incl if i["type"] == "reviewSubmissionIssues"}
+              for iid in rel_issues:
+                  if iid not in issue_ids:
+                      continue
+                  iss = next(i for i in incl if i["id"] == iid)
+                  ia = iss["attributes"]
+                  print(f"  issue: {iid}  state={ia.get('state')}  resolved={ia.get('resolved')}")
+                  print(f"  title: {ia.get('title')}")
+                  print(f"  body: {(ia.get('body') or '')[:400]}")
+
+          # 版本截图完整性（新版本缺截图也会导致 not in valid state）
+          VER_ID = "cc9212ed-75d3-4abb-8ed7-f60c17bc28cf"
+          locs = api("GET", f"/appStoreVersions/{VER_ID}/appStoreVersionLocalizations")["data"]
+          for l in locs:
+              lid = l["id"]
+              locale = l["attributes"].get("locale")
+              try:
+                  shots = api("GET", f"/appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"]
+                  counts = {}
+                  for st in shots:
+                      n = len(api("GET", f"/appScreenshotSets/{st['id']}/appScreenshots")["data"])
+                      counts[st["attributes"].get("displayType")] = n
+                  print(f"screenshots {locale}: {counts}")
+              except Exception as e:
+                  print(f"screenshots {locale}: query failed", repr(e))
           EOF
