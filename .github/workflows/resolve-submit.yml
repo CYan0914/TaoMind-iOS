@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   fix:
-    name: Rebuild rejected item & submit 1.4.0(32)
+    name: Copy screenshots to zh-Hans & submit 1.4.0(32)
     runs-on: ubuntu-latest
     env:
       APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
@@ -20,10 +20,10 @@ jobs:
           printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
           python3 -m pip install --quiet cryptography
 
-      - name: Rebuild item + submit
+      - name: Fix zh-Hans screenshots + submit
         run: |
           python3 - <<'EOF'
-          import base64, json, os, sys, time, urllib.request, urllib.error
+          import base64, hashlib, json, os, sys, time, urllib.request, urllib.error
 
           key_id = os.environ["APPSTORE_KEY_ID"]
           issuer = os.environ["APPSTORE_ISSUER_ID"]
@@ -46,92 +46,114 @@ jobs:
           sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
           token = f"{h}.{p}.{b64(sig)}"
 
-          def api(method, path, body=None, full_err=False):
+          def api(method, path, body=None, raw=False):
               url = "https://api.appstoreconnect.apple.com/v1" + path
               data = json.dumps(body).encode() if body else None
               for attempt in range(4):
                   req = urllib.request.Request(url, data=data, method=method,
                       headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                   try:
-                      with urllib.request.urlopen(req, timeout=30) as resp:
-                          return json.load(resp)
+                      with urllib.request.urlopen(req, timeout=60) as resp:
+                          payload_bytes = resp.read()
+                          return json.loads(payload_bytes) if not raw else payload_bytes
                   except urllib.error.HTTPError as e:
                       err = e.read().decode()
-                      print(f"  API {method} {path} -> {e.code}: {err if full_err else err[:300]}")
+                      print(f"  API {method} {path} -> {e.code}: {err[:500]}")
                       if e.code in (404, 409, 400):
                           raise
                       time.sleep(8)
               raise RuntimeError(f"API failed: {path}")
 
-          APP_ID = "6792008756"
+          def dl(url):
+              req = urllib.request.Request(url)
+              with urllib.request.urlopen(req, timeout=120) as resp:
+                  return resp.read()
+
           VER_ID = "cc9212ed-75d3-4abb-8ed7-f60c17bc28cf"  # 1.4.0
+          APP_ID = "6792008756"
 
-          # ---- 诊断 1: 1.4.0 版本截图完整性 ----
-          print("---- screenshots ----")
           locs = api("GET", f"/appStoreVersions/{VER_ID}/appStoreVersionLocalizations")["data"]
-          for l in locs:
-              lid, locale = l["id"], l["attributes"].get("locale")
-              try:
-                  sets = api("GET", f"/appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"]
-                  counts = {}
-                  for st in sets:
-                      n = len(api("GET", f"/appScreenshotSets/{st['id']}/appScreenshots")["data"])
-                      counts[st["attributes"].get("displayType")] = n
-                  print(f"  {locale}: {counts}")
-              except Exception as e:
-                  print(f"  {locale}: failed {e!r}")
+          loc = {l["attributes"]["locale"]: l["id"] for l in locs}
+          print("locales:", list(loc))
+          en_id, zh_id = loc["en-US"], loc["zh-Hans"]
 
-          # ---- 诊断 2: 版本状态 ----
-          ver = api("GET", f"/appStoreVersions/{VER_ID}")["data"]
-          print("version state:", ver["attributes"].get("appStoreState"))
+          # ---- 1) en-US 已有截图（全集复制）----
+          en_sets = api("GET", f"/appStoreVersionLocalizations/{en_id}/appScreenshotSets")["data"]
+          zh_sets = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
+          zh_by_type = {s["attributes"].get("displayType"): s["id"] for s in zh_sets}
 
-          # ---- 修复: 移除 REJECTED 旧 item -> 创建新 item ----
+          for es in en_sets:
+              dtype = es["attributes"].get("displayType")
+              shots = api("GET", f"/appScreenshotSets/{es['id']}/appScreenshots")["data"]
+              print(f"en set {dtype or es['attributes']}: {len(shots)} shots")
+              if not shots:
+                  continue
+
+              # zh-Hans 对应 displayType 的 set，没有则创建
+              zs_id = zh_by_type.get(dtype)
+              if not zs_id:
+                  created = api("POST", "/appScreenshotSets", {"data": {
+                      "type": "appScreenshotSets",
+                      "attributes": {"displayType": dtype},
+                      "relationships": {"appStoreVersionLocalization": {
+                          "data": {"type": "appStoreVersionLocalizations", "id": zh_id}}},
+                  }})
+                  zs_id = created["data"]["id"]
+                  print(f"  created zh set {dtype}: {zs_id}")
+
+              # 逐张下载 -> 上传 -> commit
+              for shot in shots:
+                  sa = shot["attributes"]
+                  url = (sa.get("assetDeliveryState") or {}).get("assetDownloadUrl") or sa.get("fileUrl")
+                  fname = sa.get("fileName") or "shot.png"
+                  if not url:
+                      print(f"  !! no download url for {shot['id']}, keys={list(sa)}")
+                      continue
+                  blob = dl(url)
+                  print(f"  copied {fname} ({len(blob)} bytes)")
+                  new_shot = api("POST", "/appScreenshots", {"data": {
+                      "type": "appScreenshots",
+                      "attributes": {"fileName": fname, "fileSize": len(blob)},
+                      "relationships": {"appScreenshotSet": {
+                          "data": {"type": "appScreenshotSets", "id": zs_id}}},
+                  }})
+                  sid = new_shot["data"]["id"]
+                  for op in new_shot["data"]["attributes"]["uploadOperations"]:
+                      req = urllib.request.Request(op["url"], data=blob[op["offset"]:op["offset"]+op["length"]],
+                          method=op.get("method", "PUT"))
+                      with urllib.request.urlopen(req, timeout=120):
+                          pass
+                  api("PATCH", f"/appScreenshots/{sid}", {"data": {
+                      "type": "appScreenshots", "id": sid,
+                      "attributes": {
+                          "uploaded": True,
+                          "sourceFileSha256": hashlib.sha256(blob).hexdigest(),
+                      },
+                  }})
+                  print(f"  committed {fname} -> zh-Hans")
+              time.sleep(2)
+
+          # ---- 2) 确认 zh-Hans 截图就位 ----
+          zh_sets2 = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
+          for s in zh_sets2:
+              n = len(api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"])
+              print(f"zh set {s['attributes'].get('displayType')}: {n} shots")
+
+          # ---- 3) 提交审核 ----
+          time.sleep(5)
           subs = api("GET", f"/reviewSubmissions?filter[app]={APP_ID}&filter[platform]=IOS")["data"]
           target = next((s for s in subs if s["attributes"].get("state") in
                         ("UNRESOLVED_ISSUES", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW")), None)
           if not target:
-              print("no active submission found"); sys.exit(1)
+              print("no active submission"); sys.exit(1)
           sub_id = target["id"]
-          print("submission:", sub_id, "state:", target["attributes"].get("state"))
-
-          items = api("GET", f"/reviewSubmissions/{sub_id}/items")["data"]
-          for it in items:
-              st = it["attributes"].get("state")
-              print("item:", it["id"], "state:", st)
-              if st in ("REJECTED", "REMOVED", "CANCELLED"):
-                  api("PATCH", f"/reviewSubmissionItems/{it['id']}", {"data": {
-                      "type": "reviewSubmissionItems", "id": it["id"],
-                      "attributes": {"removed": True},
-                  }}, full_err=True)
-                  print("  removed")
-              time.sleep(3)
-
-          # 移除后重新拉取，若已无版本 item 则创建指向 1.4.0 的新 item
-          items = api("GET", f"/reviewSubmissions/{sub_id}/items")["data"]
-          print("items after removal:", [(i["id"], i["attributes"].get("state")) for i in items])
-          live = [i for i in items if not i["attributes"].get("removed")]
-          if not live:
-              created = api("POST", "/reviewSubmissionItems", {"data": {
-                  "type": "reviewSubmissionItems",
-                  "attributes": {},
-                  "relationships": {
-                      "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub_id}},
-                      "appStoreVersion": {"data": {"type": "appStoreVersions", "id": VER_ID}},
-                  },
-              }}, full_err=True)
-              print("new item created:", created["data"]["id"], "state:", created["data"]["attributes"].get("state"))
-          else:
-              print("live item exists:", live[0]["id"], "state:", live[0]["attributes"].get("state"))
-
-          # ---- 提交 ----
-          time.sleep(5)
           try:
               final = api("PATCH", f"/reviewSubmissions/{sub_id}", {"data": {
                   "type": "reviewSubmissions", "id": sub_id,
                   "attributes": {"submitted": True},
-              }}, full_err=True)
+              }})
               print("SUBMITTED — state:", final["data"]["attributes"].get("state"))
-          except Exception as e:
-              print("!! submit still failing — see full 409 body above (meta.associatedErrors)")
+          except Exception:
+              print("!! submit still failing after screenshot fix")
               sys.exit(2)
           EOF
