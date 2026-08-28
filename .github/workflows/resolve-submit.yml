@@ -156,14 +156,55 @@ jobs:
               n = len(api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"])
               print(f"zh set {s['attributes'].get('screenshotDisplayType')}: {n} shots")
 
-          # ---- 3) 提交审核 ----
+          # ---- 3) 提交审核（无活跃 submission 则新建）----
           time.sleep(5)
           subs = api("GET", f"/reviewSubmissions?filter[app]={APP_ID}&filter[platform]=IOS")["data"]
+          for s in subs:
+              print("submission:", s["id"], "state:", s["attributes"].get("state"))
           target = next((s for s in subs if s["attributes"].get("state") in
                         ("UNRESOLVED_ISSUES", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW")), None)
-          if not target:
-              print("no active submission"); sys.exit(1)
-          sub_id = target["id"]
+          if target:
+              sub_id = target["id"]
+              print("reusing submission:", sub_id)
+          else:
+              created = api("POST", "/reviewSubmissions", {"data": {
+                  "type": "reviewSubmissions",
+                  "attributes": {"platform": "IOS"},
+                  "relationships": {"app": {"data": {"type": "apps", "id": APP_ID}}},
+              }})
+              sub_id = created["data"]["id"]
+              print("created submission:", sub_id, "state:", created["data"]["attributes"].get("state"))
+
+          # item：清理无效 item，确保有一个指向 1.4.0 的版本 item
+          items = api("GET", f"/reviewSubmissions/{sub_id}/items")["data"]
+          for it in items:
+              st = it["attributes"].get("state")
+              print("item:", it["id"], "state:", st)
+              if st in ("REJECTED", "REMOVED", "CANCELLED"):
+                  try:
+                      api("PATCH", f"/reviewSubmissionItems/{it['id']}", {"data": {
+                          "type": "reviewSubmissionItems", "id": it["id"],
+                          "attributes": {"removed": True},
+                      }})
+                      print("  removed")
+                  except Exception as e:
+                      print("  remove failed:", repr(e))
+                  time.sleep(3)
+          items = api("GET", f"/reviewSubmissions/{sub_id}/items")["data"]
+          live = [i for i in items if i["attributes"].get("state") not in ("REMOVED", "REJECTED", "CANCELLED")]
+          if not live:
+              created = api("POST", "/reviewSubmissionItems", {"data": {
+                  "type": "reviewSubmissionItems",
+                  "attributes": {},
+                  "relationships": {
+                      "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub_id}},
+                      "appStoreVersion": {"data": {"type": "appStoreVersions", "id": VER_ID}},
+                  },
+              }})
+              print("new item created:", created["data"]["id"], "state:", created["data"]["attributes"].get("state"))
+
+          # 提交（状态传播滞后时 409，可重跑本 workflow）
+          time.sleep(5)
           try:
               final = api("PATCH", f"/reviewSubmissions/{sub_id}", {"data": {
                   "type": "reviewSubmissions", "id": sub_id,
@@ -171,6 +212,6 @@ jobs:
               }})
               print("SUBMITTED — state:", final["data"]["attributes"].get("state"))
           except Exception:
-              print("!! submit still failing after screenshot fix")
+              print("!! submit still failing")
               sys.exit(2)
           EOF
