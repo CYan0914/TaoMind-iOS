@@ -71,12 +71,19 @@ jobs:
           loc = {l["attributes"]["locale"]: l["id"] for l in locs}
           zh_id = loc["zh-Hans"]
 
-          # ---- 1) zh-Hans 截图按 fileName 去重（保留首张，删多余）----
+          # ---- 1) zh-Hans 截图清理：先删上传未完成的僵尸，再按 fileName 去重 ----
           zh_sets = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
           for s in zh_sets:
               dtype = s["attributes"].get("screenshotDisplayType")
               shots = api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"]
               print(f"zh set {dtype}: {len(shots)} shots")
+              # 僵尸清理：commit 未完成的截图会卡死整个版本提交
+              for shot in shots:
+                  st = (shot["attributes"].get("assetDeliveryState") or {}).get("state")
+                  if st != "COMPLETE":
+                      api("DELETE", f"/appScreenshots/{shot['id']}")
+                      print(f"  deleted unfinished {shot['id']} ({st})")
+              shots = api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"]
               seen = set()
               for shot in shots:
                   fn = shot["attributes"].get("fileName")
