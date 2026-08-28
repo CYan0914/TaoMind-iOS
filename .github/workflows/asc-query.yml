@@ -1,0 +1,94 @@
+name: ASC Query - Subscriptions & Introductory Offers
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: asc-query
+
+jobs:
+  query:
+    name: Query subscription groups & introductory offers
+    runs-on: ubuntu-latest
+    env:
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
+    steps:
+      - name: Prepare App Store Connect API key
+        run: |
+          printf '%s' "$APPSTORE_API_KEY" | tr -d '\r' > /tmp/AuthKey_${APPSTORE_KEY_ID}.p8
+          python3 -m pip install --quiet cryptography
+
+      - name: Query
+        run: |
+          python3 - <<'EOF'
+          import base64, json, os, sys, time, urllib.request, urllib.error
+
+          key_id = os.environ["APPSTORE_KEY_ID"]
+          issuer = os.environ["APPSTORE_ISSUER_ID"]
+          p8 = f"/tmp/AuthKey_{key_id}.p8"
+          from cryptography.hazmat.primitives import hashes, serialization
+          from cryptography.hazmat.primitives.asymmetric import ec
+          from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+          with open(p8, "rb") as f:
+              key = serialization.load_pem_private_key(f.read(), password=None)
+
+          def b64(raw):
+              return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+          now = int(time.time())
+          header = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
+          payload = {"iss": issuer, "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"}
+          h = b64(json.dumps(header, separators=(",", ":")).encode())
+          p = b64(json.dumps(payload, separators=(",", ":")).encode())
+          der_sig = key.sign((h + "." + p).encode(), ec.ECDSA(hashes.SHA256()))
+          r, s = decode_dss_signature(der_sig)
+          sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
+          token = f"{h}.{p}.{b64(sig)}"
+
+          def api(method, path, body=None):
+              url = "https://api.appstoreconnect.apple.com/v1" + path
+              data = json.dumps(body).encode() if body else None
+              for attempt in range(4):
+                  req = urllib.request.Request(url, data=data, method=method,
+                      headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as resp:
+                          return json.load(resp)
+                  except urllib.error.HTTPError as e:
+                      err = e.read().decode()[:500]
+                      print(f"  API {method} {path} -> {e.code}: {err}")
+                      if e.code in (404,):
+                          raise
+                      time.sleep(8)
+              raise RuntimeError(f"API failed: {path}")
+
+          APP_ID = "6792008756"
+          groups = api("GET", f"/apps/{APP_ID}/subscriptionGroups")["data"]
+          if not groups:
+              print("NO subscription groups found")
+          for g in groups:
+              print("group:", g["id"], "-", g["attributes"].get("referenceName"))
+              subs = api("GET", f"/subscriptionGroups/{g['id']}/subscriptions")["data"]
+              for s in subs:
+                  a = s["attributes"]
+                  print(f"  sub: {s['id']}  {a.get('productId')}  state={a.get('state')}")
+                  try:
+                      offers = api("GET", f"/subscriptions/{s['id']}/introductoryOffers")["data"]
+                      if not offers:
+                          print("    intro offer: NONE")
+                      for o in offers:
+                          oa = o["attributes"]
+                          print(f"    intro offer: type={oa.get('type')}  duration={oa.get('duration')}  paymentMode={oa.get('paymentMode')}")
+                  except Exception as e:
+                      print("    intro offer query failed:", repr(e))
+
+          # IAP（Lifetime 等）顺带列一遍，确认随版本提交的就绪状态
+          try:
+              iaps = api("GET", f"/apps/{APP_ID}/inAppPurchasesV2")["data"]
+              for i in iaps:
+                  ia = i["attributes"]
+                  print(f"IAP: {ia.get('productId')}  type={ia.get('inAppPurchaseType')}  state={ia.get('state')}")
+          except Exception as e:
+              print("IAP query failed:", repr(e))
+          EOF
