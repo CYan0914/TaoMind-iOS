@@ -117,11 +117,11 @@ jobs:
 
               for shot in shots:
                   sa = shot["attributes"]
-                  urls = find_urls(sa.get("imageAsset"))
-                  dl_urls = [u for p, u in urls if "download" in p.lower()]
-                  url = (dl_urls or [u for _, u in urls] or [None])[0]
-                  if urls:
-                      print("  url paths:", [p for p, _ in urls][:4])
+                  ia = sa.get("imageAsset") or {}
+                  tpl = ia.get("templateUrl")
+                  url = (tpl.replace("{w}", str(ia.get("width", 0)))
+                            .replace("{h}", str(ia.get("height", 0)))
+                            .replace("{f}", "png")) if tpl else None
                   fname = sa.get("fileName") or "shot.png"
                   if not url:
                       print(f"  !! no download url for {shot['id']}, keys={list(sa)}")
