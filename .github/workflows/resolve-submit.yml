@@ -80,10 +80,10 @@ jobs:
           # ---- 1) en-US 已有截图（全集复制）----
           en_sets = api("GET", f"/appStoreVersionLocalizations/{en_id}/appScreenshotSets")["data"]
           zh_sets = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
-          zh_by_type = {s["attributes"].get("displayType"): s["id"] for s in zh_sets}
+          zh_by_type = {s["attributes"].get("screenshotDisplayType"): s["id"] for s in zh_sets}
 
           for es in en_sets:
-              dtype = es["attributes"].get("displayType")
+              dtype = es["attributes"].get("screenshotDisplayType")
               shots = api("GET", f"/appScreenshotSets/{es['id']}/appScreenshots")["data"]
               print(f"en set {dtype or es['attributes']}: {len(shots)} shots")
               if not shots:
@@ -94,7 +94,7 @@ jobs:
               if not zs_id:
                   created = api("POST", "/appScreenshotSets", {"data": {
                       "type": "appScreenshotSets",
-                      "attributes": {"displayType": dtype},
+                      "attributes": {"screenshotDisplayType": dtype},
                       "relationships": {"appStoreVersionLocalization": {
                           "data": {"type": "appStoreVersionLocalizations", "id": zh_id}}},
                   }})
@@ -137,7 +137,7 @@ jobs:
           zh_sets2 = api("GET", f"/appStoreVersionLocalizations/{zh_id}/appScreenshotSets")["data"]
           for s in zh_sets2:
               n = len(api("GET", f"/appScreenshotSets/{s['id']}/appScreenshots")["data"])
-              print(f"zh set {s['attributes'].get('displayType')}: {n} shots")
+              print(f"zh set {s['attributes'].get('screenshotDisplayType')}: {n} shots")
 
           # ---- 3) 提交审核 ----
           time.sleep(5)
