@@ -53,9 +53,9 @@ struct OnboardingView: View {
                     .padding(.trailing, 18)
                 VStack(spacing: 10) {
                     Text("TaoMind")
-                        .font(DS.display(42, weight: .black, relativeTo: .largeTitle))
+                        .font(DS.verse(40, relativeTo: .largeTitle))
+                        .fontWeight(.semibold)
                         .foregroundColor(ink)
-                        .tracking(3)
                     Text(AppState.tr("Ancient wisdom for today"))
                         .eyebrowStyle()
                 }

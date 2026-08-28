@@ -45,6 +45,7 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle(AppState.tr("Library"))
+            .paperBackground()
             .task { await load() }
         }
         .sheet(item: $selectedEntry) { entry in
@@ -68,6 +69,7 @@ struct LibraryView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
     }
 
     private func libraryRow(_ entry: LibraryEntry) -> some View {

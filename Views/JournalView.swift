@@ -107,12 +107,14 @@ struct JournalView: View {
                     .onDelete(perform: deleteEntries)
                 }
                 .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
                 .refreshable {
                     await loadEntries()
                 }
             }
         }
         .navigationTitle("Journal")
+        .paperBackground()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 // Export journal — Pro-only

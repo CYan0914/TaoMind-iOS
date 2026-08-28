@@ -38,6 +38,7 @@ struct PracticeView: View {
             }
         }
         .navigationTitle("Practice")
+        .paperBackground()
         .task {
             if authService.isSignedIn {
                 await loadStatus()
