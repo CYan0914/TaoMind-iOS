@@ -245,10 +245,12 @@ struct CardCollectionView: View {
     }
 }
 
-/// 收藏册点开单张大卡预览
+/// 收藏册点开单张大卡预览（可分享：分享图带 App Store 二维码，与解锁弹窗同款）
 private struct CardDetailSheet: View {
     let card: CommemorativeCard
     let isChinese: Bool
+
+    @State private var showShare = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -258,10 +260,26 @@ private struct CardDetailSheet: View {
             Text("\(card.number) / \(CommemorativeCardSeries.total)")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
+            Button(action: { showShare = true }) {
+                Label(AppState.tr("Share"), systemImage: "square.and.arrow.up")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 11)
+                    .background(DS.ink.opacity(0.045))
+                    .foregroundColor(DS.ink)
+                    .cornerRadius(20)
+            }
+            .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .paperBackground()
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .sheet(isPresented: $showShare) {
+            if let img = CommemorativeCardRenderer.image(for: card, isChinese: isChinese) {
+                ShareSheet(activityItems: [img])
+            }
+        }
     }
 }
 
