@@ -210,7 +210,7 @@
 
 /* ===== 修行纪念卡 ===== */
 "card_unlock_title" = "收藏到新纪念卡";
-"card_unlocked_fmt" = "修行第 %d 天 · 收藏第 %d/%d 张";
+"card_unlocked_fmt" = "修行第 %d 天 · 收得第 %d/%d 章";
 "card_collection" = "修行纪念册";
 "card_collection_hint" = "每天打卡收藏一张，集齐《道德经》81 章";
 "card_collection_progress_fmt" = "已收藏 %d / %d 张";

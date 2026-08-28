@@ -101,7 +101,7 @@ struct CardFaceView: View {
 /// 全用户开放（收集是留存钩子，不是付费点）。
 struct CommemorativeCardUnlockView: View {
     let card: CommemorativeCard
-    /// 解锁这张卡时的总打卡天数（= card.number，传入只为显示文案明确）
+    /// 解锁这张卡时的总打卡天数（随机发卡后与卡号无对应关系，仅用于文案）
     let totalCheckins: Int
     let isChinese: Bool
 
@@ -161,10 +161,9 @@ struct CommemorativeCardUnlockView: View {
 
 // MARK: - Collection（收藏册）
 
-/// 修行纪念册：81 宫格，已解锁显示卡面、未解锁显示剪影。
+/// 修行纪念册：81 宫格，已拥有的章显示卡面、未拥有的显示剪影。
+/// 已拥有集合持久化在客户端（随机发放），进度直接读 ownedCount。
 struct CardCollectionView: View {
-    /// 总打卡天数（已解锁张数 = min(totalCheckins, 81)）
-    let totalCheckins: Int
     let isChinese: Bool
 
     @Environment(\.dismiss) private var dismiss
@@ -172,7 +171,7 @@ struct CardCollectionView: View {
 
     private let columns = [GridItem(.adaptive(minimum: 96), spacing: 12)]
 
-    private var unlocked: Int { CommemorativeCardSeries.unlockedCount(totalCheckins: totalCheckins) }
+    private var owned: Int { CommemorativeCardSeries.ownedCount }
 
     var body: some View {
         NavigationStack {
@@ -180,11 +179,11 @@ struct CardCollectionView: View {
                 VStack(spacing: 16) {
                     // 进度
                     VStack(spacing: 8) {
-                        Text("\(unlocked) / \(CommemorativeCardSeries.total)")
+                        Text("\(owned) / \(CommemorativeCardSeries.total)")
                             .font(.custom("Georgia", size: 30, relativeTo: .title))
                             .fontWeight(.bold)
                             .foregroundColor(DS.ink)
-                        ProgressView(value: Double(unlocked), total: Double(CommemorativeCardSeries.total))
+                        ProgressView(value: Double(owned), total: Double(CommemorativeCardSeries.total))
                             .tint(DS.cinnabar)
                             .padding(.horizontal, 48)
                         Text(AppState.tr("card_collection_hint"))
@@ -195,7 +194,7 @@ struct CardCollectionView: View {
 
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(1...CommemorativeCardSeries.total, id: \.self) { n in
-                            if let card = CommemorativeCardSeries.card(n), n <= unlocked {
+                            if let card = CommemorativeCardSeries.card(n), CommemorativeCardSeries.isOwned(n) {
                                 Button(action: { previewCard = card }) {
                                     CardFaceView(card: card, isChinese: isChinese, compact: true)
                                 }
@@ -233,7 +232,7 @@ struct CardCollectionView: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 15))
                     .foregroundColor(.secondary.opacity(0.5))
-                Text(isChinese ? "第\(number)天" : "Day \(number)")
+                Text(isChinese ? "第\(number)章" : "Ch. \(number)")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary.opacity(0.6))
             }

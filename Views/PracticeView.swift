@@ -69,11 +69,11 @@ struct PracticeView: View {
             ShareCardPreviewSheet(content: content)
         }
         .sheet(item: $newCard) { card in
-            CommemorativeCardUnlockView(card: card, totalCheckins: card.number, isChinese: appState.language == .chinese)
+            CommemorativeCardUnlockView(card: card, totalCheckins: status?.streak.totalCheckins ?? card.number, isChinese: appState.language == .chinese)
                 .presentationDetents([.large])
         }
         .sheet(isPresented: $showCardCollection) {
-            CardCollectionView(totalCheckins: status?.streak.totalCheckins ?? 0, isChinese: appState.language == .chinese)
+            CardCollectionView(isChinese: appState.language == .chinese)
         }
         .sheet(isPresented: $showMonthlyReport) {
             MonthlyReportView(month: currentMonthString)
@@ -276,7 +276,7 @@ struct PracticeView: View {
     // MARK: - 纪念册入口（打卡收集 81 张道德经卡）
 
     private var cardCollectionEntry: some View {
-        let unlocked = CommemorativeCardSeries.unlockedCount(totalCheckins: status?.streak.totalCheckins ?? 0)
+        let owned = CommemorativeCardSeries.ownedCount
         return Button(action: { showCardCollection = true }) {
             HStack(spacing: 12) {
                 Image(systemName: "square.grid.2x2.fill")
@@ -287,7 +287,7 @@ struct PracticeView: View {
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(DS.ink)
-                    Text(AppState.tr("card_collection_progress_fmt", unlocked, CommemorativeCardSeries.total))
+                    Text(AppState.tr("card_collection_progress_fmt", owned, CommemorativeCardSeries.total))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -303,15 +303,14 @@ struct PracticeView: View {
         .buttonStyle(.plain)
     }
 
-    /// 本次打卡/补卡若解锁了新纪念卡（且未曾弹过）→ 立即揭示。
+    /// 本次打卡/补卡若解锁了新纪念卡 → 从未拥有的章号里随机发一张并立即揭示。
+    /// 已拥有张数上限 = min(total_checkins, 81)，由服务端打卡数推导；
     /// 同一天编辑感悟（total 不变）不会重复弹；只从用户主动动作的回调里调用，
     /// 避免与 loadStatus 触发的 milestone sheet 同帧争抢 present。
     private func presentNewCardIfUnlocked() {
         guard let total = status?.streak.totalCheckins else { return }
-        guard (1...CommemorativeCardSeries.total).contains(total),
-              !CommemorativeCardSeries.isRevealed(total),
-              let card = CommemorativeCardSeries.card(total) else { return }
-        CommemorativeCardSeries.markRevealed(total)
+        let target = CommemorativeCardSeries.unlockedCount(totalCheckins: total)
+        guard let card = CommemorativeCardSeries.grantRandomUnownedCard(targetCount: target) else { return }
         newCard = card
     }
 

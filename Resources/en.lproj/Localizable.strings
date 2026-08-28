@@ -83,7 +83,7 @@
 
 /* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
 "card_unlock_title" = "New card collected";
-"card_unlocked_fmt" = "Day %d · Card %d of %d";
+"card_unlocked_fmt" = "Day %d · Chapter %d of %d";
 "card_collection" = "Commemorative Cards";
 "card_collection_hint" = "One card for every day of practice — all 81 chapters of the Tao Te Ching";
 "card_collection_progress_fmt" = "%d / %d collected";

@@ -2,10 +2,11 @@ import UIKit
 
 // MARK: - Commemorative Card (修行纪念卡)
 
-/// 打卡纪念卡：第 N 次打卡解锁第 N 张，对应《道德经》第 N 章，全套 81 张。
-/// 引文内置客户端（双语），解锁进度完全由服务端已有 total_checkins 推导——零服务端改动。
+/// 打卡纪念卡：每次打卡随机收藏一张，对应《道德经》81 章之一，全套 81 张。
+/// 引文内置客户端（双语），收藏张数由服务端已有 total_checkins 推导（零服务端改动），
+/// 具体发哪张由客户端从未拥有的章号里随机抽取并持久化。
 struct CommemorativeCard: Identifiable {
-    /// 1...81 = 解锁所需打卡天数 = 道德经章号
+    /// 道德经章号 1...81（随机发放，与打卡天数无固定对应）
     let number: Int
     let titleZh: String
     let titleEn: String
@@ -33,21 +34,33 @@ enum CommemorativeCardSeries {
         min(max(totalCheckins, 0), total)
     }
 
-    // 已揭示标记（UserDefaults）：同一天编辑感悟 total 不变，防止重复弹卡
-    private static let revealedKey = "commemorative_cards_revealed"
+    // 已拥有卡集合（UserDefaults）：收藏张数上限 = min(总打卡天数, 81)，
+    // 具体哪张在解锁时从未拥有的章号里随机抽取后记入。key 沿用旧版顺序发卡
+    // 时代的存储，老用户已拿到的卡号自动平移，不会重复发放。
+    private static let ownedKey = "commemorative_cards_revealed"
 
-    static func isRevealed(_ number: Int) -> Bool {
-        revealedNumbers.contains(number)
+    static var ownedCount: Int { ownedNumbers.count }
+
+    static func isOwned(_ number: Int) -> Bool {
+        ownedNumbers.contains(number)
     }
 
-    static func markRevealed(_ number: Int) {
-        var updated = revealedNumbers
-        updated.insert(number)
-        UserDefaults.standard.set(updated.map(String.init), forKey: revealedKey)
+    /// 随机发卡：已拥有张数少于目标张数 `targetCount` 时，从未拥有的章号里
+    /// 随机抽一张记入拥有集合并返回；没有新卡可发时返回 nil。
+    @discardableResult
+    static func grantRandomUnownedCard(targetCount: Int) -> CommemorativeCard? {
+        let owned = ownedNumbers
+        guard owned.count < min(max(targetCount, 0), total) else { return nil }
+        guard let pick = (1...total).filter({ !owned.contains($0) }).randomElement(),
+              let card = card(pick) else { return nil }
+        var updated = owned
+        updated.insert(pick)
+        UserDefaults.standard.set(updated.map(String.init), forKey: ownedKey)
+        return card
     }
 
-    private static var revealedNumbers: Set<Int> {
-        Set((UserDefaults.standard.stringArray(forKey: revealedKey) ?? []).compactMap(Int.init))
+    private static var ownedNumbers: Set<Int> {
+        Set((UserDefaults.standard.stringArray(forKey: ownedKey) ?? []).compactMap(Int.init))
     }
 
     /// 《道德经》81 章章首句（王弼本章句 + 英译对齐 App 现有经文风格），
