@@ -58,7 +58,7 @@ jobs:
                           return json.loads(raw) if raw else {}
                   except urllib.error.HTTPError as e:
                       err = e.read().decode()
-                      print(f"  API {method} {path} -> {e.code}: {err[:400]}")
+                      print(f"  API {method} {path} -> {e.code}: {err[:2500]}")
                       if e.code in (404, 409, 400):
                           raise
                       time.sleep(8)
