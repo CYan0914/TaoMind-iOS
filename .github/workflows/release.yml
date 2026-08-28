@@ -67,7 +67,7 @@ jobs:
 
           BUNDLE = "com.cyan0914.taomind"
           VERSION = "1.5.0"
-          BUILD = "34"
+          BUILD = "35"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
