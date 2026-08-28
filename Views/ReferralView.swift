@@ -29,11 +29,11 @@ struct ReferralView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 22)
-                    .background(DS.card)
+                    .background(DS.ink.opacity(0.04))
                     .cornerRadius(16)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(DS.line, lineWidth: 1)
+                            .stroke(DS.bronze.opacity(0.35), lineWidth: 1)
                     )
 
                     if let qr = QRCodeMaker.image(for: ref.shareURL ?? "https://taomindapp.com", size: qrSize * 2) {
@@ -130,11 +130,11 @@ struct ReferralView: View {
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(DS.card)
+        .background(DS.ink.opacity(0.04))
         .cornerRadius(14)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(DS.line, lineWidth: 1)
+                .stroke(DS.bronze.opacity(0.35), lineWidth: 1)
         )
     }
 
