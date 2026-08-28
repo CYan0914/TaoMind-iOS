@@ -38,7 +38,14 @@ struct TaoMindApp: App {
                     if phase == .active {
                         // 回到前台时重排习惯通知（打卡状态可能已变）
                         Task { await NotificationService.shared.scheduleHabitNotifications() }
+                        // 登录后重试从 deep link 暂存的邀请码
+                        if AuthService.shared.isSignedIn {
+                            Task { await ReferralService.shared.tryPendingRedeem() }
+                        }
                     }
+                }
+                .onOpenURL { url in
+                    ReferralService.shared.handleDeepLink(url)
                 }
         }
     }

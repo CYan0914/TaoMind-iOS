@@ -72,5 +72,17 @@
             </dict>
         </dict>
     </dict>
+    <!-- 推荐裂变 deep link：分享图上的二维码扫描后，App Store 装好后首次打开触发 -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.cyan0914.taomind.referral</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>taomind</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

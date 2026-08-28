@@ -71,6 +71,13 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 32)
 
+            // 社交证明：放在价值点之后，制造"很多人已经在用"暗示
+            Text(AppState.tr("onboarding_social_proof"))
+                .font(.subheadline)
+                .foregroundColor(DS.bronze)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
             Spacer()
         }
         .padding(.top, 48)

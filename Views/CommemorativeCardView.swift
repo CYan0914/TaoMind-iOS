@@ -289,6 +289,7 @@ private struct CardDetailSheet: View {
 private struct CommemorativeCardShareView: View {
     let card: CommemorativeCard
     let isChinese: Bool
+    var attribution: String? = nil  // build 34 新增：社交裂变署名
 
     var body: some View {
         VStack(spacing: 14) {
@@ -313,6 +314,13 @@ private struct CommemorativeCardShareView: View {
                     Text(AppState.tr("share_card_download_hint"))
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                    if let attr = attribution, !attr.isEmpty {
+                        Text(attr)
+                            .font(.caption2)
+                            .italic()
+                            .foregroundColor(DS.bronze)
+                            .padding(.top, 2)
+                    }
                 }
                 Spacer()
             }
@@ -331,8 +339,8 @@ private struct CommemorativeCardShareView: View {
 
 @MainActor
 enum CommemorativeCardRenderer {
-    static func image(for card: CommemorativeCard, isChinese: Bool) -> UIImage? {
-        let renderer = ImageRenderer(content: CommemorativeCardShareView(card: card, isChinese: isChinese))
+    static func image(for card: CommemorativeCard, isChinese: Bool, attribution: String? = nil) -> UIImage? {
+        let renderer = ImageRenderer(content: CommemorativeCardShareView(card: card, isChinese: isChinese, attribution: attribution))
         renderer.scale = UIScreen.main.scale
         return renderer.uiImage
     }

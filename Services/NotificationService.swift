@@ -2,6 +2,13 @@ import UserNotifications
 import SwiftUI
 
 // MARK: - Daily Verse + Habit Loop Notification Service
+//
+// 时区说明：所有触发器（08:00 每日经文 / 18:00 断签预警 / 19:00 里程碑激励 / 10:00 断签召回）
+// 都基于 `Calendar.current`，即用户设备的本地时区。这意味着 18:00 触发即用户本地 18:00
+// ——对欧美用户是下班路上，对亚洲用户是饭后，无需 A/B。设备时区变更时 iOS 会按新时区
+// 自动重算下次触发时间。
+// 如未来要按用户偏好时段（如"早 8 点"vs"晚 9 点"）做 A/B，扩展点：
+// `scheduleHabitNotifications(_ preferredWindow: ReminderWindow?)` 注释位。
 
 @MainActor
 final class NotificationService: NSObject, ObservableObject {

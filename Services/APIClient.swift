@@ -39,6 +39,45 @@ class APIClient {
         return (response as? HTTPURLResponse)?.statusCode == 200
     }
 
+    // MARK: - Referral (推荐裂变)
+
+    /// GET /referral/my-code —— 取或生成当前用户的 8 位邀请码
+    func getMyReferralCode(authToken: String) async throws -> ReferralCodeResp {
+        let url = try makeURL("/referral/my-code")
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        return try decoder.decode(ReferralCodeResp.self, from: data)
+    }
+
+    /// GET /referral/status —— 当前用户作为 inviter 的邀请概况
+    func getReferralStatus(authToken: String) async throws -> ReferralStatus {
+        let url = try makeURL("/referral/status")
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        return try decoder.decode(ReferralStatus.self, from: data)
+    }
+
+    /// POST /referral/redeem —— 用 8 位码换双方各 7 天 Pro
+    func redeemReferral(code: String, authToken: String) async throws -> ReferralRedeemResp {
+        let url = try makeURL("/referral/redeem")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 15
+        let body = ["code": code]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        return try decoder.decode(ReferralRedeemResp.self, from: data)
+    }
+
     // MARK: - Daily Verse
 
     func getDailyVerse() async throws -> DailyVerse {

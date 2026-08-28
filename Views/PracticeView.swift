@@ -330,7 +330,8 @@ struct PracticeView: View {
             title: String(format: AppState.tr("streak_days_fmt"), days),
             verse: verse,
             note: "",
-            subtitle: AppState.tr("share_card_subtitle")
+            subtitle: AppState.tr("share_card_subtitle"),
+            attribution: referralAttribution(days: days)
         )
     }
 
@@ -356,8 +357,20 @@ struct PracticeView: View {
             title: String(format: AppState.tr("streak_days_fmt"), m.days),
             verse: zh ? m.quoteZh : m.quoteEn,
             note: zh ? m.titleZh : m.titleEn,
-            subtitle: AppState.tr("share_card_subtitle")
+            subtitle: AppState.tr("share_card_subtitle"),
+            attribution: referralAttribution(days: m.days)
         )
+    }
+
+    /// 社交裂变署名：build 34 新增。匿名用户不署名。
+    private func referralAttribution(days: Int) -> String? {
+        let handle: String
+        if let name = AuthService.shared.user?.display_name, !name.isEmpty {
+            handle = name
+        } else {
+            return nil
+        }
+        return String(format: AppState.tr("referral_footer_fmt"), handle, days)
     }
 
     private var monthlyReportCard: some View {
@@ -817,6 +830,8 @@ struct PracticeView: View {
                     errorMessage = nil
                     // 打卡成功随即揭示新纪念卡（第 N 次打卡 = 第 N 章）
                     presentNewCardIfUnlocked()
+                    // 7/30 节点弹评分：用户在持续使用 → 此时弹转化率最高
+                    ReviewPromptService.shared.promptIfAtMilestone(totalCheckins: result.streak.totalCheckins)
                 }
                 // 打卡成功后重排习惯通知（今日已完成 → 18:00 预警/19:00 激励应取消）
                 await NotificationService.shared.scheduleHabitNotifications()

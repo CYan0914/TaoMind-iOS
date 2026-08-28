@@ -11,6 +11,7 @@ struct ShareCardContent: Identifiable {
     var verse: String       // 经文或引语
     var note: String        // 感悟摘录（可空）
     var subtitle: String    // 底部署名，如 "TaoMind · 每日功课"
+    var attribution: String?  // 社交裂变署名（build 34 新增），如 "shared by @zhanghaojia_91 on day 7"
 }
 
 /// Reusable TaoMind share-card view — rendered to an image via ImageRenderer.
@@ -70,6 +71,13 @@ struct ShareCardView: View {
                     Text(AppState.tr("share_card_download_hint"))
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                    if let attr = content.attribution, !attr.isEmpty {
+                        Text(attr)
+                            .font(.caption2)
+                            .italic()
+                            .foregroundColor(DS.bronze)
+                            .padding(.top, 2)
+                    }
                 }
                 Spacer()
             }

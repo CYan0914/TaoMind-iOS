@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @State private var showReferral = false
 
     var body: some View {
         List {
@@ -104,6 +105,37 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
 
+                // 评分入口（兜底：不受 7 天节点规则限制）
+                Button {
+                    ReviewPromptService.shared.promptNow()
+                } label: {
+                    HStack {
+                        Text(AppState.tr("rate_taomind"))
+                        Spacer()
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                // 推荐裂变入口（双向 7 天 Pro）
+                Button {
+                    showReferral = true
+                } label: {
+                    HStack {
+                        Text(AppState.tr("referral_title"))
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Text("✨")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.plain)
+
                 HStack {
                     Text("API Status")
                     Spacer()
@@ -126,6 +158,9 @@ struct SettingsView: View {
                 }
                 .padding(.top, 8)
             }
+        }
+        .sheet(isPresented: $showReferral) {
+            ReferralView()
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Settings")

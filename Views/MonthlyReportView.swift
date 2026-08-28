@@ -91,7 +91,15 @@ struct MonthlyReportView: View {
             title: "\(monthLabel) · \(AppState.tr("monthly_report"))",
             verse: "",
             note: note,
-            subtitle: AppState.tr("share_card_subtitle")
+            subtitle: AppState.tr("share_card_subtitle"),
+            attribution: monthlyAttribution()
         )
+    }
+
+    private func monthlyAttribution() -> String? {
+        guard let name = AuthService.shared.user?.display_name, !name.isEmpty else { return nil }
+        // 简单格式：@handle 在 2026年8月 修行报告（不混用 referral_footer_fmt，避免数字语义错位）
+        let handle = name
+        return String(format: AppState.tr("referral_monthly_fmt"), handle, monthLabel)
     }
 }

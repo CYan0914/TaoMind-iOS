@@ -99,3 +99,18 @@
 /* ===== Paywall 夜底改版 ===== */
 "pw_eyebrow" = "Disciple's Path";
 "pw_trial_note" = "Starting with a free trial — cancel anytime";
+
+/* ===== build 34: Rate + Onboarding social proof + Referral ===== */
+"rate_taomind" = "Rate TaoMind";
+"onboarding_social_proof" = "Join 50,000+ on the path";
+"referral_title" = "Give 7 days, get 7 days";
+"referral_body" = "Share your invite code. When a friend joins, you both get 7 days of TaoMind Pro.";
+"referral_my_code" = "My invite code";
+"referral_qr_hint" = "Scan to download with my code";
+"referral_stat_invited" = "Friends invited";
+"referral_stat_granted" = "Days of Pro earned";
+"referral_share_button" = "Share with friends";
+"referral_share_text_fmt" = "Use my code %@ for 7 days of TaoMind Pro · %@";
+"referral_redeem_success" = "You both got 7 days of Pro ✨";
+"referral_footer_fmt" = "shared by %@ on day %d of practice";
+"referral_monthly_fmt" = "%@'s practice report · %@";

@@ -8,6 +8,25 @@ struct User: Codable, Identifiable {
     let provider_user_id: String
     let email: String
     let display_name: String
+    // 后端 2026-08 build 34 新增：用户自己的 8 位邀请码（/auth/apple 响应注入）
+    let referral_code: String?
+    // snake_case 字段配套的 camelCase 访问器（避免全项目替换风险）
+    var displayName: String { display_name }
+    var referralCode: String? { referral_code }
+
+    // 兼容老后端（user 表无 referral_code 字段时也不挂）
+    enum CodingKeys: String, CodingKey {
+        case id, provider, provider_user_id, email, display_name, referral_code
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decode(Int.self, forKey: .id)
+        self.provider = try c.decode(String.self, forKey: .provider)
+        self.provider_user_id = try c.decode(String.self, forKey: .provider_user_id)
+        self.email = try c.decode(String.self, forKey: .email)
+        self.display_name = try c.decode(String.self, forKey: .display_name)
+        self.referral_code = try c.decodeIfPresent(String.self, forKey: .referral_code)
+    }
 }
 
 // MARK: - Auth Response
@@ -15,6 +34,21 @@ struct User: Codable, Identifiable {
 struct AuthResponse: Codable {
     let token: String
     let user: User
+    // 后端在 token 与 user 之外也单独返回 referral_code（双轨，老客户端忽略即可）
+    let referral_code: String?
+    var referralCode: String? { referral_code }
+
+    // 自定义 decode 容忍老后端（build 34 之前）响应里没有 referral_code 字段——
+    // 否则新客户端 → 老后端会解码失败导致登录挂掉
+    enum CodingKeys: String, CodingKey {
+        case token, user, referral_code
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.token = try c.decode(String.self, forKey: .token)
+        self.user = try c.decode(User.self, forKey: .user)
+        self.referral_code = try c.decodeIfPresent(String.self, forKey: .referral_code)
+    }
 }
 
 // MARK: - Daily Check-in (每日功课)
@@ -128,4 +162,40 @@ struct ChatMessage: Identifiable, Codable {
         self.role = role
         self.content = content
     }
+}
+
+// MARK: - Referral (推荐裂变)
+
+struct ReferralCodeResp: Codable {
+    let code: String
+    let share_url: String
+    let redeemed_by_user_id: Int?
+    let redeemed_at: String?
+    var shareURL: String { share_url }
+    var redeemedByUserId: Int? { redeemed_by_user_id }
+    var redeemedAt: String? { redeemed_at }
+}
+
+struct ReferralStatus: Codable {
+    let code: String?
+    let has_invited: Bool
+    let invite_count: Int
+    let total_granted_days: Int
+    let redeemed_by_user_id: Int?
+    let redeemed_at: String?
+    var hasInvited: Bool { has_invited }
+    var inviteCount: Int { invite_count }
+    var totalGrantedDays: Int { total_granted_days }
+    var redeemedByUserId: Int? { redeemed_by_user_id }
+    var redeemedAt: String? { redeemed_at }
+}
+
+struct ReferralRedeemResp: Codable {
+    let ok: Bool
+    let granted_days: Int
+    let inviter_user_id: Int
+    let new_pro_until: String?
+    var grantedDays: Int { granted_days }
+    var inviterUserId: Int { inviter_user_id }
+    var newProUntil: String? { new_pro_until }
 }

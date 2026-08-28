@@ -224,3 +224,18 @@
 /* ===== 付费墙夜底改版 ===== */
 "pw_eyebrow" = "入室弟子";
 "pw_trial_note" = "以免费试用开始——随时可取消";
+
+/* ===== build 34: 评分 + 社交证明 + 推荐裂变 ===== */
+"rate_taomind" = "给 TaoMind 评分";
+"onboarding_social_proof" = "已有 5 万+ 修行者在此同路";
+"referral_title" = "给 7 天，得 7 天";
+"referral_body" = "把邀请码分享给朋友，他加入后你们各得 7 天 TaoMind Pro。";
+"referral_my_code" = "我的邀请码";
+"referral_qr_hint" = "扫码用我的邀请码下载";
+"referral_stat_invited" = "已邀请朋友";
+"referral_stat_granted" = "累计获得 Pro 天数";
+"referral_share_button" = "分享给朋友";
+"referral_share_text_fmt" = "用我的邀请码 %@ 解锁 7 天 TaoMind Pro · %@";
+"referral_redeem_success" = "你们都获得了 7 天 Pro ✨";
+"referral_footer_fmt" = "%@ 在修行第 %d 天分享";
+"referral_monthly_fmt" = "%@ 的修行报告 · %@";
