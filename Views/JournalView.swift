@@ -29,13 +29,18 @@ struct JournalView: View {
     var body: some View {
         Group {
             if isLoading {
+                // build 34: 撑满整屏让外层 .paperBackground 真正铺到 loading 区，
+                // 否则 Group 子视图没 Spacer 时背景只盖在最小边界上 → 加载中显白。
                 VStack(spacing: 12) {
+                    Spacer()
                     ProgressView()
                         .scaleEffect(1.2)
                     Text("Loading your journal...")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                    Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let err = errorMessage {
                 VStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle")

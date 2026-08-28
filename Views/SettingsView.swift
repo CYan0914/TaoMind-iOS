@@ -8,6 +8,8 @@ struct SettingsView: View {
     @State private var showReferral = false
 
     var body: some View {
+        // build 34: List 默认 systemBackground（白）与全站宣纸色不一致；
+        // scrollContentBackground(.hidden) 把默认白底抹掉，外层 background 再铺 DS.paper。
         List {
             // MARK: - Subscription Section
             Section {
@@ -159,6 +161,10 @@ struct SettingsView: View {
                 .padding(.top, 8)
             }
         }
+        // build 34: 整个 List 默认 systemBackground（白）与全站宣纸色不一致；
+        // scrollContentBackground(.hidden) 抹掉默认白底，外层 background 再铺 DS.paper。
+        .scrollContentBackground(.hidden)
+        .background(DS.paper.ignoresSafeArea())
         .sheet(isPresented: $showReferral) {
             ReferralView()
         }
