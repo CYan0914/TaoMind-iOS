@@ -176,7 +176,7 @@ struct PaywallView: View {
 
                         // 配了免费试用（RC intro offer）才显示——不硬编码，避免虚假宣传
                         if let pkg = selectedPackage,
-                           let intro = pkg.storeProduct.introductoryPrice,
+                           let intro = pkg.storeProduct.introductoryDiscount,
                            intro.paymentMode == .freeTrial {
                             Text(AppState.tr("pw_trial_note"))
                                 .font(.caption)
