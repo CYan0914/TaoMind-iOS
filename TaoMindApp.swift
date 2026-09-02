@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct TaoMindApp: App {
@@ -11,7 +12,26 @@ struct TaoMindApp: App {
 
     init() {
         SubscriptionManager.configure()
+        // 修 build 39 Google 登录一点闪退：SDK 8.0+ 要求在首次 signIn()
+        // 之前显式设置 GIDSignIn.sharedInstance.configuration，否则抛
+        // NSInvalidArgumentException 直接闪退。
+        Self.configureGoogleSignIn()
         // 通知权限改在首启 onboarding 第 3 屏请求（价值预告之后，转化更好）
+    }
+
+    /// 显式从 bundle 的 GoogleService-Info.plist 读 CLIENT_ID 并配置 GIDSignIn。
+    /// 显式比 GIDSignIn.sharedInstance.start() 更可靠：不依赖 SDK 的 plist 解析路径，
+    /// 也不阻塞启动（同步设置好再走 main runloop）。
+    private static func configureGoogleSignIn() {
+        guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+              let dict = NSDictionary(contentsOfFile: path),
+              let clientID = dict["CLIENT_ID"] as? String else {
+            print("[Auth] GoogleService-Info.plist not found in bundle — Google Sign-In disabled")
+            return
+        }
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        print("[Auth] GIDSignIn configured with clientID \(clientID.prefix(20))…")
     }
 
     var body: some Scene {
