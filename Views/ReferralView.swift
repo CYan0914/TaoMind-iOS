@@ -74,7 +74,8 @@ struct ReferralView: View {
                     if ref.lastRedeemSuccess {
                         Label(AppState.tr("referral_redeem_success"), systemImage: "checkmark.circle.fill")
                             .font(.subheadline)
-                            .foregroundColor(.green)
+                            // 修设计审计 2026-09-02 Blocker 3：.green → DS.sage
+                            .foregroundColor(DS.sage)
                             .padding(.top, 4)
                     } else if let err = ref.lastError {
                         Text(err)

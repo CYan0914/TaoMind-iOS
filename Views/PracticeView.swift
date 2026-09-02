@@ -26,6 +26,8 @@ struct PracticeView: View {
     @State private var showMonthlyReport = false
     @State private var newCard: CommemorativeCard?
     @State private var showCardCollection = false
+    // 修设计审计 2026-09-02 QW2：Library 从底 tab 移到 Practice 主屏入口。
+    @State private var showLibrary = false
 
     private let service = CheckinService()
 
@@ -78,6 +80,11 @@ struct PracticeView: View {
         .sheet(isPresented: $showMonthlyReport) {
             MonthlyReportView(month: currentMonthString)
         }
+        // 修设计审计 2026-09-02 QW2：Library（经藏）从底 tab 移到 Practice。
+        // LibraryView 自身已带 NavigationStack（见 LibraryView.swift line 17），sheet 里直接调用即可。
+        .sheet(isPresented: $showLibrary) {
+            LibraryView()
+        }
     }
 
     // MARK: - Signed out
@@ -128,6 +135,11 @@ struct PracticeView: View {
             }
             .padding(.top, 40)
         }
+        // 修设计审计 2026-09-02 Blocker 2：底 tab bar 49pt + home indicator 34pt ≈ 100pt
+        // 留白让 Practice 主屏内容不被 tab bar 覆盖。
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 100)
+        }
     }
 
     // MARK: - Signed in content
@@ -146,6 +158,9 @@ struct PracticeView: View {
 
                 // Monthly report (Pro)
                 monthlyReportCard
+
+                // 修设计审计 2026-09-02 QW2：经藏入口（5 tab → 4 tab 后从底 tab 迁入）
+                libraryEntry
 
                 // Today's verse
                 if let verse = appState.dailyVerse {
@@ -177,6 +192,11 @@ struct PracticeView: View {
             }
             .padding()
         }
+        // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
+        // 避免最后一段（如历史打卡、Master Guidance、Reflection 输入框）被 iOS tab bar 切。
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 100)
+        }
         .overlay(alignment: .top) {
             if errorMessage != nil {
                 errorBanner
@@ -196,8 +216,11 @@ struct PracticeView: View {
     private var streakHeader: some View {
         HStack(spacing: 16) {
             VStack(spacing: 2) {
-                Text("🔥")
+                // 修设计审计 2026-09-02 QW4：🔥 emoji 偏 child-ish 风格、与「修行」主题不搭。
+                // 换 SF Symbol flame.fill + bronze 调色，保留「火」符号但更克制、东亚。
+                Image(systemName: "flame.fill")
                     .font(.title2)
+                    .foregroundColor(DS.bronze)
                 Text("\(status?.streak.currentStreak ?? 0)")
                     .font(.custom("Georgia", size: 32, relativeTo: .largeTitle))
                     .fontWeight(.bold)
@@ -231,7 +254,9 @@ struct PracticeView: View {
                     .foregroundColor(.secondary)
                 Image(systemName: (status?.streak.todayDone ?? false) ? "checkmark.seal.fill" : "circle")
                     .font(.title3)
-                    .foregroundColor((status?.streak.todayDone ?? false) ? .green : .secondary)
+                    // 修设计审计 2026-09-02 Blocker 3：iOS 系统绿跟 bronze 暖色系跳戏。
+                    // 改 DS.sage（鼠尾草绿），保留「成功」语义但融入宣纸调色板。
+                    .foregroundColor((status?.streak.todayDone ?? false) ? DS.sage : .secondary)
                 Text(AppState.tr("signed_in_as", authService.user?.display_name ?? authService.user?.email ?? ""))
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -421,6 +446,35 @@ struct PracticeView: View {
         return f.string(from: Date())
     }
 
+    // MARK: - 经藏入口（QW2：5→4 tab 后从底 tab 迁入 Practice）
+
+    private var libraryEntry: some View {
+        Button(action: { showLibrary = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: "books.vertical")
+                    .font(.title3)
+                    .foregroundColor(DS.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(AppState.tr("Library"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(DS.ink)
+                    Text("《道德经》 · 《金刚经》")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+            .padding(14)
+            .background(DS.paperHi)
+            .cornerRadius(14)
+        }
+        .buttonStyle(.plain)
+    }
+
     private var sourcePicker: some View {
         HStack(spacing: 10) {
             sourceChip("📖", AppState.tr("read_verse"), selected: source == "verse") {
@@ -511,7 +565,8 @@ struct PracticeView: View {
                 Label(AppState.tr("practice_done_today"), systemImage: "checkmark.seal.fill")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.green)
+                    // 修设计审计 2026-09-02 Blocker 3：.green → DS.sage
+                    .foregroundColor(DS.sage)
                 Spacer()
                 Button {
                     // Allow rewriting today's reflection
@@ -532,7 +587,8 @@ struct PracticeView: View {
                 .cornerRadius(DS.Radius.small)
         }
         .padding()
-        .background(Color.green.opacity(0.06))
+        // 修设计审计 2026-09-02 Blocker 3：打卡完成态背景 .green 0.06 → DS.sageSoft 0.06
+        .background(DS.sageSoft.opacity(0.06))
         .cornerRadius(14)
     }
 
@@ -747,7 +803,8 @@ struct PracticeView: View {
             ForEach(Array(checkins.prefix(7))) { checkin in
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        // 修设计审计 2026-09-02 Blocker 3：.green → DS.sage
+                        .foregroundColor(DS.sage)
                         .font(.subheadline)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(checkin.checkin_date)

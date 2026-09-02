@@ -109,8 +109,15 @@ struct ShareCardPreviewSheet: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(DS.ink)
-                    .foregroundColor(.white)
+                    // 修设计审计 2026-09-02 QW1：DS.ink（纯黑）→ bronze 渐变
+                    // （暖色系里纯黑 CTA 突兀；铜金渐变更入调性）
+                    .background(
+                        LinearGradient(
+                            colors: [DS.bronzeLight, DS.bronzeDeep],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                    .foregroundColor(DS.paperHi)
                     .cornerRadius(14)
             }
             .padding(.horizontal, 32)

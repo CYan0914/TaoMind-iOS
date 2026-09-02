@@ -72,6 +72,9 @@ struct SeekWisdomView: View {
                                 }
                             }
                         }
+                        // 修设计审计 2026-09-02 QW3：场景 chip 组末尾留 16pt padding，
+                        // 修"Career" chip 被切边缘。
+                        .padding(.trailing, 16)
                     }
                 }
 
@@ -249,6 +252,11 @@ struct SeekWisdomView: View {
                 }
             }
             .padding()
+        }
+        // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
+        // 让 Wisdom Result 屏不被 iOS tab bar 切。
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 100)
         }
         .paperBackground()
         .scrollDismissesKeyboard(.immediately)

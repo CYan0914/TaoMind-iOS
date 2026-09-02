@@ -70,6 +70,11 @@ struct LibraryView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+        // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
+        // 让《金刚经》最后一章不被 iOS tab bar 切。
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 100)
+        }
     }
 
     private func libraryRow(_ entry: LibraryEntry) -> some View {

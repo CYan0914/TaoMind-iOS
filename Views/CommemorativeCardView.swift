@@ -24,13 +24,15 @@ struct CardFaceView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                // 底部渐隐衬底，保证任何艺术图上文字可读
+                // 修设计审计 2026-09-02 QW5：底部渐隐衬底 compact 52pt、非 compact 132pt
+                // （原 108pt 让 Chapter 1 大卡底部"The Tao that can be told..."被切）。
+                // 描述行 lineLimit 也从 3 → 4，完整容纳首章引文。
                 LinearGradient(
                     colors: [DS.ink.opacity(0.0),
                              DS.ink.opacity(0.72)],
                     startPoint: .top, endPoint: .bottom
                 )
-                .frame(height: compact ? 52 : 108)
+                .frame(height: compact ? 56 : 132)
                 .overlay(bottomText)
             }
         }
@@ -55,7 +57,9 @@ struct CardFaceView: View {
                 .font(compact ? .system(size: 9) : .custom("Georgia", size: 14, relativeTo: .footnote))
                 .italic(!isChinese)
                 .foregroundColor(DS.ink.opacity(0.04))
-                .lineLimit(compact ? 2 : 3)
+                // 修设计审计 2026-09-02 QW5：lineLimit 3 → 4，
+                // 让 Chapter 1 大卡描述"The Tao that can be told..."完整显示。
+                .lineLimit(compact ? 2 : 4)
                 .multilineTextAlignment(.leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,8 +136,15 @@ struct CommemorativeCardUnlockView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(DS.ink)
-                    .foregroundColor(.white)
+                    // 修设计审计 2026-09-02 QW1：DS.ink（纯黑）→ bronze 渐变
+                    // （暖色系里纯黑 CTA 突兀；铜金渐变更入调性）
+                    .background(
+                        LinearGradient(
+                            colors: [DS.bronzeLight, DS.bronzeDeep],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                    .foregroundColor(DS.paperHi)
                     .cornerRadius(14)
             }
             .padding(.horizontal, 36)
@@ -207,6 +218,11 @@ struct CardCollectionView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                 }
+            }
+            // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
+            // 让 81 宫格最后一行不被 iOS tab bar 切。
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 100)
             }
             .paperBackground()
             .navigationTitle(AppState.tr("card_collection"))

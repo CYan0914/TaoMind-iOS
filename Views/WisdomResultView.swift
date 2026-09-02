@@ -153,7 +153,10 @@ struct WisdomSection: View {
                         .foregroundColor(DS.ink)
                 }
 
-                Text(content)
+                // 修设计审计 2026-09-02 Blocker 1：用 AttributedString 解析后端返回的
+                // markdown（*italic* / **bold**），去掉 AI 常带的 --- 分隔行。
+                // 见 DesignSystem.swift 顶部 `extension Text { static func markdown }`。
+                Text.markdown(content)
                     .font(DS.verse(15, relativeTo: .body))
                     .foregroundColor(DS.inkSoft)
                     .lineSpacing(6)

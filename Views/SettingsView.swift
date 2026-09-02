@@ -23,7 +23,8 @@ struct SettingsView: View {
                         Spacer()
                         if subscriptionManager.isPro {
                             Label("Active", systemImage: "checkmark.seal.fill")
-                                .foregroundColor(.green)
+                                // 修设计审计 2026-09-02 Blocker 3：.green → DS.sage
+                                .foregroundColor(DS.sage)
                                 .font(.subheadline)
                         } else {
                             Text("Free Tier")
@@ -117,8 +118,10 @@ struct SettingsView: View {
                     HStack {
                         Text(AppState.tr("rate_taomind"))
                         Spacer()
+                        // 修设计审计 2026-09-02 Blocker 3：.yellow → DS.bronze
+                        // (iOS 系统金黄星在暖宣纸底色上跳戏；bronze 同色系更内敛)
                         Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
+                            .foregroundColor(DS.bronze)
                             .font(.caption)
                     }
                 }
@@ -145,7 +148,8 @@ struct SettingsView: View {
                     Text("API Status")
                     Spacer()
                     Label("Connected", systemImage: "circle.fill")
-                        .foregroundColor(.green)
+                        // 修设计审计 2026-09-02 Blocker 3：.green → DS.sage
+                        .foregroundColor(DS.sage)
                         .font(.caption)
                 }
 
@@ -166,6 +170,13 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
+            // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
+            // 让「Privacy Policy / Terms of Service」链接不被 iOS tab bar 切掉。
+            // List 在 iOS 16+ 也会处理 safe area，但对 .scrollContentBackground(.hidden) 的 List
+            // 不自动加 bottom padding；这是 1.5.0 出现合规章节被切的根因。
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 100)
+            }
         }
         .sheet(isPresented: $showReferral) {
             ReferralView()

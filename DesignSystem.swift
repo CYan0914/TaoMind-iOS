@@ -36,6 +36,23 @@ enum DS {
     /// 夜之金（深底上的金色点缀/描边）
     static let nightGold = Color(red: 0.788, green: 0.663, blue: 0.416)  // #C9A96A
 
+    // MARK: 设计审计 build 35+ 新增（替换系统绿/纯黑 CTA）
+
+    /// 暖鼠尾草绿 —— 替代 iOS .green / systemGreen
+    /// 用于「Active / Connected / Today 打卡勾」等成功态。
+    /// 调性比 .systemGreen 更柔、偏 bronze 暖色系，避开冷绿跳戏。
+    static let sage = Color(red: 0.451, green: 0.557, blue: 0.420)       // #738E6B
+    /// 鼠尾草绿（更淡，用于「已完成」卡片背景的 0.06 透明度叠加）
+    static let sageSoft = Color(red: 0.541, green: 0.620, blue: 0.498)   // #8A9E7F
+
+    /// 铜金主色（深）—— Share CTA 渐变下端
+    static let bronzeDeep = Color(red: 0.467, green: 0.357, blue: 0.180)  // #775B2E
+    /// 铜金主色（浅）—— Share CTA 渐变上端
+    static let bronzeLight = Color(red: 0.612, green: 0.486, blue: 0.275) // #9C7C46
+
+    /// Tab bar 暖白半透明底（iOS 16+ .toolbarBackground 用）
+    static let tabBarBackground = Color(red: 0.957, green: 0.937, blue: 0.890).opacity(0.92) // DS.paper 92%
+
     // MARK: 形制 —— Shape
 
     enum Radius {
@@ -151,6 +168,49 @@ extension View {
             .foregroundColor(color)
             .tracking(DS.eyebrowTracking)
             .textCase(.uppercase)
+    }
+
+    /// 暖底 Tab bar（iOS 16+ .toolbarBackground 用）
+    /// 用于覆盖 iOS 默认纯白/纯黑 Tab bar，融入全站宣纸调性。
+    func warmTabBar() -> some View {
+        self.toolbarBackground(DS.tabBarBackground, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
+    }
+}
+
+// MARK: - Text.markdown —— 修 Wisdom Result 的 *From / ** / --- 漏出
+//
+// 根因：后端返回的 wisdom.passage / wisdom.wisdom / wisdom.reflection / wisdom.way_forward
+// 仍是 Markdown 源串（`*italic*` `**bold**` `---` 分隔线），原代码用 `Text(content)`
+// 把 `*` `**` `---` 当作普通字符渲染 —— 设计审计 2026-09-02 报告 Blocker 1。
+//
+// 修复：先去掉孤立的 `---` / `***` 分隔行（AI 输出里常夹，但产品里不需要渲染），
+// 再用 SwiftUI AttributedString 的 inlineOnly 解析 `*italic*` / `**bold**`。
+// 解析失败时回退到原文 —— 不崩。
+
+extension Text {
+    /// 渲染 AI 返回的章节引文/感悟：去孤立分隔行 + 解析内联 Markdown 强调。
+    /// 与 `Text(_ content)` 行为一致：返回的 Text 可继续链式套 .font / .foregroundColor / .lineSpacing。
+    static func markdown(_ content: String) -> Text {
+        let cleaned = Self.stripStandaloneDividers(content)
+        if let attributed = try? AttributedString(
+            markdown: cleaned,
+            options: AttributedString.MarkdownParsingOptions(
+                interpretedSyntax: .inlineOnlyPreservingWhitespace
+            )
+        ) {
+            return Text(attributed)
+        }
+        return Text(cleaned)
+    }
+
+    private static func stripStandaloneDividers(_ content: String) -> String {
+        let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+        let cleaned = lines.filter { line in
+            let t = line.trimmingCharacters(in: .whitespaces)
+            return t != "---" && t != "***" && t != "* * *"
+        }
+        return cleaned.joined(separator: "\n")
     }
 }
 
