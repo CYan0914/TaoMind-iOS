@@ -106,6 +106,7 @@
 /* ===== Paywall 夜底改版 ===== */
 "pw_eyebrow" = "Disciple's Path";
 "pw_trial_note" = "Starting with a free trial — cancel anytime";
+"pw_trial_xday_fmt" = "%d-day free trial";
 
 /* ===== build 34: Rate + Onboarding social proof + Referral ===== */
 "rate_taomind" = "Rate TaoMind";

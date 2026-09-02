@@ -384,6 +384,23 @@ private struct PlanCard: View {
                             .fontWeight(.semibold)
                             .foregroundColor(DS.nightGold)
                     }
+
+                    // build 42: 年卡下面挂「N 天免费试用」小行（金印 + 文字）。
+                    // 仅在 (a) 是年档 + (b) RC 后台真的配了 freeTrial intro offer 时显示，
+                    // 避免硬编码「7 天」与实际配置不一致被 App Store 判虚假宣传。
+                    // 天数从 introductoryDiscount.subscriptionPeriod 动态算出来。
+                    if let trialLabel = trialLabel {
+                        HStack(spacing: 4) {
+                            Image(systemName: "gift.fill")
+                                .font(.caption2)
+                                .foregroundColor(DS.nightGold)
+                            Text(trialLabel)
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(DS.nightGold)
+                        }
+                        .padding(.top, 2)
+                    }
                 }
 
                 Spacer()
@@ -446,6 +463,26 @@ private struct PlanCard: View {
         fmt.minimumFractionDigits = 2
         fmt.maximumFractionDigits = 2
         return fmt.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
+    }
+
+    /// 试用天数标签（仅在年档且 RC 后台配了 freeTrial intro offer 时返回文案）。
+    /// 文案从 introductoryDiscount.subscriptionPeriod 动态算，避免硬编码"7"与配置不一致
+    /// 被 App Store 判虚假宣传。1 周 → 7 天，1 月 → 30 天，1 年 → 365 天。
+    private var trialLabel: String? {
+        guard package.packageType == .annual,
+              let intro = package.storeProduct.introductoryDiscount,
+              intro.paymentMode == .freeTrial,
+              let period = intro.subscriptionPeriod else { return nil }
+        let days: Int
+        switch period.unit {
+        case .day: days = period.value
+        case .week: days = period.value * 7
+        case .month: days = period.value * 30
+        case .year: days = period.value * 365
+        @unknown default: return nil
+        }
+        guard days > 0 else { return nil }
+        return String(format: AppState.tr("pw_trial_xday_fmt"), days)
     }
 
     /// 每档下面一行的周期小字：lifetime / Annual / Quarterly / Six months / Monthly / Weekly / Daily

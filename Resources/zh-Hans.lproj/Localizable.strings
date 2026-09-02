@@ -232,6 +232,7 @@
 /* ===== 付费墙夜底改版 ===== */
 "pw_eyebrow" = "入室弟子";
 "pw_trial_note" = "以免费试用开始——随时可取消";
+"pw_trial_xday_fmt" = "%d 天免费试用";
 
 /* ===== build 34: 评分 + 社交证明 + 推荐裂变 ===== */
 "rate_taomind" = "给 TaoMind 评分";
