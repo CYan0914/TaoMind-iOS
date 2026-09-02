@@ -67,40 +67,42 @@ jobs:
 
           BUNDLE = "com.cyan0914.taomind"
           VERSION = "1.5.0"
-          BUILD = "38"
+          # build 42: 付费墙年卡下加 N 天免费试用提示（动态从 RC intro discount 算）
+          BUILD = "42"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
+          # build 40-42 用户能感知的增量：
+          #   41: Google 登录（已有 Apple 登录之外，海外用户多一个选择）
+          #   42: 年卡下面挂「N 天免费试用」金印+文字，天数从 RC 后台 intro discount 动态算
+          #   40: 付费墙 100% 自动关闭的 bug（之前用户首启就立即关掉付费墙）
+          # 邀请码/评分/社交证明/视觉统一是 34 已有功能，不再列；本次只列 40-42 增量。
           WHATS_NEW_EN = (
-              "**Invite a friend, both get 7 days of Pro**\n"
-              "Open Settings to find your 8-character invite code. Share it with a "
-              "friend — when they join with your code, you each receive 7 days of "
-              "TaoMind Pro. Scan the QR in the share card or share the link directly.\n\n"
-              "**Rate TaoMind at the right moment**\n"
-              "After a meaningful streak, we'll gently invite you to leave a rating. "
-              "You can also rate anytime from Settings. Your feedback helps more "
-              "seekers find the practice.\n\n"
-              "**Join 50,000+ on the path**\n"
-              "On first launch, you'll see how many fellow practitioners are walking "
-              "this road of ancient wisdom with you.\n\n"
-              "**Visual polish**\n"
-              "Settings and the journal loading screen now use the same xuan-paper "
-              "ground as the rest of the app, for a calmer, more unified feel."
+              "**Sign in with Google**\n"
+              "You can now sign in to TaoMind with your Google account, in addition "
+              "to Apple. Your daily practice, journal, and streaks sync across devices "
+              "the moment you sign in.\n\n"
+              "**Free trial on the annual plan**\n"
+              "The annual subscription now shows a 'try it free' line under the price, "
+              "so you can experience the full library of the Tao Te Ching and Diamond "
+              "Sutra before committing. The trial length is set by us and shown in the "
+              "paywall — no surprise charges, cancel anytime in App Store settings.\n\n"
+              "**Smoother paywall**\n"
+              "We fixed a bug that closed the paywall too quickly on first launch. "
+              "It now stays open long enough to read what's offered before deciding."
           )
           WHATS_NEW_ZH = (
-              "**邀请好友,各得 7 天 Pro**\n"
-              "进入设置即可看到你的 8 位邀请码。分享给朋友,他用你的码加入后,"
-              "你们各获得 7 天 TaoMind Pro。卡片自带二维码,扫码或链接分享均可。\n\n"
-              "**在合适的时刻为 TaoMind 评分**\n"
-              "在有意义的天数节点,我们会温柔地邀请你留下评分。"
-              "你也可以随时在设置页打分。你的反馈能帮更多求索者发现这里。\n\n"
-              "**已有 5 万+ 修行者在此同路**\n"
-              "首次打开时,你会看到正有多少同道一起走在古老智慧的路上。\n\n"
-              "**视觉细节**\n"
-              "设置页与修行日志加载页已统一为宣纸底色,与全站视觉保持一致,"
-              "更沉稳、更统一。"
+              "**支持 Google 账号登录**\n"
+              "除了 Apple 登录，你现在也可以用 Google 账号登录 TaoMind。\n"
+              "登录后每日功课、修行日志、连续打卡数据会在多设备间即时同步。\n\n"
+              "**年卡免费试用**\n"
+              "年卡订阅现在会在价格下方标注「N 天免费试用」。\n"
+              "你可以先完整体验《道德经》与《金刚经》全文精读，再决定是否继续。\n"
+              "试用天数由我们设定并明示在付费墙中——不会偷偷扣款，随时可在 App Store 设置中取消。\n\n"
+              "**付费墙体验更顺手**\n"
+              "修复了首启时付费墙过快关闭的 bug，现在你能从容看完介绍再做选择。"
           )
 
           # 1) Find app
