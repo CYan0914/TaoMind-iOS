@@ -121,6 +121,17 @@ struct PracticeView: View {
                 .padding(.horizontal, 32)
                 .disabled(authService.isAuthenticating)
 
+                // build 39: Google Sign-In — same width as Apple button
+                GoogleSignInButton(
+                    action: {
+                        Task {
+                            _ = await authService.signInWithGoogle()
+                        }
+                    },
+                    isLoading: authService.isAuthenticating
+                )
+                .padding(.horizontal, 32)
+
                 if authService.isAuthenticating {
                     ProgressView()
                 }
@@ -459,7 +470,7 @@ struct PracticeView: View {
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(DS.ink)
-                    Text("《道德经》 · 《金刚经》")
+                    Text(AppState.tr("library_subtitle"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

@@ -53,6 +53,8 @@
 
 /* ===== Paywall: lifetime + offerings fallback ===== */
 "One-time purchase" = "One-time purchase";
+"Quarterly" = "Quarterly";
+"Semi-annual" = "Six months";
 "Unable to load purchase options. Please check your connection." = "Unable to load purchase options. Please check your connection.";
 "Retry" = "Retry";
 "Restore" = "Restore";
@@ -80,6 +82,11 @@
 "pw_monthly_equiv_fmt" = "%@/mo";
 "pw_save_fmt" = "Save %d%%";
 "pw_best_value" = "荐";
+"pw_plan_lifetime" = "TaoMind Pro Lifetime";
+"pw_plan_brand" = "TaoMind Pro";
+"library_tao_te_ching" = "Tao Te Ching";
+"library_diamond_sutra" = "Diamond Sutra";
+"library_subtitle" = "Tao Te Ching · Diamond Sutra";
 
 /* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
 "card_unlock_title" = "New card collected";
@@ -114,3 +121,10 @@
 "referral_redeem_success" = "You both got 7 days of Pro ✨";
 "referral_footer_fmt" = "shared by %@ on day %d of practice";
 "referral_monthly_fmt" = "%@'s practice report · %@";
+
+/* ===== build 39: Google Sign-In + Account ===== */
+"Account" = "Account";
+"Sign Out" = "Sign Out";
+"Continue with Google" = "Continue with Google";
+"Signed in with Google" = "Signed in with Google";
+"Signed in with Apple" = "Signed in with Apple";

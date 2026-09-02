@@ -10,13 +10,16 @@ packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios
     from: 5.14.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 8.0.0
 settings:
   base:
     SWIFT_VERSION: "5.9"
     ALWAYS_SEARCH_USER_PATHS: NO
     DEVELOPMENT_TEAM: H4VQ9X6KYK
     MARKETING_VERSION: "1.5.0"
-    CURRENT_PROJECT_VERSION: "38"
+    CURRENT_PROJECT_VERSION: "39"
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
     INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
@@ -63,3 +66,5 @@ targets:
         Release: {}
     dependencies:
       - package: RevenueCat
+      - package: GoogleSignIn
+        product: GoogleSignIn

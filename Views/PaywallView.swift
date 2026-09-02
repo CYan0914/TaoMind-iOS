@@ -34,11 +34,11 @@ struct PaywallView: View {
         return pkgs
     }
 
-    /// 周期越长性价比越高 → 排序越靠前。
+    /// Lifetime 居首（用户原话：lifetime 排在最上面）→ 其余按周期从长到短。
     private static func anchorRank(_ type: PackageType) -> Int {
         switch type {
-        case .annual: return 0
-        case .lifetime: return 1
+        case .lifetime: return 0
+        case .annual: return 1
         case .sixMonth: return 2
         case .threeMonth: return 3
         case .twoMonth: return 4
@@ -354,7 +354,8 @@ private struct PlanCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 7) {
-                        Text(package.storeProduct.localizedTitle)
+                        // 标题统一为 "TaoMind Pro" 品牌（避免与 ASC product 名字耦合导致 lifetime 误显示为订阅）
+                        Text(AppState.tr("pw_plan_brand"))
                             .font(DS.title(15))
                             .foregroundColor(DS.nightText)
 
@@ -370,15 +371,11 @@ private struct PlanCard: View {
                         }
                     }
 
-                    if package.packageType == .lifetime {
-                        Text(AppState.tr("One-time purchase"))
-                            .font(.caption)
-                            .foregroundColor(DS.nightSoft)
-                    } else if package.storeProduct.subscriptionPeriod != nil {
-                        Text(periodDetail)
-                            .font(.caption)
-                            .foregroundColor(DS.nightSoft)
-                    }
+                    // 周期小字：lifetime / Annual / Quarterly / Monthly / Weekly / Six months / Daily，
+                    // 所有档都显示（用户原话：每档下面一行小子）
+                    Text(periodLabel)
+                        .font(.caption)
+                        .foregroundColor(DS.nightSoft)
 
                     // 价格锚点：长周期档折算月均价 + 相对月档省多少（"$3.33/mo · Save 58%"）
                     if let anchor = priceAnchor {
@@ -451,11 +448,21 @@ private struct PlanCard: View {
         return fmt.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
     }
 
-    private var periodDetail: String {
+    /// 每档下面一行的周期小字：lifetime / Annual / Quarterly / Six months / Monthly / Weekly / Daily
+    private var periodLabel: String {
+        if package.packageType == .lifetime {
+            return AppState.tr("Lifetime")
+        }
         guard let period = package.storeProduct.subscriptionPeriod else { return "" }
         switch period.unit {
         case .month:
-            return period.value == 1 ? AppState.tr("Monthly") : String(format: AppState.tr("every_n_months_fmt"), period.value)
+            switch period.value {
+            case 1: return AppState.tr("Monthly")
+            case 3: return AppState.tr("Quarterly")
+            case 6: return AppState.tr("Semi-annual")
+            case 2: return String(format: AppState.tr("every_n_months_fmt"), period.value)
+            default: return String(format: AppState.tr("every_n_months_fmt"), period.value)
+            }
         case .year:
             return AppState.tr("Annual")
         case .week:

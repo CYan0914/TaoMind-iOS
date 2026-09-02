@@ -1,7 +1,11 @@
 import Foundation
 import AuthenticationServices
+import GoogleSignIn
+import UIKit
 
-// MARK: - Auth Service (Sign in with Apple)
+// MARK: - Auth Service
+// Supports Sign in with Apple (build 30+) and Google Sign-In (build 39+).
+// Both providers share the same backend exchange flow at /auth/{provider}.
 
 @MainActor
 final class AuthService: NSObject, ObservableObject {
@@ -36,7 +40,7 @@ final class AuthService: NSObject, ObservableObject {
         ["Authorization": "Bearer \(token ?? "")"]
     }
 
-    // MARK: - Sign In
+    // MARK: - Sign in with Apple (existing path)
 
     /// Complete a Sign in with Apple result: extract the identity token and
     /// exchange it with the backend for a TaoMind session.
@@ -44,7 +48,7 @@ final class AuthService: NSObject, ObservableObject {
         authError = nil
         switch result {
         case .failure(let error):
-            print("[Auth] Sign in failed: \(error)")
+            print("[Auth] Apple sign in failed: \(error)")
             authError = "Sign in failed: \(error.localizedDescription)"
             return false
         case .success(let authorization):
@@ -70,20 +74,98 @@ final class AuthService: NSObject, ObservableObject {
 
             isAuthenticating = true
             defer { isAuthenticating = false }
-
-            return await exchange(identityToken: identityToken, email: email, displayName: name)
+            return await exchangeToken(
+                provider: "apple",
+                idToken: identityToken,
+                email: email,
+                displayName: name
+            )
         }
     }
 
-    private func exchange(identityToken: String, email: String, displayName: String) async -> Bool {
-        let url = URL(string: "\(apiBaseURL)/auth/apple")!
+    // MARK: - Sign in with Google (build 39+)
+
+    /// Trigger Google Sign-In flow. Presents the native Google account picker
+    /// and exchanges the resulting ID token with the backend.
+    func signInWithGoogle() async -> Bool {
+        authError = nil
+
+        // Restore last signed-in Google account silently (no UI).
+        GIDSignIn.sharedInstance.restorePreviousSignIn { [weak self] user, error in
+            if let error = error {
+                print("[Auth] Google restorePreviousSignIn: \(error.localizedDescription)")
+                return
+            }
+            guard let user = user else { return }
+            Task { @MainActor in
+                guard let self = self,
+                      let idToken = user.idToken?.tokenString else { return }
+                let email = user.profile?.email ?? ""
+                let name = user.profile?.name ?? ""
+                self.isAuthenticating = true
+                defer { self.isAuthenticating = false }
+                _ = await self.exchangeToken(
+                    provider: "google",
+                    idToken: idToken,
+                    email: email,
+                    displayName: name
+                )
+            }
+        }
+
+        guard let rootVC = Self.topViewController() else {
+            authError = "No view controller available for sign-in"
+            return false
+        }
+
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootVC)
+            guard let idToken = result.user.idToken?.tokenString else {
+                authError = "Could not obtain a Google identity token"
+                return false
+            }
+            let email = result.user.profile?.email ?? ""
+            let name = result.user.profile?.name ?? ""
+
+            isAuthenticating = true
+            defer { isAuthenticating = false }
+            return await exchangeToken(
+                provider: "google",
+                idToken: idToken,
+                email: email,
+                displayName: name
+            )
+        } catch let error as GIDSignInError where error.code == .canceled {
+            // User cancellation is not an error worth surfacing.
+            print("[Auth] Google sign in cancelled by user")
+            return false
+        } catch {
+            print("[Auth] Google sign in failed: \(error)")
+            authError = "Google sign in failed: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    // MARK: - Shared backend exchange
+
+    /// Exchange an OAuth ID token (Apple or Google) with the backend for a
+    /// TaoMind session. The backend handles user lookup/creation by
+    /// `(provider, provider_user_id)`. The iOS side does not need to know
+    /// the OAuth sub — the backend verifies the token and returns its own user.
+    private func exchangeToken(
+        provider: String,
+        idToken: String,
+        email: String,
+        displayName: String
+    ) async -> Bool {
+        let url = URL(string: "\(apiBaseURL)/auth/\(provider)")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 20
 
         let body: [String: Any] = [
-            "identity_token": identityToken,
+            "identity_token": idToken,
             "email": email,
             "display_name": displayName,
         ]
@@ -102,7 +184,7 @@ final class AuthService: NSObject, ObservableObject {
             self.user = auth.user
             self.token = auth.token
             persist()
-            print("[Auth] Signed in as user \(auth.user.id) ✅")
+            print("[Auth] Signed in as user \(auth.user.id) via \(auth.user.provider) ✅")
             return true
         } catch {
             print("[Auth] Network error: \(error)")
@@ -114,6 +196,11 @@ final class AuthService: NSObject, ObservableObject {
     // MARK: - Sign Out
 
     func signOut() {
+        // If the user signed in with Google, also sign out of Google to avoid
+        // a stale account being restored on next launch.
+        if user?.provider == "google" {
+            GIDSignIn.sharedInstance.signOut()
+        }
         user = nil
         token = nil
         authError = nil
@@ -136,5 +223,23 @@ final class AuthService: NSObject, ObservableObject {
             UserDefaults.standard.set(data, forKey: userKey)
         }
         UserDefaults.standard.set(token, forKey: tokenKey)
+    }
+
+    // MARK: - Helpers
+
+    /// Find the topmost presented view controller for presenting modal sheets
+    /// (Google Sign-In picker, Apple Sign-In sheet).
+    private static func topViewController() -> UIViewController? {
+        guard let scene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive }) ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first,
+              var top = window.rootViewController else {
+            return nil
+        }
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        return top
     }
 }

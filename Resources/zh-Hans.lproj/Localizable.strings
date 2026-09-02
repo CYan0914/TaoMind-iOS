@@ -80,6 +80,9 @@
 "Annual" = "每年";
 "Weekly" = "每周";
 "Daily" = "每天";
+"Quarterly" = "每季度";
+"Semi-annual" = "每半年";
+"Lifetime" = "终身";
 "every_n_months_fmt" = "每 %d 个月";
 "Export Journal" = "导出日志";
 "Export" = "导出";
@@ -207,6 +210,11 @@
 "pw_monthly_equiv_fmt" = "%@/月";
 "pw_save_fmt" = "省 %d%%";
 "pw_best_value" = "荐";
+"pw_plan_lifetime" = "TaoMind Pro 终身版";
+"pw_plan_brand" = "TaoMind Pro";
+"library_tao_te_ching" = "《道德经》";
+"library_diamond_sutra" = "《金刚经》";
+"library_subtitle" = "《道德经》 · 《金刚经》";
 
 /* ===== 修行纪念卡 ===== */
 "card_unlock_title" = "收藏到新纪念卡";
@@ -239,3 +247,10 @@
 "referral_redeem_success" = "你们都获得了 7 天 Pro ✨";
 "referral_footer_fmt" = "%@ 在修行第 %d 天分享";
 "referral_monthly_fmt" = "%@ 的修行报告 · %@";
+
+/* ===== build 39: Google Sign-In + Account ===== */
+"Account" = "账户";
+"Sign Out" = "退出登录";
+"Continue with Google" = "用 Google 账号继续";
+"Signed in with Google" = "已用 Google 账号登录";
+"Signed in with Apple" = "已用 Apple 账号登录";

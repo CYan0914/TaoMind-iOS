@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @EnvironmentObject var authService: AuthService
     @State private var showReferral = false
 
     var body: some View {
@@ -14,6 +15,35 @@ struct SettingsView: View {
         ZStack {
             DS.paper.ignoresSafeArea()
             List {
+            // MARK: - Account Section (build 39: provider badge)
+            if authService.isSignedIn, let user = authService.user {
+                Section {
+                    HStack(spacing: 12) {
+                        // Provider icon
+                        providerIcon(for: user.provider)
+                            .frame(width: 32, height: 32)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(user.displayName.isEmpty ? user.email : user.displayName)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(DS.ink)
+                            Text(providerLabel(for: user.provider))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Button("Sign Out") {
+                            authService.signOut()
+                        }
+                        .font(.caption)
+                        .foregroundColor(DS.cinnabar)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Label("Account", systemImage: "person.crop.circle")
+                }
+            }
+
             // MARK: - Subscription Section
             Section {
                 VStack(spacing: 12) {
@@ -188,6 +218,58 @@ struct SettingsView: View {
         .task {
             // Refresh subscription status when user opens Settings
             await subscriptionManager.refreshStatus()
+        }
+    }
+
+    // MARK: - Provider badge helpers (build 39)
+
+    @ViewBuilder
+    private func providerIcon(for provider: String) -> some View {
+        switch provider {
+        case "google":
+            // Small multicolor G mark
+            ZStack {
+                Circle().fill(Color.white)
+                Circle()
+                    .trim(from: 0.00, to: 0.25)
+                    .stroke(Color(red: 0.918, green: 0.263, blue: 0.208), lineWidth: 2.5)
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .trim(from: 0.25, to: 0.50)
+                    .stroke(Color(red: 0.984, green: 0.737, blue: 0.020), lineWidth: 2.5)
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .trim(from: 0.50, to: 0.75)
+                    .stroke(Color(red: 0.204, green: 0.659, blue: 0.325), lineWidth: 2.5)
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .trim(from: 0.75, to: 1.00)
+                    .stroke(Color(red: 0.259, green: 0.522, blue: 0.957), lineWidth: 2.5)
+                    .rotationEffect(.degrees(-90))
+                Rectangle()
+                    .fill(Color(red: 0.259, green: 0.522, blue: 0.957))
+                    .frame(width: 12, height: 2.5)
+                    .offset(x: 4, y: 0)
+            }
+            .frame(width: 28, height: 28)
+            .overlay(Circle().stroke(DS.inkFaint.opacity(0.3), lineWidth: 0.5))
+        case "apple":
+            Image(systemName: "apple.logo")
+                .font(.system(size: 22, weight: .medium))
+                .foregroundColor(DS.ink)
+                .frame(width: 32, height: 32)
+        default:
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 28))
+                .foregroundColor(DS.inkFaint)
+        }
+    }
+
+    private func providerLabel(for provider: String) -> String {
+        switch provider {
+        case "google": return "Signed in with Google"
+        case "apple": return "Signed in with Apple"
+        default: return "Signed in"
         }
     }
 }

@@ -83,6 +83,16 @@
                 <string>taomind</string>
             </array>
         </dict>
+        <!-- build 39: Google Sign-In OAuth callback. REVERSED_CLIENT_ID
+             由 GoogleService-Info.plist 提供；复用会触发 90158 拒签占位符。 -->
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.googleusercontent.apps.20891932539-e709pcq28c1a2rcp55lu5okl7hderdst</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.20891932539-e709pcq28c1a2rcp55lu5okl7hderdst</string>
+            </array>
+        </dict>
     </array>
 </dict>
 </plist>

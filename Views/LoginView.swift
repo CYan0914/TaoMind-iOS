@@ -44,6 +44,20 @@ struct LoginView: View {
             .padding(.horizontal, 32)
             .disabled(authService.isAuthenticating)
 
+            // build 39: Google Sign-In — same width as Apple button
+            GoogleSignInButton(
+                action: {
+                    Task {
+                        let ok = await authService.signInWithGoogle()
+                        if ok {
+                            dismiss()
+                        }
+                    }
+                },
+                isLoading: authService.isAuthenticating
+            )
+            .padding(.horizontal, 32)
+
             if authService.isAuthenticating {
                 ProgressView()
                     .padding(.top, 8)

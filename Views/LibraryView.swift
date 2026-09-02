@@ -57,12 +57,12 @@ struct LibraryView: View {
 
     private var libraryList: some View {
         List {
-            Section(header: Text("《道德经》 · Tao Te Ching")) {
+            Section(header: Text(AppState.tr("library_tao_te_ching"))) {
                 ForEach(ttcEntries) { entry in
                     libraryRow(entry)
                 }
             }
-            Section(header: Text("《金刚经》 · Diamond Sutra")) {
+            Section(header: Text(AppState.tr("library_diamond_sutra"))) {
                 ForEach(diamondEntries) { entry in
                     libraryRow(entry)
                 }
