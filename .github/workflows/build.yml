@@ -146,33 +146,70 @@ jobs:
           sudo xcodebuild -license accept 2>&1 || true
           sudo xcodebuild -runFirstLaunch 2>&1 || true
 
-          # 2) Install iOS platform with retry. 显式不带 -quiet: 上次 33169947484
-          # 三次都"Attempt N failed"但没真正报错，archive 步骤才暴露 "iOS 26.0
-          # is not installed" —— 静默下载失败让 archive 误以为是 OOM/超时的根因。
-          # 失败时用 ::error:: 标红，CI summary 直接看到，不再被吞。
+          # 2) Install iOS platform with retry.
+          # 上次 (33650761653) 的 bug：原写法 `if sudo xcodebuild ... 2>&1 | tail -40`
+          # 拿到的是 tail 的 exit code（永远 0），所以即使 xcodebuild 内部 "Unable to
+          # connect to simulator" 静默失败，循环也把 ok=0 跳出去；后续 `showsdks` 报
+          # 的是缓存里的 `iOS 26.0 -sdk iphoneos26.0`，看起来「✅ 装好了」，到 archive
+          # 步骤才真正暴露 "iOS 26.0 is not installed"。这次用 PIPESTATUS[0] 抓 xcodebuild
+          # 自己的退出码，failed attempt 会继续重试 3 次，每次输出留着。
+          download_with_retry() {
+            local label="$1"; shift
+            local i rc
+            for i in 1 2 3; do
+              echo "--- $label attempt $i/3 ---"
+              # set -o pipefail + PIPESTATUS[0] 才能抓 xcodebuild 真实退出码
+              set -o pipefail
+              "$@" 2>&1 | tee "/tmp/sdkinstall_${label}.log" | tail -20
+              rc=${PIPESTATUS[0]}
+              set +o pipefail
+              if [ "$rc" -eq 0 ]; then
+                echo "$label attempt $i succeeded"
+                return 0
+              fi
+              echo "::error::$label attempt $i failed (xcodebuild exit $rc)"
+              tail -30 "/tmp/sdkinstall_${label}.log"
+              sleep 15
+            done
+            return 1
+          }
+
           echo "--- Downloading iOS platform ---"
-          ok=1
-          for i in 1 2 3; do
-            echo "Attempt $i..."
-            if sudo xcodebuild -downloadPlatform iOS 2>&1 | tail -40; then
-              ok=0
-              break
+          if ! download_with_retry "downloadPlatform_iOS" sudo xcodebuild -downloadPlatform iOS; then
+            echo "::error::xcodebuild -downloadPlatform iOS failed 3x — trying -downloadAllPlatforms as fallback"
+            if ! download_with_retry "downloadAllPlatforms" sudo xcodebuild -downloadAllPlatforms; then
+              echo "::error::xcodebuild -downloadAllPlatforms also failed 3x — giving up"
+              exit 1
             fi
-            echo "Attempt $i failed, sleeping 10s..."
-            sleep 10
-          done
-          if [ "$ok" -ne 0 ]; then
-            echo "::error::xcodebuild -downloadPlatform iOS failed after 3 attempts"
-            exit 1
           fi
 
           # 3) Verify SDK installed (主动 fail-fast, 不留到 archive 步骤才发现)
+          # 注意：光看 `xcodebuild -showsdks` 不够 — 它会列缓存里的 SDK 元数据，
+          # 但实际 platform 文件没下完 archive 才会挂。必须真试一次 destination 解析。
           echo "=== SDK verification ==="
           xcodebuild -version
           xcodebuild -showsdks
           xcrun --sdk iphoneos --show-sdk-version || { echo "::error::iphoneos SDK still missing after download"; exit 1; }
           xcrun --sdk iphoneos --show-sdk-path || true
-          echo "=== Done ==="
+
+          # 3b) Real test: parse destinations for an iOS device — if SDK 不真在，
+          # 这步会 "iOS 26.0 is not installed" 跟 archive 步骤报的同一个错。
+          # 在 archive 前 fail-fast 才是我们想要的。
+          echo "--- Resolving iOS generic destination (real SDK test) ---"
+          set -o pipefail
+          xcodebuild -showdestinations \
+            -project TaoMind.xcodeproj \
+            -scheme TaoMind \
+            -sdk iphoneos26.0 \
+            -destination 'generic/platform=iOS' 2>&1 | tee /tmp/destcheck.log | tail -40
+          rc=${PIPESTATUS[0]}
+          set +o pipefail
+          if [ "$rc" -ne 0 ] || grep -q "is not installed" /tmp/destcheck.log; then
+            echo "::error::iOS 26.0 SDK is reported as installed but cannot resolve generic/platform=iOS destination"
+            cat /tmp/destcheck.log
+            exit 1
+          fi
+          echo "=== Done — iOS SDK ready, destinations resolve ==="
 
       - name: Clean up stale Development certificates (best-effort, prevent cert limit)
         env:
