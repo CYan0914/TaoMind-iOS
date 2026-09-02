@@ -238,11 +238,10 @@ struct PaywallView: View {
                 Text(restoreMessage)
             }
             .task {
-                // If already Pro, dismiss immediately
-                if subscriptionManager.isPro {
-                    dismiss()
-                    return
-                }
+                // 2026-09-02 fix: 删掉 sync isPro check。SubscriptionManager.init() 启动时
+                // 异步跑 refreshStatus()，如果用户已是 Pro，isPro 会在 .task 跑后
+                // 100~500ms 内从 false 翻成 true，onChange(of: isPro) 已经处理 dismiss。
+                // 不要再做"开局立刻 dismiss"，那会触发"paywall 闪一下就走"假象。
                 Analytics.paywallView(context: context)
                 await subscriptionManager.fetchOfferings()
                 // 默认选中年档（价格锚点：把用户的起点放在最划算的选项上）；
@@ -251,7 +250,8 @@ struct PaywallView: View {
                     selectedPackage = packages.first(where: { $0.packageType == .annual }) ?? packages.first
                 }
             }
-            // Auto-dismiss when purchase succeeds
+            // Auto-dismiss when purchase succeeds OR user is already Pro.
+            // 唯一 dismiss 入口：等 isPro 翻 true 主动 dismiss。
             .onChange(of: subscriptionManager.isPro) { isPro in
                 if isPro { dismiss() }
             }

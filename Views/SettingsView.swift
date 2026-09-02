@@ -212,9 +212,8 @@ struct SettingsView: View {
             ReferralView()
         }
         .navigationTitle("Settings")
-        .sheet(isPresented: $subscriptionManager.showingPaywall) {
-            PaywallView(context: subscriptionManager.paywallContext)
-        }
+        // .sheet 提到 ContentView 顶层（修 bug 2026-09-02：原此处 + SeekWisdomView 重复 attach
+        // 同一 binding，导致 SwiftUI sheet 状态冲突，paywall 第一次 present 瞬间被关掉）。
         .task {
             // Refresh subscription status when user opens Settings
             await subscriptionManager.refreshStatus()

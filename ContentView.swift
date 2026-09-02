@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Binding var dailyVerse: DailyVerse?
     @State private var selectedTab = 0
     @State private var showOnboarding = false
@@ -60,6 +61,13 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             OnboardingView()
+        }
+        // 修付费墙 100% 自动退出 bug：原本 SeekWisdomView + SettingsView 各 attach 了一个
+        // .sheet(isPresented: $subscriptionManager.showingPaywall)，两个 binding 同时驱动
+        // 同一个 @Published 时 SwiftUI 内部状态冲突，sheet 第一次 present 瞬间被关掉。
+        // 统一提到 ContentView 顶层（一个 binding 驱动一个 sheet），行为可预期。
+        .sheet(isPresented: $subscriptionManager.showingPaywall) {
+            PaywallView(context: subscriptionManager.paywallContext)
         }
     }
 }

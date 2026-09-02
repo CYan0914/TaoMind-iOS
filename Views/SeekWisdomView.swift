@@ -268,9 +268,8 @@ struct SeekWisdomView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: result != nil)
-        .sheet(isPresented: $subscriptionManager.showingPaywall) {
-            PaywallView(context: subscriptionManager.paywallContext)
-        }
+        // .sheet 提到 ContentView 顶层（修 bug 2026-09-02：原此处 + SettingsView 重复 attach
+        // 同一 binding，导致 SwiftUI sheet 状态冲突，paywall 第一次 present 瞬间被关掉）。
         .alert(AppState.tr("Microphone access needed"), isPresented: $showSpeechPermissionDenied) {
             Button(AppState.tr("OK"), role: .cancel) {}
         } message: {
