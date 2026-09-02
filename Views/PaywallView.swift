@@ -468,11 +468,13 @@ private struct PlanCard: View {
     /// 试用天数标签（仅在年档且 RC 后台配了 freeTrial intro offer 时返回文案）。
     /// 文案从 introductoryDiscount.subscriptionPeriod 动态算，避免硬编码"7"与配置不一致
     /// 被 App Store 判虚假宣传。1 周 → 7 天，1 月 → 30 天，1 年 → 365 天。
+    /// RC 5.14：introductoryDiscount.subscriptionPeriod 是 non-optional `SubscriptionPeriod`，
+    /// 不需要 `if let`。
     private var trialLabel: String? {
         guard package.packageType == .annual,
               let intro = package.storeProduct.introductoryDiscount,
-              intro.paymentMode == .freeTrial,
-              let period = intro.subscriptionPeriod else { return nil }
+              intro.paymentMode == .freeTrial else { return nil }
+        let period = intro.subscriptionPeriod
         let days: Int
         switch period.unit {
         case .day: days = period.value
