@@ -66,9 +66,11 @@ jobs:
               raise RuntimeError(f"API failed after retries: {path}")
 
           BUNDLE = "com.cyan0914.taomind"
-          VERSION = "1.5.0"
-          # build 42: 付费墙年卡下加 N 天免费试用提示（动态从 RC intro discount 算）
-          BUILD = "42"
+          # 已批准/被拒版本 1.5.0 的 train 已关闭 — 不能复用同 version 字符串
+          # （PATCH build 关联会 409 RELATIONSHIP.INVALID.INVALID_STATE）。
+          # bump 到 1.5.1 (build 43) 是 ASC 关 train 后的标准恢复路径。
+          VERSION = "1.5.1"
+          BUILD = "43"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
