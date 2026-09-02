@@ -63,11 +63,15 @@ struct JournalView: View {
                 }
                 .padding()
             } else if entries.isEmpty {
+                // build 44: 撑满整屏让外层 .paperBackground 真正铺到空状态区域。
+                // 没 Spacer 时 VStack 按内容最小尺寸渲染 → 背景只盖在文字块上，
+                // 周围一圈是 NavigationStack 默认白色 → 丑。
                 VStack(spacing: 16) {
+                    Spacer()
                     Image(systemName: "book")
                         .font(.system(size: 48))
                         .foregroundColor(.secondary.opacity(0.5))
-                    Text("Your Journal is Empty")
+                    Text(AppState.tr("Your Journal is Empty"))
                         .font(.custom("Georgia", size: 20, relativeTo: .title2))
                         .fontWeight(.semibold)
                         .foregroundColor(DS.ink)
@@ -75,7 +79,9 @@ struct JournalView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                    Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
             } else {
                 List {
