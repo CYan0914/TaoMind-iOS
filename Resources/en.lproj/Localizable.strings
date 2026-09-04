@@ -89,6 +89,9 @@
 "library_subtitle" = "Tao Te Ching · Diamond Sutra";
 "library_jingjiang" = "Tao Te Ching · In-Depth";
 "library_jingjiang_pro" = "PRO";
+"library_hub_original" = "Original verses";
+"library_hub_in_depth" = "In-depth commentary";
+"library_hub_count_fmt" = "%d chapters";
 "chapter_fmt" = "Chapter %d";
 
 /* ===== In-Depth Commentary (build 46: 精讲 — original commentary, 1 free chapter + 35 Pro) ===== */

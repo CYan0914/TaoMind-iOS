@@ -217,6 +217,9 @@
 "library_subtitle" = "《道德经》 · 《金刚经》";
 "library_jingjiang" = "道德经·精讲";
 "library_jingjiang_pro" = "PRO";
+"library_hub_original" = "原文";
+"library_hub_in_depth" = "深度通释";
+"library_hub_count_fmt" = "%d 章";
 "chapter_fmt" = "第 %d 章";
 
 /* ===== 精讲 (build 46：原创通释, 1 章试读 + 35 章 Pro) ===== */

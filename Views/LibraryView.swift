@@ -1,19 +1,20 @@
 import SwiftUI
 
-// MARK: - Library (经藏)
+// MARK: - Library (经藏) — 入口 Hub
+//
+// build 48 改造：原「194 章全展开列表」太重，改为 3 个入口卡：
+//   1) 《道德经》原文  → LibrarySourceView（81 章，按 display_order 升序）
+//   2) 《金刚经》原文  → LibrarySourceView（32 章，按 display_order 升序）
+//   3) 《道德经》精讲  → LibraryJingjiangView（81 章，前 3 章免费）
 
 struct LibraryView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var entries: [LibraryEntry] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var selectedEntry: LibraryEntry?
-    @State private var selectedJingjiang: JingjiangChapter?
     @StateObject private var jingjiang = JingjiangService.shared
 
     private let api = APIClient()
-    /// Free tier can read the first 5 chapters of each source as a taste.
-    private let freeTasteCount = 5
 
     var body: some View {
         NavigationStack {
@@ -22,28 +23,9 @@ struct LibraryView: View {
                     ProgressView()
                         .scaleEffect(1.2)
                 } else if let err = errorMessage {
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundColor(.orange)
-                        Text(err)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        Button(AppState.tr("Retry")) {
-                            Task { await load() }
-                        }
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(DS.ink)
-                        .foregroundColor(.white)
-                        .cornerRadius(DS.Radius.small)
-                    }
-                    .padding()
+                    errorState(err)
                 } else {
-                    libraryList
+                    hubList
                 }
             }
             .navigationTitle(AppState.tr("Library"))
@@ -53,152 +35,125 @@ struct LibraryView: View {
                 await load()
             }
         }
-        .sheet(item: $selectedEntry) { entry in
-            NavigationStack {
-                LibraryDetailView(entry: entry)
-            }
-        }
-        .sheet(item: $selectedJingjiang) { chapter in
-            NavigationStack {
-                JingjiangDetailView(chapter: chapter)
-            }
-        }
     }
 
-    private var libraryList: some View {
-        List {
-            Section(header: Text(AppState.tr("library_tao_te_ching"))) {
-                ForEach(ttcEntries) { entry in
-                    libraryRow(entry)
-                }
-            }
-            Section(header: Text(AppState.tr("library_diamond_sutra"))) {
-                ForEach(diamondEntries) { entry in
-                    libraryRow(entry)
-                }
-            }
-            // 道德经·精讲：build 46 新增。原 5 章 free taste 模型不适用精讲（内容深度差异大），
-            // 改成 1 章试读 + paywall(.)jingjiangLocked），让免费用户有"想继续看"的钩子
-            if !jingjiang.chapters.isEmpty {
-                Section {
-                    ForEach(jingjiang.chapters) { chapter in
-                        jingjiangRow(chapter)
+    // MARK: 3 个入口卡
+
+    private var hubList: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                ForEach(hubItems) { item in
+                    NavigationLink(value: item.destination) {
+                        LibraryHubCard(
+                            title: item.title,
+                            subtitle: item.subtitle,
+                            countText: item.countText,
+                            icon: item.icon,
+                            showPro: !subscriptionManager.isPro && item.requiresPro
+                        )
                     }
-                } header: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "book.closed.fill")
-                            .font(.caption2)
-                            .foregroundColor(DS.bronze)
-                        Text(AppState.tr("library_jingjiang"))
-                    }
+                    .buttonStyle(.plain)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
+            // 让最后一张卡不被 iOS tab bar 切。
+            .safeAreaPadding(.bottom, 100)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
-        // 让《金刚经》最后一章不被 iOS tab bar 切。
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 100)
-        }
-    }
-
-    private func libraryRow(_ entry: LibraryEntry) -> some View {
-        let locked = isLocked(entry)
-        return Button {
-            open(entry)
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.chapter)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(DS.ink)
-                    Text(entry.verse_text)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-                Spacer()
-                if locked {
-                    Image(systemName: "lock.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        .navigationDestination(for: LibraryDestination.self) { dest in
+            switch dest {
+            case .taoTeChing:
+                LibrarySourceView(
+                    title: AppState.tr("library_tao_te_ching"),
+                    source: "Tao Te Ching",
+                    entries: ttcEntries
+                )
+            case .diamondSutra:
+                LibrarySourceView(
+                    title: AppState.tr("library_diamond_sutra"),
+                    source: "Diamond Sutra",
+                    entries: diamondEntries
+                )
+            case .jingjiang:
+                LibraryJingjiangView()
             }
         }
-        .contentShape(Rectangle())
     }
 
-    /// 精讲行：标题 + 通释片段 + 锁标。Pro 全部解锁；非 Pro 仅第 1 章免费。
-    private func jingjiangRow(_ chapter: JingjiangChapter) -> some View {
-        let locked = jingjiang.isLocked(chapter, isPro: subscriptionManager.isPro)
-        return Button {
-            openJingjiang(chapter, locked: locked)
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(AppState.tr("chapter_fmt", chapter.num))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(DS.ink)
-                        if locked {
-                            Text(AppState.tr("library_jingjiang_pro"))
-                                .font(.system(size: 9, weight: .bold))
-                                .tracking(1)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
-                                .background(DS.cinnabar.opacity(0.12))
-                                .foregroundColor(DS.cinnabar)
-                                .cornerRadius(3)
-                        }
-                    }
-                    Text(chapter.localizedTongshi)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-                Spacer()
-                if locked {
-                    Image(systemName: "lock.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                } else {
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
+    private func errorState(_ err: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundColor(.orange)
+            Text(err)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            Button(AppState.tr("Retry")) {
+                Task { await load() }
             }
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(DS.ink)
+            .foregroundColor(.white)
+            .cornerRadius(DS.Radius.small)
         }
-        .contentShape(Rectangle())
+        .padding()
     }
 
-    private var ttcEntries: [LibraryEntry] { entries.filter { $0.source == "Tao Te Ching" } }
-    private var diamondEntries: [LibraryEntry] { entries.filter { $0.source == "Diamond Sutra" } }
+    // MARK: 数据切片（原文部分按 display_order 升序）
 
-    private func isLocked(_ entry: LibraryEntry) -> Bool {
-        guard !subscriptionManager.isPro else { return false }
-        let sameSource = entries.filter { $0.source == entry.source }
-        let index = sameSource.firstIndex { $0.display_order == entry.display_order } ?? 0
-        return index >= freeTasteCount
+    private var ttcEntries: [LibraryEntry] {
+        entries
+            .filter { $0.source == "Tao Te Ching" }
+            .sorted { $0.display_order < $1.display_order }
     }
 
-    private func open(_ entry: LibraryEntry) {
-        if isLocked(entry) {
-            subscriptionManager.openPaywall(.libraryLocked)
-            return
+    private var diamondEntries: [LibraryEntry] {
+        entries
+            .filter { $0.source == "Diamond Sutra" }
+            .sorted { $0.display_order < $1.display_order }
+    }
+
+    private var hubItems: [LibraryHubItem] {
+        var items: [LibraryHubItem] = [
+            LibraryHubItem(
+                id: "ttc",
+                title: AppState.tr("library_tao_te_ching"),
+                subtitle: AppState.tr("library_hub_original"),
+                countText: AppState.tr("library_hub_count_fmt", ttcEntries.count),
+                icon: "book.closed.fill",
+                requiresPro: false,
+                destination: .taoTeChing
+            ),
+            LibraryHubItem(
+                id: "diamond",
+                title: AppState.tr("library_diamond_sutra"),
+                subtitle: AppState.tr("library_hub_original"),
+                countText: AppState.tr("library_hub_count_fmt", diamondEntries.count),
+                icon: "diamond.fill",
+                requiresPro: false,
+                destination: .diamondSutra
+            ),
+        ]
+        if !jingjiang.chapters.isEmpty {
+            items.append(LibraryHubItem(
+                id: "jingjiang",
+                title: AppState.tr("library_jingjiang"),
+                subtitle: AppState.tr("library_hub_in_depth"),
+                countText: AppState.tr("library_hub_count_fmt", jingjiang.chapters.count),
+                icon: "text.book.closed.fill",
+                requiresPro: true,
+                destination: .jingjiang
+            ))
         }
-        selectedEntry = entry
+        return items
     }
 
-    private func openJingjiang(_ chapter: JingjiangChapter, locked: Bool) {
-        if locked {
-            subscriptionManager.openPaywall(.jingjiangLocked)
-            return
-        }
-        selectedJingjiang = chapter
-    }
+    // MARK: 网络加载
 
     private func load() async {
         await MainActor.run { isLoading = true }
@@ -219,5 +174,86 @@ struct LibraryView: View {
                 isLoading = false
             }
         }
+    }
+}
+
+// MARK: - Hub 路由目标
+
+private enum LibraryDestination: Hashable {
+    case taoTeChing
+    case diamondSutra
+    case jingjiang
+}
+
+// MARK: - Hub Item 描述
+
+private struct LibraryHubItem: Identifiable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let countText: String
+    let icon: String
+    let requiresPro: Bool
+    let destination: LibraryDestination
+}
+
+// MARK: - Hub Card 视图
+
+private struct LibraryHubCard: View {
+    let title: String
+    let subtitle: String
+    let countText: String
+    let icon: String
+    let showPro: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(DS.bronze.opacity(0.10))
+                    .frame(width: 48, height: 48)
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(DS.bronze)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(DS.ink)
+                    if showPro {
+                        Text(AppState.tr("library_jingjiang_pro"))
+                            .font(.system(size: 9, weight: .bold))
+                            .tracking(1)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(DS.cinnabar.opacity(0.12))
+                            .foregroundColor(DS.cinnabar)
+                            .cornerRadius(3)
+                    }
+                }
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(DS.inkSoft)
+                Text(countText)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.card)
+                .fill(DS.paperHi)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.card)
+                .stroke(DS.bronze.opacity(0.30), lineWidth: 1)
+        )
     }
 }
