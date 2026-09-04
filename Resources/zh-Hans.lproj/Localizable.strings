@@ -215,6 +215,19 @@
 "library_tao_te_ching" = "《道德经》";
 "library_diamond_sutra" = "《金刚经》";
 "library_subtitle" = "《道德经》 · 《金刚经》";
+"library_jingjiang" = "道德经·精讲";
+"library_jingjiang_pro" = "PRO";
+"chapter_fmt" = "第 %d 章";
+
+/* ===== 精讲 (build 46：原创通释, 1 章试读 + 35 章 Pro) ===== */
+"pw_ctx_jingjiang_locked" = "精讲试读已完，解锁全部 36 章深度通释";
+"jingjiang_counter_title" = "一个反常识点";
+"jingjiang_scene_title" = "一个场景：30 岁的产品经理";
+"jingjiang_tension_title" = "张力：跟上一章的连接";
+"jingjiang_action_title" = "今天一句行动";
+"jingjiang_play_audio" = "收听";
+"jingjiang_pause_audio" = "暂停";
+"jingjiang_no_audio" = "音频即将上线";
 
 /* ===== 修行纪念卡 ===== */
 "card_unlock_title" = "收藏到新纪念卡";

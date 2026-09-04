@@ -24,3 +24,11 @@ Thumbs.db
 
 # Card art source images (kept locally, only compressed imagesets ship)
 Card/
+
+# Local-only working files (not for commit; safe to delete on dev machine)
+# Note: glob by English prefix to avoid UTF-8 path issues on Windows.
+.commit_msg_*.txt
+TaoMind*.docx
+TaoMind*.md
+TaoMind*.mp4
+Taomind*/

@@ -87,6 +87,19 @@
 "library_tao_te_ching" = "Tao Te Ching";
 "library_diamond_sutra" = "Diamond Sutra";
 "library_subtitle" = "Tao Te Ching · Diamond Sutra";
+"library_jingjiang" = "Tao Te Ching · In-Depth";
+"library_jingjiang_pro" = "PRO";
+"chapter_fmt" = "Chapter %d";
+
+/* ===== In-Depth Commentary (build 46: 精讲 — original commentary, 1 free chapter + 35 Pro) ===== */
+"pw_ctx_jingjiang_locked" = "Free preview complete — unlock all 36 chapters of in-depth commentary";
+"jingjiang_counter_title" = "A counter-intuitive point";
+"jingjiang_scene_title" = "A scene: the 30-year-old product manager";
+"jingjiang_tension_title" = "Tension with the previous chapter";
+"jingjiang_action_title" = "One action today";
+"jingjiang_play_audio" = "Listen";
+"jingjiang_pause_audio" = "Pause";
+"jingjiang_no_audio" = "Audio coming soon";
 
 /* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
 "card_unlock_title" = "New card collected";

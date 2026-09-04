@@ -10,6 +10,7 @@ enum PaywallContext {
     case seekLimitToday     // 今日 3 次免费求取智慧用完
     case journalFull        // 免费版 20 条日志存满
     case libraryLocked      // 经藏免费试读结束
+    case jingjiangLocked    // 道德经·精讲试读结束（1 章免费，余 Pro）
     case backfill           // 补卡（Pro）
     case monthlyReport      // 修习月报（Pro）
     case masterFeedback     // 本周免费名师指点已用完
@@ -24,6 +25,7 @@ enum PaywallContext {
         case .seekLimitToday: return "pw_ctx_seek_limit"
         case .journalFull: return "pw_ctx_journal_full"
         case .libraryLocked: return "pw_ctx_library_locked"
+        case .jingjiangLocked: return "pw_ctx_jingjiang_locked"
         case .backfill: return "pw_ctx_backfill"
         case .monthlyReport: return "pw_ctx_monthly_report"
         case .masterFeedback: return "pw_ctx_master_feedback"

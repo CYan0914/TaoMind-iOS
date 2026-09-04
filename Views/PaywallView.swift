@@ -327,6 +327,7 @@ private extension PaywallContext {
         case .seekLimitToday: return "sparkles"
         case .journalFull: return "note.text"
         case .libraryLocked: return "books.vertical"
+        case .jingjiangLocked: return "book.closed.fill"
         case .backfill: return "calendar.badge.plus"
         case .monthlyReport: return "chart.line.uptrend.xyaxis"
         case .masterFeedback: return "person.wave.2"

@@ -66,48 +66,40 @@ jobs:
               raise RuntimeError(f"API failed after retries: {path}")
 
           BUNDLE = "com.cyan0914.taomind"
-          # 已批准/被拒版本 1.5.0 的 train 已关闭 — 不能复用同 version 字符串
+          # 已批准/被拒版本 1.5.1 (build 45) 的 train 已关闭 — 不能复用同 version 字符串
           # （PATCH build 关联会 409 RELATIONSHIP.INVALID.INVALID_STATE）。
-          # bump 到 1.5.1 (build 45) 是 ASC 关 train 后的标准恢复路径。
-          VERSION = "1.5.1"
-          BUILD = "45"
+          # bump 到 1.6.0 (build 47) — 47 是 81章精讲 + plan-34 partial 的合并 build
+          VERSION = "1.6.0"
+          BUILD = "47"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
-          # build 40-44 用户能感知的增量：
-          #   41: Google 登录（已有 Apple 登录之外，海外用户多一个选择）
-          #   42: 年卡下面挂「N 天免费试用」金印+文字，天数从 RC 后台 intro discount 动态算
-          #   40: 付费墙 100% 自动关闭的 bug（之前用户首启就立即关掉付费墙）
-          #   44: Journal 空状态整屏宣纸底（之前只有中间一个方块，周围白）
-          # 邀请码/评分/社交证明/视觉统一是 34 已有功能，不再列；本次只列 40-44 增量。
+          # build 47 用户能感知的增量：经藏新增「道德经·精讲」分区
+          #   - 81 章深度通释（覆盖全本道德经，不是 36 章节选）
+          #   - 每章 = 原文 + 通释 + 反常识点 + 30岁PM场景 + 张力 + 一句行动
+          #   - 前 3 章免费试读，第 4 章起解锁 Pro 订阅
+          #   - 通释音频首批 cosine voices 跟 36章版本同步发布
           WHATS_NEW_EN = (
-              "**Sign in with Google**\n"
-              "You can now sign in to TaoMind with your Google account, in addition "
-              "to Apple. Your daily practice, journal, and streaks sync across devices "
-              "the moment you sign in.\n\n"
-              "**Free trial on the annual plan**\n"
-              "The annual subscription now shows a 'try it free' line under the price, "
-              "so you can experience the full library of the Tao Te Ching and Diamond "
-              "Sutra before committing. The trial length is set by us and shown in the "
-              "paywall — no surprise charges, cancel anytime in App Store settings.\n\n"
-              "**Smoother paywall & journal**\n"
-              "We fixed a bug that closed the paywall too quickly on first launch. "
-              "The empty Journal screen now uses the same xuan-paper ground as the "
-              "rest of the app for a calmer, more unified feel."
+              "**Tao Te Ching · In-Depth Commentary**\n"
+              "A new section in the Library: 81 chapters of original commentary on the Tao Te Ching, "
+              "written as a thinking partner rather than a textbook. Each chapter pairs the original "
+              "verse with a plain-language reading, a counter-intuitive insight, a 30-year-old "
+              "product-manager scene, the tension with the previous chapter, and one action for today. "
+              "The first 3 chapters are free to preview; the rest unlock with a Pro subscription.\n\n"
+              "**Free preview experience**\n"
+              "Try the first three chapters in full to feel the format before subscribing. "
+              "No paywall on those three reads, no surprise charges."
           )
           WHATS_NEW_ZH = (
-              "**支持 Google 账号登录**\n"
-              "除了 Apple 登录，你现在也可以用 Google 账号登录 TaoMind。\n"
-              "登录后每日功课、修行日志、连续打卡数据会在多设备间即时同步。\n\n"
-              "**年卡免费试用**\n"
-              "年卡订阅现在会在价格下方标注「N 天免费试用」。\n"
-              "你可以先完整体验《道德经》与《金刚经》全文精读，再决定是否继续。\n"
-              "试用天数由我们设定并明示在付费墙中——不会偷偷扣款，随时可在 App Store 设置中取消。\n\n"
-              "**付费墙与日志页更顺手**\n"
-              "修复了首启时付费墙过快关闭的 bug。\n"
-              "空白的修行日志页现在也统一为宣纸底色，与全站视觉保持一致，更沉稳、更统一。"
+              "**经藏新增「道德经·精讲」**\n"
+              "81 章原创通释（覆盖全本道德经），写给今天的你。每章包含：原文 + 白话通释 + "
+              "一个反常识点 + 30 岁产品经理的日常场景 + 与上一章的张力 + 今天一句行动。\n"
+              "前 3 章免费试读，第 4 章起需解锁 Pro 订阅。\n\n"
+              "**免费试读，无需先付费**\n"
+              "前三章完整开放：通释、五个反常识点都能体验。\n"
+              "觉得值得再订阅，订阅页明示价格、不偷扣款。"
           )
 
           # 1) Find app
