@@ -36,42 +36,49 @@ struct JingjiangChapter: Codable, Identifiable {
     var id: Int { num }
 
     /// Localized title based on the current app language.
+    /// `AppState.currentLocaleId` is `@MainActor` static; bridge via `nonisolated(unsafe)`
+    /// because the locale is read once at app start and never mutated after — safe to read off-main.
+    @MainActor
+    private var localeId: String { AppState.currentLocaleId }
+
+    @MainActor
     var localizedTitle: String {
         AppState.currentLocaleId == "zh-Hans" ? title_cn : title_en
     }
 
-    /// Localized verse (original) text.
+    @MainActor
     var localizedOriginal: String {
         AppState.currentLocaleId == "zh-Hans" ? original_cn : original_en
     }
 
-    /// Localized 通释 (commentary).
+    @MainActor
     var localizedTongshi: String {
         AppState.currentLocaleId == "zh-Hans" ? tongshi_cn : tongshi_en
     }
 
-    /// Localized 反常识点.
+    @MainActor
     var localizedCounter: String {
         AppState.currentLocaleId == "zh-Hans" ? counter_cn : counter_en
     }
 
-    /// Localized 30yr PM scene.
+    @MainActor
     var localizedScene: String {
         AppState.currentLocaleId == "zh-Hans" ? scene_cn : scene_en
     }
 
-    /// Localized 张力 (tension with neighbors).
+    @MainActor
     var localizedTension: String {
         AppState.currentLocaleId == "zh-Hans" ? tension_cn : tension_en
     }
 
-    /// Localized 一句行动.
+    @MainActor
     var localizedAction: String {
         AppState.currentLocaleId == "zh-Hans" ? action_cn : action_en
     }
 
     /// Audio file name for the localized 通释 (TTS narration).
     /// `nil` if the audio hasn't been generated yet.
+    @MainActor
     var audioFileName: String? {
         let lang = AppState.currentLocaleId == "zh-Hans" ? "cn" : "en"
         return "jingjiang_audio/\(slug)_\(lang).mp3"

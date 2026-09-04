@@ -167,7 +167,7 @@ struct LibraryView: View {
                 } else {
                     Image(systemName: "chevron.right")
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundStyle(.tertiary)
                 }
             }
         }
