@@ -57,9 +57,9 @@ struct LibraryView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
-            // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
-            // 让最后一张卡不被 iOS tab bar 切。
-            .safeAreaPadding(.bottom, 100)
+            // 修设计审计 2026-09-02 Blocker 2：ScrollView 内容底部加 100pt 留白，
+            // 让最后一张卡不被 iOS tab bar 切。（safeAreaPadding 是 iOS 17+，本工程部署 iOS 16，用 padding 兜底）
+            .padding(.bottom, 100)
         }
         .navigationDestination(for: LibraryDestination.self) { dest in
             switch dest {
