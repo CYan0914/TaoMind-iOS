@@ -16,6 +16,10 @@ struct TaoMindApp: App {
         // 之前显式设置 GIDSignIn.sharedInstance.configuration，否则抛
         // NSInvalidArgumentException 直接闪退。
         Self.configureGoogleSignIn()
+        // 修 build 48 Library hub 闪一下只显示 2 张卡的 bug：
+        // JingjiangService.load() 同步从 bundle 读 jingjiang.json（约 1.5MB），
+        // 在 app 启动时预热可以让 Library tab 首次打开时 hub 直接 3 张卡全显。
+        JingjiangService.shared.load()
         // 通知权限改在首启 onboarding 第 3 屏请求（价值预告之后，转化更好）
     }
 
