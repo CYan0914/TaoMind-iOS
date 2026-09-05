@@ -44,7 +44,9 @@ final class NotificationService: NSObject, ObservableObject {
         // Cancel any existing pending notification first
         cancelScheduled()
 
-        let verse = await fetchTodayVerse()
+        // build 50: 若已签到 + (Pro 或 trial) 且当日已有 cache → 用个性化 verse 推,
+        // 否则走老 fixed verse(不阻塞 8am 推送)。
+        let verse = await fetchTodaysVerseForNotification()
 
         // Build notification content
         let content = UNMutableNotificationContent()
@@ -71,6 +73,17 @@ final class NotificationService: NSObject, ObservableObject {
         } catch {
             print("[Notifications] Failed to schedule: \(error)")
         }
+    }
+
+    /// build 50: 8am 推送取 verse 优先用个性化 cache(避免 LLM 重跑)
+    private func fetchTodaysVerseForNotification() async -> DailyVerse {
+        let svc = PersonalizedDailyVerseService()
+        if svc.isEligible(),
+           let language = Locale.preferredLanguages.first?.hasPrefix("zh") == true ? "zh" : "en",
+           let personalized = svc.cachedForToday(language: language) {
+            return personalized
+        }
+        return await fetchTodayVerse()
     }
 
     /// Today's verse — API first, offline fallback. Shared by the morning push and the recall push.

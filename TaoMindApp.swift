@@ -95,6 +95,43 @@ struct TaoMindApp: App {
                 dailyVerse = appState.dailyVerse
             }
         }
+        // build 50: Step B — 若已登录且 (Pro 或 Day 1-3 free trial),
+        // 后台并发拉个性化 verse,成功则覆盖 dailyVerse + 写 personalizedVerse。
+        // 失败静默降级,留 fixed verse。
+        await loadPersonalizedVerse(recentReflections: nil)
+    }
+
+    /// build 50: 个性化 verse 拉取。
+    /// - 无登录/不在 trial/Pro  → skip
+    /// - 已 cache 当日 → skip LLM,直接覆盖
+    /// - 成功 → 覆盖 dailyVerse + 写 personalizedVerse
+    /// - 失败 → personalizedVerseFailedToday = true(PracticeView 据此显 upgrade banner)
+    private func loadPersonalizedVerse(recentReflections: [String]?) async {
+        let svc = PersonalizedDailyVerseService()
+        guard svc.isEligible() else { return }
+        // 跨日清 mood cache
+        svc.clearStaleMoodIfNewDay()
+        // 重新从 UserDefaults 读(可能在 PracticeView 里刚被改)
+        let mood = svc.todaysMood() ?? appState.todaysMood
+        let language = appState.language.rawValue
+        do {
+            let personalized = try await svc.fetchTodaysPersonalizedVerse(
+                mood: mood,
+                recentReflections: recentReflections ?? [],
+                userIntent: appState.userIntent,
+                language: language
+            )
+            await MainActor.run {
+                appState.dailyVerse = personalized
+                dailyVerse = personalized
+                appState.personalizedVerse = personalized
+                appState.personalizedVerseFailedToday = false
+            }
+        } catch {
+            await MainActor.run {
+                appState.personalizedVerseFailedToday = true
+            }
+        }
     }
 }
 
@@ -122,6 +159,24 @@ class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(userIntent, forKey: Self.userIntentKey) }
     }
 
+    // MARK: - build 50: Personalized Daily Verse (情绪化每日经文)
+
+    /// 当日 mood（无日期后缀；跨日由 PersonalizedDailyVerseService.clearStaleMoodIfNewDay 清空）
+    @Published var todaysMood: Mood? {
+        didSet { UserDefaults.standard.set(todaysMood?.rawValue, forKey: "todaysMood") }
+    }
+
+    /// 首装日期（Day 1 锚，存一次永不变；用作 3 天免费 trial 判定）
+    @Published var installDate: Date {
+        didSet { UserDefaults.standard.set(installDate, forKey: "installDate") }
+    }
+
+    /// 当日个性化 verse（仅内存，不持久化；DailyVerseCard 据此显示「为你而选」eyebrow）
+    @Published var personalizedVerse: DailyVerse?
+
+    /// 当日 LLM 失败标记：避免无意义重试；同时驱动 PracticeView 的 upgrade banner 显隐
+    @Published var personalizedVerseFailedToday: Bool = false
+
     private static let languageOverrideKey = "languageOverride"
     private static let onboardingSeenKey = "hasSeenOnboarding"
     private static let userIntentKey = "userIntent"
@@ -138,6 +193,16 @@ class AppState: ObservableObject {
         Self.currentLocaleId = detected.localeId
         self.hasSeenOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingSeenKey)
         self.userIntent = UserDefaults.standard.string(forKey: Self.userIntentKey)
+        // 首装日期锚（首次启动 seed 当下；后续读取已有值）
+        if let existing = UserDefaults.standard.object(forKey: "installDate") as? Date {
+            self.installDate = existing
+        } else {
+            let now = Date()
+            self.installDate = now
+            UserDefaults.standard.set(now, forKey: "installDate")
+        }
+        // 当日 mood（跨日清空）
+        self.todaysMood = UserDefaults.standard.string(forKey: "todaysMood").flatMap(Mood.init(rawValue:))
     }
 
     /// 根据当前语言翻译字符串（键 = 英文原文，表 = Localizable.strings）

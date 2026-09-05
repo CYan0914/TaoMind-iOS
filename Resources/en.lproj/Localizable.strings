@@ -145,3 +145,16 @@
 "Continue with Google" = "Continue with Google";
 "Signed in with Google" = "Signed in with Google";
 "Signed in with Apple" = "Signed in with Apple";
+
+/* ===== build 50: Personalized Daily Verse (情绪化每日经文) ===== */
+"mood_calm" = "Calm";
+"mood_restless" = "Restless";
+"mood_stuck" = "Stuck";
+"mood_hopeful" = "Hopeful";
+"mood_row_title" = "How are you today?";
+"mood_row_hint" = "Tap to personalize today's verse";
+"mood_row_locked_hint" = "Personalized verses — Pro picks one that fits your state each morning";
+"personalized_verse_eyebrow" = "TODAY'S VERSE · FOR YOU";
+"personalized_verse_upsell_title" = "A daily verse that knows you";
+"personalized_verse_upsell_sub" = "Tap your mood each morning. We'll pick a verse that fits. Pro.";
+"pw_ctx_personalized_daily_verse" = "Personalized daily verses — choose your mood, get a verse that fits";

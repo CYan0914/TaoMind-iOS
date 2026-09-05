@@ -66,40 +66,43 @@ jobs:
               raise RuntimeError(f"API failed after retries: {path}")
 
           BUNDLE = "com.cyan0914.taomind"
-          # 已批准/被拒版本 1.5.1 (build 45) 的 train 已关闭 — 不能复用同 version 字符串
+          # 已批准/被拒版本 1.6.0 (build 47) 的 train 已关闭 — 不能复用同 version 字符串
           # （PATCH build 关联会 409 RELATIONSHIP.INVALID.INVALID_STATE）。
-          # bump 到 1.6.0 (build 47) — 47 是 81章精讲 + plan-34 partial 的合并 build
-          VERSION = "1.6.0"
-          BUILD = "47"
+          # bump 到 1.7.0 (build 50) — 50 是「情绪化每日经文」:Pro 用户每天选 mood
+          # 获得 LLM 个性化 verse;Free 用户前 3 天免费体验,Day 4 起锁升级
+          VERSION = "1.7.0"
+          BUILD = "50"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
-          # build 47 用户能感知的增量：经藏新增「道德经·精讲」分区
-          #   - 81 章深度通释（覆盖全本道德经，不是 36 章节选）
-          #   - 每章 = 原文 + 通释 + 反常识点 + 30岁PM场景 + 张力 + 一句行动
-          #   - 前 3 章免费试读，第 4 章起解锁 Pro 订阅
-          #   - 通释音频首批 cosine voices 跟 36章版本同步发布
+          # build 50 用户能感知的增量：每日经文能感知你的状态
+          #   - 顶部新增 4 个心情 emoji(平静/烦躁/卡住/期待)
+          #   - 选完 5 秒内出对应 verse(eyebrow 变"TODAY'S VERSE · FOR YOU"朱砂色)
+          #   - LLM 基于 mood + 最近 7 天 reflection + onboarding userIntent 选章 + 写反思
+          #   - 同一日多次切换 mood 不重 LLM(省 50/天 额度)
+          #   - Pro 永久;Free 用户前 3 天免费,Day 4 起 chip 仍在但 verse 走 fixed 池 + 升级 banner
           WHATS_NEW_EN = (
-              "**Tao Te Ching · In-Depth Commentary**\n"
-              "A new section in the Library: 81 chapters of original commentary on the Tao Te Ching, "
-              "written as a thinking partner rather than a textbook. Each chapter pairs the original "
-              "verse with a plain-language reading, a counter-intuitive insight, a 30-year-old "
-              "product-manager scene, the tension with the previous chapter, and one action for today. "
-              "The first 3 chapters are free to preview; the rest unlock with a Pro subscription.\n\n"
-              "**Free preview experience**\n"
-              "Try the first three chapters in full to feel the format before subscribing. "
-              "No paywall on those three reads, no surprise charges."
+              "**A daily verse that knows you**\n"
+              "Tap how you feel each morning — calm, restless, stuck, or hopeful — "
+              "and TaoMind picks a verse from the Tao Te Ching or Diamond Sutra that fits, "
+              "with a two-line reflection written just for that moment. "
+              "The eyebrow on the verse changes to a cinnabar \"For You\" tag so you can see "
+              "at a glance which days are personalized. Pro keeps this every day; new users "
+              "get the first three days free to feel the difference.\n\n"
+              "**Same verse, three days in**\n"
+              "Once you pick a mood for the day, we lock the verse. Switch moods all you want — "
+              "your morning companion stays the same. No spam, no churn."
           )
           WHATS_NEW_ZH = (
-              "**经藏新增「道德经·精讲」**\n"
-              "81 章原创通释（覆盖全本道德经），写给今天的你。每章包含：原文 + 白话通释 + "
-              "一个反常识点 + 30 岁产品经理的日常场景 + 与上一章的张力 + 今天一句行动。\n"
-              "前 3 章免费试读，第 4 章起需解锁 Pro 订阅。\n\n"
-              "**免费试读，无需先付费**\n"
-              "前三章完整开放：通释、五个反常识点都能体验。\n"
-              "觉得值得再订阅，订阅页明示价格、不偷扣款。"
+              "**专属于你的每日经文**\n"
+              "每天早上点一下今天的心情——平静、烦躁、卡住、期待——TaoMind 会从道德经或金刚经里"
+              "挑一句当下合用的经文,配两行只写给此刻的反思。\n"
+              "经文卡片顶部会出现朱砂色的「为你而选」标签,一眼看出哪些天是定制的。\n"
+              "Pro 永久可用;新用户前 3 天免费体验,无打扰不催订阅。\n\n"
+              "**选过即定，不来回重算**\n"
+              "一天内多次切换心情,早晨的经文不会跟着重抽——避免打扰,也省你的耐心。"
           )
 
           # 1) Find app
@@ -317,4 +320,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.4.0 (30) — What's New filled, submitted for App Store review."
+          echo "Published 1.7.0 (50) — What's New filled, submitted for App Store review."

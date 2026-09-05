@@ -14,6 +14,22 @@ struct DailyVerse: Codable, Identifiable {
     }
 }
 
+// MARK: - Personalized Daily Verse (build 50: 情绪化每日经文)
+//
+// `DailyVerse` 本体保持字节级兼容(老 codepath 用得到 source/chapter/verse_text/reflection)。
+// 个性化缓存用这个 envelope 包装：记录生成时刻 + 当日 mood + userIntent,
+// 方便后续做"为什么选这章"的可观测性(analytics)与去重。
+//
+// 注意：`verse` 的 `id` 是 `let id = UUID()` —— 跨日 cache miss 时
+// SwiftUI 不会因为 id 相同而误判是同一条。
+
+struct PersonalizedDailyVerse: Codable {
+    let verse: DailyVerse
+    let generatedAt: Date
+    let moodRaw: String?
+    let userIntent: String?
+}
+
 // MARK: - Wisdom Response Model
 
 struct WisdomResponse: Codable, Identifiable {

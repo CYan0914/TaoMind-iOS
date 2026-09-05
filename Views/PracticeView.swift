@@ -51,6 +51,17 @@ struct PracticeView: View {
                 Task { await loadStatus() }
             }
         }
+        // build 50: 登录后 / 升级 Pro / 切换心情 → 重评估个性化 verse
+        .onChange(of: subscriptionManager.isPro) { _ in
+            Task { await loadPersonalizedVerseIfEligible() }
+        }
+        .onChange(of: appState.todaysMood) { _ in
+            Task { await loadPersonalizedVerseIfEligible() }
+        }
+        .onChange(of: appState.language) { _ in
+            // 切语言时 cache key 变 → 重新拉(当天 1 次 LLM 接受)
+            Task { await loadPersonalizedVerseIfEligible() }
+        }
         .sheet(isPresented: $showBackfill) {
             if let date = status?.backfill?.targetDate {
                 BackfillView(targetDate: date) {
@@ -161,6 +172,11 @@ struct PracticeView: View {
                 // Streak header
                 streakHeader
 
+                // build 50: Mood chip row — Pro/trial 才显,签到后引导用户选心情
+                if showMoodRow {
+                    moodRow
+                }
+
                 // Streak actions (backfill + share card)
                 streakActions
 
@@ -173,9 +189,14 @@ struct PracticeView: View {
                 // 修设计审计 2026-09-02 QW2：经藏入口（5 tab → 4 tab 后从底 tab 迁入）
                 libraryEntry
 
+                // build 50: 升级 banner — Day 4+ 非 Pro 显,紧贴 verse card 形成视觉链路
+                if showUpgradeBanner {
+                    personalizedUpgradeBanner
+                }
+
                 // Today's verse
                 if let verse = appState.dailyVerse {
-                    DailyVerseCard(verse: verse)
+                    DailyVerseCard(verse: verse, isPersonalized: appState.personalizedVerse != nil)
                 }
 
                 // Source picker
@@ -482,6 +503,76 @@ struct PracticeView: View {
             .padding(14)
             .background(DS.paperHi)
             .cornerRadius(14)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - build 50: Personalized Daily Verse (mood row + upgrade banner)
+
+    /// 已签到 且 (Pro 或 Day 1-3 free trial) 才显 mood row
+    private var showMoodRow: Bool {
+        guard authService.isSignedIn else { return false }
+        return subscriptionManager.isPro || PersonalizedDailyVerseService.isInFreeTrial()
+    }
+
+    /// 已签到 且 非 Pro 且 非 trial → Day 4+ 显升级 banner
+    private var showUpgradeBanner: Bool {
+        guard authService.isSignedIn else { return false }
+        return !subscriptionManager.isPro && !PersonalizedDailyVerseService.isInFreeTrial()
+    }
+
+    private var moodRowBinding: Binding<Mood?> {
+        Binding(
+            get: { appState.todaysMood },
+            set: { newValue in
+                appState.todaysMood = newValue
+                PersonalizedDailyVerseService().saveTodaysMood(newValue)
+                // 重评估个性化 verse:mood 变化但 cache 非空时不会重 LLM(节省 Pro 50/天)
+                Task { await loadPersonalizedVerseIfEligible() }
+            }
+        )
+    }
+
+    private var moodRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            MoodChipRow(selected: moodRowBinding)
+            if appState.personalizedVerse == nil && !appState.personalizedVerseFailedToday {
+                Text(AppState.tr("mood_row_hint"))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private var personalizedUpgradeBanner: some View {
+        Button(action: { subscriptionManager.openPaywall(.personalizedDailyVerse) }) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .foregroundColor(DS.cinnabar)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(AppState.tr("personalized_verse_upsell_title"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(DS.ink)
+                    Text(AppState.tr("personalized_verse_upsell_sub"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+                Text(AppState.tr("Upgrade"))
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(DS.cinnabar)
+            }
+            .padding(14)
+            .background(DS.cinnabar.opacity(0.06))
+            .cornerRadius(14)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(DS.cinnabar.opacity(0.25), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -873,6 +964,31 @@ struct PracticeView: View {
             checkMilestone()
         } catch {
             errorMessage = error.localizedDescription
+        }
+        // build 50: status 拿到后用最近 7 天 reflection 重 LLM(只首次,后续 cache 命中)
+        await loadPersonalizedVerseIfEligible()
+    }
+
+    /// build 50: 拉今日个性化 verse。已签到 + (Pro 或 trial) 才执行。
+    /// service 内部有 cache 命中短路 + 50/天 Pro 额度保护,放心反复调。
+    private func loadPersonalizedVerseIfEligible() async {
+        let svc = PersonalizedDailyVerseService()
+        guard svc.isEligible() else { return }
+        let reflections = (status?.checkins ?? [])
+            .prefix(7)
+            .map { $0.reflection }
+        do {
+            let verse = try await svc.fetchTodaysPersonalizedVerse(
+                mood: appState.todaysMood,
+                recentReflections: Array(reflections),
+                userIntent: appState.userIntent,
+                language: appState.language.rawValue
+            )
+            appState.dailyVerse = verse
+            appState.personalizedVerse = verse
+            appState.personalizedVerseFailedToday = false
+        } catch {
+            appState.personalizedVerseFailedToday = true
         }
     }
 

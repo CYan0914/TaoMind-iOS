@@ -271,3 +271,16 @@
 "Continue with Google" = "用 Google 账号继续";
 "Signed in with Google" = "已用 Google 账号登录";
 "Signed in with Apple" = "已用 Apple 账号登录";
+
+/* ===== build 50: 情绪化每日经文 ===== */
+"mood_calm" = "平静";
+"mood_restless" = "烦躁";
+"mood_stuck" = "卡住";
+"mood_hopeful" = "期待";
+"mood_row_title" = "今天感觉如何?";
+"mood_row_hint" = "点选后今日经文会为你定制";
+"mood_row_locked_hint" = "每日情绪定制经文——点心情,我们为你挑一句当下合用的。Pro 专属。";
+"personalized_verse_eyebrow" = "今日经文 · 为你而选";
+"personalized_verse_upsell_title" = "专属于你的每日经文";
+"personalized_verse_upsell_sub" = "每天点一下心情,我们为你挑一句当下合用的经文。Pro 专属。";
+"pw_ctx_personalized_daily_verse" = "每日情绪定制经文——点心情,给你一句当下合用的";

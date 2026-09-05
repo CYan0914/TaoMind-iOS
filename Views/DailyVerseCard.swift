@@ -4,11 +4,13 @@ import SwiftUI
 
 struct DailyVerseCard: View {
     let verse: DailyVerse
+    /// build 50: 个性化 verse 走"为你而选"eyebrow + 朱砂色,跟固定 verse 视觉区分
+    var isPersonalized: Bool = false
 
     var body: some View {
         VStack(spacing: 12) {
-            Text(AppState.tr("daily_verse_eyebrow"))
-                .eyebrowStyle()
+            Text(AppState.tr(isPersonalized ? "personalized_verse_eyebrow" : "daily_verse_eyebrow"))
+                .eyebrowStyle(isPersonalized ? DS.cinnabar : DS.bronze)
 
             Text(verse.verse_text)
                 .font(DS.verse(16, relativeTo: .body))

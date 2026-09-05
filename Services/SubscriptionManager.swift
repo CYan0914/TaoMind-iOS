@@ -18,6 +18,7 @@ enum PaywallContext {
     case journalExport      // 导出日志（Pro）
     case styleTuning        // 回复风格调节（Pro）
     case seekResult         // 求取智慧结果页（心流转化位）
+    case personalizedDailyVerse  // build 50: 每日情绪定制经文 Day 4+ 升级 banner
 
     var headlineKey: String {
         switch self {
@@ -33,6 +34,7 @@ enum PaywallContext {
         case .journalExport: return "pw_ctx_journal_export"
         case .styleTuning: return "pw_ctx_style_tuning"
         case .seekResult: return "pw_ctx_seek_result"
+        case .personalizedDailyVerse: return "pw_ctx_personalized_daily_verse"
         }
     }
 }
