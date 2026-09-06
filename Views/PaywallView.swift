@@ -334,6 +334,7 @@ private extension PaywallContext {
         case .masterFollowup: return "bubble.left.and.text.bubble.right"
         case .journalExport: return "square.and.arrow.up"
         case .styleTuning: return "paintbrush"
+        case .personalizedDailyVerse: return "sparkles"
         case .seekResult: return "crown"
         }
     }
