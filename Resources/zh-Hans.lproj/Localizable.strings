@@ -200,6 +200,12 @@
 "pw_ctx_journal_export" = "把修行日志导出为文本";
 "pw_ctx_style_tuning" = "调节智者的回复风格";
 "pw_ctx_seek_result" = "你刚完成一次完整的求取——让修行继续下去";
+
+/* ===== 额度用尽提示（HTTP 429，与网络错误区分）===== */
+"quota_reached_title" = "今天的求取次数用完了";
+"quota_reached_body" = "免费版每天可求取 3 次，明天恢复。升级 Pro 可无限求取，还能听取完整的经文旁白。";
+"quota_reached_cta" = "升级 Pro · 无限求取";
+"quota_reached_generic" = "今天的免费额度已用完，明天恢复。";
 "share_card_download_hint" = "扫码下载 TaoMind";
 "seek_banner_title" = "解锁完整修行";
 "seek_banner_sub" = "无限求取 · 名师指点 · 完整经藏";

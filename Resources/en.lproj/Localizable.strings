@@ -72,6 +72,12 @@
 "pw_ctx_journal_export" = "Export your journal as text";
 "pw_ctx_style_tuning" = "Tune the sage's response style";
 "pw_ctx_seek_result" = "You just received a full reading — keep the practice going";
+
+/* ===== Quota exhausted (HTTP 429, shown instead of a network error) ===== */
+"quota_reached_title" = "Today's wisdom sessions are used up";
+"quota_reached_body" = "The free plan includes 3 sessions a day, resetting tomorrow. Pro is unlimited — and unlocks the full chapter narrations.";
+"quota_reached_cta" = "Go Pro · Unlimited";
+"quota_reached_generic" = "Today's free limit is used up — it resets tomorrow.";
 "share_card_download_hint" = "Scan to get TaoMind";
 "seek_banner_title" = "Unlock the full practice";
 "seek_banner_sub" = "Unlimited sessions, master's guidance & the full library";

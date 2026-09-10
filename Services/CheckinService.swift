@@ -118,6 +118,11 @@ struct CheckinService {
                 AuthService.shared.forceSignOut(message: "Session expired — please sign in again")
                 throw APIError.serverError("Session expired")
             }
+            // 429 = AI 额度用尽，与 APIClient.validate 保持一致（2026-09-10）。
+            // 不区分的话 UI 会显示 "Server error: 429"，用户看不懂。
+            if http.statusCode == 429 {
+                throw APIError.quotaExceeded
+            }
             throw APIError.serverError("Server error: \(http.statusCode)")
         }
         return try JSONDecoder().decode(T.self, from: data)

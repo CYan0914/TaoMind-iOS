@@ -8,6 +8,14 @@ enum APIError: LocalizedError {
     case decodingError(Error)
     case serverError(String)
     case noData
+    /// 服务端 AI 额度用尽（HTTP 429）。
+    ///
+    /// 2026-09-10 新增：服务端免费用户 3 次/天、Pro 50 次/天，超限返回
+    /// `429 {"detail":"Daily AI quota reached. Please try again tomorrow."}`。
+    /// 之前所有非 2xx 都被压成 serverError("Server error: 429")，UI 再统一
+    /// 显示成「检查你的网络」→ 用户额度用完了却以为网络坏了，只会卸载。
+    /// 单独建模，让 UI 能给出正确引导（等明天 / 升级 Pro）。
+    case quotaExceeded
 
     var errorDescription: String? {
         switch self {
@@ -16,6 +24,9 @@ enum APIError: LocalizedError {
         case .decodingError(let e): return "Data error: \(e.localizedDescription)"
         case .serverError(let m): return m
         case .noData: return "No response from server"
+        // 注意：AppState 是 @MainActor，errorDescription 是 nonisolated，
+        // 这里**不能**调 AppState.tr（编译不过）。本地化文案在 View 层处理。
+        case .quotaExceeded: return "Daily limit reached — resets tomorrow"
         }
     }
 }
@@ -237,6 +248,11 @@ class APIClient {
             throw APIError.serverError("Invalid response")
         }
         guard (200...299).contains(httpResponse.statusCode) else {
+            // 429 = AI 额度用尽。必须单独成错，否则 UI 会把它当网络故障提示
+            // 「检查你的网络」，用户排查不到原因（2026-09-10 真实踩到）。
+            if httpResponse.statusCode == 429 {
+                throw APIError.quotaExceeded
+            }
             throw APIError.serverError("Server error: \(httpResponse.statusCode)")
         }
     }

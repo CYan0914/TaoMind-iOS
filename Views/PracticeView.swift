@@ -1048,10 +1048,21 @@ struct PracticeView: View {
                     errorMessage = nil
                 }
             } catch {
-                await MainActor.run { errorMessage = error.localizedDescription }
+                await MainActor.run { errorMessage = localizedMessage(for: error) }
             }
             isAskingMaster = false
         }
+    }
+
+    /// APIError → 本地化文案。View 层专用：AppState 是 @MainActor，
+    /// 不能在 APIError.errorDescription（nonisolated）里调 AppState.tr。
+    /// 2026-09-10：429 额度用尽原样走 localizedDescription 会显示英文兜底，
+    /// 中文用户看不懂，故在此映射。
+    private func localizedMessage(for error: Error) -> String {
+        if let apiError = error as? APIError, case .quotaExceeded = apiError {
+            return AppState.tr("quota_reached_generic")
+        }
+        return error.localizedDescription
     }
 
     private func sendChat() {
@@ -1076,7 +1087,7 @@ struct PracticeView: View {
                     errorMessage = nil
                 }
             } catch {
-                await MainActor.run { errorMessage = error.localizedDescription }
+                await MainActor.run { errorMessage = localizedMessage(for: error) }
             }
             isSendingChat = false
         }

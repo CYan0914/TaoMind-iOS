@@ -11,6 +11,9 @@ struct SeekWisdomView: View {
     @State private var isSeeking = false
     @State private var result: WisdomResponse?
     @State private var errorMessage: String?
+    /// 额度用尽（HTTP 429）——与网络错误分开展示，2026-09-10 加。
+    /// 之前额度用完显示「检查你的网络」，用户排查不到原因。
+    @State private var quotaExceeded = false
     @State private var showDailyVerse = true
     @State private var showSpeechPermissionDenied = false
     @StateObject private var speechService = SpeechService()
@@ -211,6 +214,55 @@ struct SeekWisdomView: View {
                     )
                 }
 
+                // MARK: - Quota exhausted (HTTP 429)
+                // 与网络错误分开：额度是「明天恢复 / 升级解锁」，不是「检查网络」。
+                if quotaExceeded {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "hourglass")
+                                .foregroundColor(DS.bronze)
+                            Text(AppState.tr("quota_reached_title"))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(DS.ink)
+                        }
+                        Text(AppState.tr("quota_reached_body"))
+                            .font(.caption)
+                            .foregroundColor(DS.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if !subscriptionManager.isPro {
+                            Button {
+                                // 用 .seekLimitToday（语义=今日额度用完），不是 .seekResult
+                                subscriptionManager.openPaywall(.seekLimitToday)
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "crown.fill")
+                                        .font(.caption)
+                                    Text(AppState.tr("quota_reached_cta"))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(DS.bronze.opacity(0.14))
+                                .foregroundColor(DS.bronze)
+                                .cornerRadius(DS.Radius.small)
+                            }
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: DS.Radius.small)
+                            .fill(DS.bronze.opacity(0.07))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.small)
+                            .stroke(DS.bronze.opacity(0.30), lineWidth: 1)
+                    )
+                }
+
                 // MARK: - Result
                 if let result = result {
                     WisdomResultView(result: result, question: question, scenarioType: selectedScenario)
@@ -339,6 +391,7 @@ struct SeekWisdomView: View {
 
         isSeeking = true
         errorMessage = nil
+        quotaExceeded = false
         result = nil
 
         let apiQuestion = question
@@ -365,6 +418,18 @@ struct SeekWisdomView: View {
 
                     // Auto-save to journal
                     saveToJournal(response: response)
+                }
+            } catch let error as APIError {
+                await MainActor.run {
+                    isSeeking = false
+                    switch error {
+                    case .quotaExceeded:
+                        // 免费额度 3 次/天用完 → 引导升级，而不是让用户去查网络
+                        quotaExceeded = true
+                        errorMessage = nil
+                    default:
+                        errorMessage = AppState.tr("The sage is silent. Check your connection and try again.")
+                    }
                 }
             } catch {
                 await MainActor.run {
