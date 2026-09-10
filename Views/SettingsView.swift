@@ -200,6 +200,13 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
+            // 修 UI 一致性 2026-09-10：insetGrouped 的行默认 systemBackground（纯白），
+            // 盖在宣纸底上突兀；.scrollContentBackground(.hidden) 只隐藏 List 容器背景，
+            // 管不到行（这就是 v1 当年没修成的原因）。
+            // 改 DS.paper —— 与「功课」页一致：PracticeView 用 ScrollView，正文直接
+            // 铺在 DS.paper 上（见 PracticeView.signedOutContent），那才是用户看到的
+            // 「淡黄色文字背景」。不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出。
+            .listRowBackground(DS.paper)
             // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
             // 让「Privacy Policy / Terms of Service」链接不被 iOS tab bar 切掉。
             // List 在 iOS 16+ 也会处理 safe area，但对 .scrollContentBackground(.hidden) 的 List

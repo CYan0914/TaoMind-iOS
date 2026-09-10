@@ -2,15 +2,33 @@ import SwiftUI
 
 // MARK: - Journal View
 
+/// 单一 sheet 驱动 —— 修 bug 2026-09-10。
+///
+/// 原来 `showDetail` 和 `showExport` 是**两个 `.sheet(isPresented:)` 挂在同一视图上**，
+/// SwiftUI 对同层多 sheet 的处理是未定义的：点条目时详情 sheet 会弹出但内容空白
+/// （呈现时机与另一个 sheet 的绑定互相干扰）。
+/// 本项目 2026-09-02 已在 SeekWisdomView / SettingsView 踩过同类坑（见 SeekWisdomView:271）。
+/// 改成一个 `.sheet(item:)` + enum，从根上消除多 sheet 冲突；
+/// 顺带干掉了 `selectedEntry` + `showDetail` 双状态竞态（前者 nil 时 sheet 就是空白）。
+private enum JournalSheet: Identifiable {
+    case detail(JournalEntry)
+    case export
+
+    var id: String {
+        switch self {
+        case .detail(let entry): return "detail-\(entry.id)"
+        case .export: return "export"
+        }
+    }
+}
+
 struct JournalView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var entries: [JournalEntry] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var selectedEntry: JournalEntry?
-    @State private var showDetail = false
-    @State private var showExport = false
+    @State private var activeSheet: JournalSheet?
 
     private let api = APIClient()
 
@@ -111,14 +129,17 @@ struct JournalView: View {
                         JournalRow(entry: entry)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                selectedEntry = entry
-                                showDetail = true
+                                activeSheet = .detail(entry)
                             }
                     }
                     .onDelete(perform: deleteEntries)
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
+                // 修 UI 一致性 2026-09-10：insetGrouped 的行默认纯白，与宣纸底不和谐。
+                // 改 DS.paper（宣纸色），与「功课 / 求取智慧」页的文字背景一致。
+                // 不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出差别。
+                .listRowBackground(DS.paper)
                 .refreshable {
                     await loadEntries()
                 }
@@ -131,7 +152,7 @@ struct JournalView: View {
                 // Export journal — Pro-only
                 Button {
                     if subscriptionManager.isPro {
-                        showExport = true
+                        activeSheet = .export
                     } else {
                         subscriptionManager.openPaywall(.journalExport)
                     }
@@ -141,13 +162,14 @@ struct JournalView: View {
                 .accessibilityLabel(AppState.tr("Export Journal"))
             }
         }
-        .sheet(isPresented: $showDetail) {
-            if let entry = selectedEntry {
+        // 单一 sheet（修 2026-09-10：原为两个 .sheet 挂同层 → 详情页空白）
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .detail(let entry):
                 JournalEntryDetailView(entry: entry)
+            case .export:
+                ShareSheet(activityItems: [exportText])
             }
-        }
-        .sheet(isPresented: $showExport) {
-            ShareSheet(activityItems: [exportText])
         }
         .task {
             await loadEntries()
@@ -183,15 +205,20 @@ struct JournalView: View {
         await MainActor.run { isLoading = true }
         do {
             let result = try await api.listJournal()
-            guard !Task.isCancelled else { return }
+            // 修 bug 2026-09-10：取消路径原来直接 return，isLoading 永远停在 true
+            // → 页面永久停在「正在加载你的修行日志……」转圈，加载不出来。
+            if Task.isCancelled {
+                await MainActor.run { isLoading = false }
+                return
+            }
             await MainActor.run {
                 entries = result
                 isLoading = false
             }
         } catch is CancellationError {
-            return
+            await MainActor.run { isLoading = false }
         } catch let error as URLError where error.code == .cancelled {
-            return
+            await MainActor.run { isLoading = false }
         } catch {
             await MainActor.run {
                 errorMessage = error.localizedDescription

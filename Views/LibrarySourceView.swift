@@ -24,6 +24,8 @@ struct LibrarySourceView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+        // 修 UI 一致性 2026-09-10：insetGrouped 行默认纯白，与宣纸底不和谐 → DS.paper。
+        .listRowBackground(DS.paper)
         .paperBackground()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)

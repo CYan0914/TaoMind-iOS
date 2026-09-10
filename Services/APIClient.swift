@@ -100,7 +100,9 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
+        // 60s：后端 LLM 已换成推理模型（deepseek-v4-flash），单次 8-20s，
+        // 段落不全时会重试一次 → 最坏 ~40s。原来 30s 会误判超时。
+        request.timeoutInterval = 60
         // 登录用户带上 session token → 后端按用户级限额（免费 3/天，Pro 50/天）而非匿名单 IP 上限
         if let authToken = authToken, !authToken.isEmpty {
             request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
