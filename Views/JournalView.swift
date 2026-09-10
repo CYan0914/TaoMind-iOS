@@ -122,6 +122,7 @@ struct JournalView: View {
                                         .foregroundColor(DS.ink)
                                 }
                             }
+                            .listRowBackground(DS.paper)
                         }
                     }
 
@@ -131,15 +132,17 @@ struct JournalView: View {
                             .onTapGesture {
                                 activeSheet = .detail(entry)
                             }
+                            .listRowBackground(DS.paper)
                     }
                     .onDelete(perform: deleteEntries)
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
-                // 修 UI 一致性 2026-09-10：insetGrouped 的行默认纯白，与宣纸底不和谐。
-                // 改 DS.paper（宣纸色），与「功课 / 求取智慧」页的文字背景一致。
-                // 不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出差别。
-                .listRowBackground(DS.paper)
+                // 修 UI 一致性 2026-09-10（v2）：
+                // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op
+                // （v1 就错在这里，build 52 用户实测仍显示纯白）。必须加在每一行内容上，
+                // 见上面 banner Button 与 ForEach 的 .listRowBackground(DS.paper)。
+                // 用显式 DS.paper 而不是 Color.clear：不依赖 List 底层是否透明。
                 .refreshable {
                     await loadEntries()
                 }

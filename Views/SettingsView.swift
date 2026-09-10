@@ -39,6 +39,7 @@ struct SettingsView: View {
                         .foregroundColor(DS.cinnabar)
                     }
                     .padding(.vertical, 4)
+                    .listRowBackground(DS.paper)
                 } header: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
@@ -113,6 +114,7 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 8)
+                .listRowBackground(DS.paper)
             } header: {
                 Label("TaoMind Premium", systemImage: subscriptionManager.isPro ? "crown.fill" : "crown")
             }
@@ -124,10 +126,12 @@ struct SettingsView: View {
                         Text(lang.displayName).tag(lang)
                     }
                 }
+                .listRowBackground(DS.paper)
 
                 Text("Responses will appear in your selected language when supported.")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .listRowBackground(DS.paper)
             } header: {
                 Label("Preferences", systemImage: "gearshape")
             }
@@ -140,6 +144,7 @@ struct SettingsView: View {
                     Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                         .foregroundColor(.secondary)
                 }
+                .listRowBackground(DS.paper)
 
                 // 评分入口（兜底：不受 7 天节点规则限制）
                 Button {
@@ -156,6 +161,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .listRowBackground(DS.paper)
 
                 // 推荐裂变入口（双向 7 天 Pro）
                 Button {
@@ -173,6 +179,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .listRowBackground(DS.paper)
 
                 HStack {
                     Text("API Status")
@@ -182,9 +189,12 @@ struct SettingsView: View {
                         .foregroundColor(DS.sage)
                         .font(.caption)
                 }
+                .listRowBackground(DS.paper)
 
                 Link("Privacy Policy", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
+                    .listRowBackground(DS.paper)
                 Link("Terms of Service", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
+                    .listRowBackground(DS.paper)
             } header: {
                 Label("About", systemImage: "info.circle")
             } footer: {
@@ -200,13 +210,13 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            // 修 UI 一致性 2026-09-10：insetGrouped 的行默认 systemBackground（纯白），
-            // 盖在宣纸底上突兀；.scrollContentBackground(.hidden) 只隐藏 List 容器背景，
-            // 管不到行（这就是 v1 当年没修成的原因）。
-            // 改 DS.paper —— 与「功课」页一致：PracticeView 用 ScrollView，正文直接
-            // 铺在 DS.paper 上（见 PracticeView.signedOutContent），那才是用户看到的
-            // 「淡黄色文字背景」。不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出。
-            .listRowBackground(DS.paper)
+            // 修 UI 一致性 2026-09-10（v2）：
+            // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op（v1 就错在
+            // 这里，build 52 用户实测仍显示纯白）。必须加在**每一行内容**上，
+            // 见上面各 Section 内的 .listRowBackground(DS.paper)（共 10 处）。
+            // 用显式 DS.paper 而不是 Color.clear：不依赖「List 背景已被隐藏」这个前提，
+            // 无论 List 底层如何，行的颜色都确定为宣纸色。
+            // 不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出差别。
             // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
             // 让「Privacy Policy / Terms of Service」链接不被 iOS tab bar 切掉。
             // List 在 iOS 16+ 也会处理 safe area，但对 .scrollContentBackground(.hidden) 的 List
