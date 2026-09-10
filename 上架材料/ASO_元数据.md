@@ -36,7 +36,7 @@ wisdom,taoism,reflection,buddhism,meditation,mindfulness,daily,philosophy,spirit
 ### 英文版（App Store 默认，4000 字符以内）：
 
 ```
-TaoMind — Wisdom for the Modern Journey
+TaoMind — Begin your daily cultivation, one small thing at a time
 
 Discover timeless wisdom from the Tao Te Ching and Diamond Sutra, reimagined through AI to guide your daily life.
 
@@ -73,13 +73,13 @@ PERFECT FOR
 DISCLAIMER
 All AI-generated content is reflective in nature and not a substitute for professional advice.
 
-Download TaoMind and begin your wisdom journey today.
+Download TaoMind and begin your daily cultivation today.
 ```
 
 ### 中文版（如 App Store 设置中文为主要语言选项）：
 
 ```
-TaoMind 道心 — AI 智慧指引，每日修身养性
+TaoMind 道心 — 从日常小事的启发中，开启你的每日修行之旅
 
 从《道德经》与《金刚经》中汲取千年智慧，借 AI 之力照亮当下生活。
 
@@ -115,7 +115,7 @@ TaoMind 道心 — AI 智慧指引，每日修身养性
 
 免责声明：所有 AI 生成内容仅供反思参考，不能替代专业建议。
 
-立即下载 TaoMind，开启你的智慧之旅。
+立即下载 TaoMind，开启你的每日修行之旅。
 ```
 
 ---
