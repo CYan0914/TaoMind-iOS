@@ -4,7 +4,8 @@ import AVFoundation
 // MARK: - 道德经·精讲 详情页
 //
 // 6 个 section: 原文 (含 audio player) → 通释 → 反常识点 → 30yr PM scene → 张力 → 一句行动
-// Audio 用 AVFoundation 的 AVAudioPlayer, 文件从 bundle 读 jingjiang_audio/{slug}_{lang}.mp3
+// Audio 用 AVFoundation 的 AVAudioPlayer, 文件从 bundle 读 {slug}_{lang}.mp3
+// （XcodeGen 会把 Resources 子目录拍平到 bundle 根,见 resolveAudioURL 注释）
 
 struct JingjiangDetailView: View {
     let chapter: JingjiangChapter
@@ -241,7 +242,7 @@ final class JingjiangAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDeleg
         if loadedFileName == fileName { return }
         loadedFileName = fileName
 
-        guard let url = Bundle.main.url(forResource: fileName, withExtension: nil) else {
+        guard let url = Self.resolveAudioURL(fileName) else {
             statusLine = AppState.tr("jingjiang_no_audio")
             isReady = false
             return
@@ -285,6 +286,30 @@ final class JingjiangAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDeleg
             self.isPlaying = false
             self.statusLine = AppState.tr("jingjiang_play_audio")
         }
+    }
+
+    /// 解析 bundle 里的音频 URL，兼容两种布局：
+    ///   1. 文件在 bundle 根目录（XcodeGen 对 `Resources` 子目录的**实际行为**，会拍平）
+    ///   2. 保留了 `jingjiang_audio/` 子目录（若将来改用 folder reference）
+    ///
+    /// 输入可以是 `ch01_en.mp3`，也可以是 `jingjiang_audio/ch01_en.mp3`。
+    /// 2026-09-10 修：实测 IPA 里 mp3 全在根目录，而原实现按
+    /// `url(forResource: "jingjiang_audio/ch01_en.mp3", withExtension: nil)` 找，
+    /// 永远 miss → 播放器一直显示「无音频」。
+    private static func resolveAudioURL(_ fileName: String) -> URL? {
+        let ns = fileName as NSString
+        let dir = ns.deletingLastPathComponent
+        let leaf = ns.lastPathComponent as NSString
+        let name = leaf.deletingPathExtension
+        let ext = leaf.pathExtension
+
+        // 1) 名字里带目录 → 先按子目录找
+        if !dir.isEmpty,
+           let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: dir) {
+            return url
+        }
+        // 2) 兜底：bundle 根目录
+        return Bundle.main.url(forResource: name, withExtension: ext)
     }
 
     private func timeString(_ seconds: TimeInterval) -> String {
