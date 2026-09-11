@@ -172,3 +172,6 @@
 /* ===== 清静经 + 列子 (2026-09-11) ===== */
 "library_qingjing" = "Qingjing Jing";
 "library_liezi" = "Liezi";
+
+/* ===== Zhuangzi (2026-09-12) ===== */
+"library_zhuangzi" = "Zhuangzi";

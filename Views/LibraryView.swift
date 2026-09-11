@@ -87,6 +87,12 @@ struct LibraryView: View {
                     source: "列子",
                     entries: lieziEntries
                 )
+            case .zhuangzi:
+                LibrarySourceView(
+                    title: AppState.tr("library_zhuangzi"),
+                    source: "庄子",
+                    entries: zhuangziEntries
+                )
             case .diamondSutra:
                 LibrarySourceView(
                     title: AppState.tr("library_diamond_sutra"),
@@ -151,6 +157,11 @@ struct LibraryView: View {
         entries.filter { $0.source == "列子" }.sorted { $0.display_order < $1.display_order }
     }
 
+    /// 庄子精选（2026-09-12）。source 是中文，与后端 seed 一致。
+    private var zhuangziEntries: [LibraryEntry] {
+        entries.filter { $0.source == "庄子" }.sorted { $0.display_order < $1.display_order }
+    }
+
     private var hubItems: [LibraryHubItem] {
         var items: [LibraryHubItem] = [
             LibraryHubItem(
@@ -203,6 +214,17 @@ struct LibraryView: View {
                 destination: .liezi
             ))
         }
+        if !zhuangziEntries.isEmpty {
+            items.append(LibraryHubItem(
+                id: "zhuangzi",
+                title: AppState.tr("library_zhuangzi"),
+                subtitle: AppState.tr("library_hub_original"),
+                countText: AppState.tr("library_hub_count_fmt", zhuangziEntries.count),
+                icon: "wind",
+                requiresPro: false,
+                destination: .zhuangzi
+            ))
+        }
         if !jingjiang.chapters.isEmpty {
             items.append(LibraryHubItem(
                 id: "jingjiang",
@@ -248,6 +270,7 @@ private enum LibraryDestination: Hashable {
     case ganying
     case qingjing
     case liezi
+    case zhuangzi
     case diamondSutra
     case jingjiang
 }

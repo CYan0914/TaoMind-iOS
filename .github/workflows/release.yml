@@ -76,37 +76,43 @@ jobs:
           #   ② 设置/修行日志列表行纯白背景（改 DS.paper 与宣纸底一致）
           #   ③ 道德经精讲音频播不出（mp3 被 XcodeGen 拍平到 bundle 根，
           #      原代码按 jingjiang_audio/ 前缀找 → 永远 miss）
-          VERSION = "1.7.2"
-          BUILD = "60"
+          VERSION = "1.7.3"
+          BUILD = "61"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
-          # 1.7.1 用户能感知的增量（三个修复，都来自真实用户反馈）：
-          #   - 道德经精讲现在能听：81 章英文旁白打包进 app，点播放即出声
-          #     （1.7.0 里音频文件在，但路径解析错了，播放按钮一直显示「无音频」）
-          #   - 修行日志详情不再空白：点进去能看到完整四段 + 你的提问
-          #   - 设置 / 修行日志的列表改用宣纸底色，与「功课」「求取智慧」页一致
+          # 1.7.3 用户能感知的增量：
+          #   - 《庄子》精选 16 篇上线（图书馆新分类，与后端 seed 的 source="庄子" 对齐）
+          #   - 中文界面修复：道德经/金刚经原本把英文存在非 _en 列，中文模式看到的是
+          #     英文章节标题 / 英译经文 / 英文反思 → 现补中文原文与中文反思
+          #   - 英文通释校订：修掉 CJK 泄漏进英文经文、字面 \n、不渲染的粗体标记等 32 处
           WHATS_NEW_EN = (
-              "**The 81 chapters now speak**\n"
-              "Every chapter of the Tao Te Ching commentary now has a full English "
-              "narration you can play right in the chapter view — original verse, "
-              "plain meaning, the counter-intuitive insight, a real scene, and one "
-              "thing to try today. Hit play and listen on a walk.\n\n"
-              "**Fixes**\n"
-              "Opening a saved journal entry no longer comes up blank — you will see "
-              "the full response and your question. Settings and Journal now use the "
-              "same warm paper background as the rest of the app."
+              "**The Zhuangzi arrives**\n"
+              "Sixteen selections, each with verse, plain commentary, and one "
+              "question to carry into your day. The Inner Chapters in full — Free "
+              "and Easy Wandering, the fasting of the heart, sitting and forgetting, "
+              "the mirror that keeps nothing — plus Autumn Floods, the woodworker "
+              "who fasted seven days, and the drum on the basin.\n\n"
+              "**Chinese readers now see Chinese**\n"
+              "If your app runs in Chinese, chapter titles and verses were showing "
+              "up in English. The Tao Te Ching and the Diamond Sutra now display "
+              "their original Chinese text, with Chinese reflections.\n\n"
+              "**Also**\n"
+              "Library loading is steadier, and the English commentaries have been "
+              "proofread and cleaned up throughout."
           )
           WHATS_NEW_ZH = (
-              "**81 章精讲，现在能听了**\n"
-              "道德经每一章的讲解都配了完整的英文旁白,在章节页点播放即可听——"
-              "原文、白话通释、反常识点、真实场景、今天能做的一件事。"
-              "散步的时候听完一章刚刚好。\n\n"
-              "**修复**\n"
-              "修行日志点进去不再空白,能看到完整的四段回应和你当时的提问。"
-              "设置页与修行日志改用与全站一致的宣纸底色。"
+              "**《庄子》上线**\n"
+              "精选 16 篇，每篇都配原文、白话通释，以及一条留给你今天的追问。"
+              "内篇七篇全收——逍遥游、心斋、坐忘、那面什么都不留的镜子——"
+              "另加秋水、斋戒七日的木匠、鼓盆而歌。\n\n"
+              "**中文界面，现在真的是中文了**\n"
+              "此前中文模式下，章节标题与经文显示的是英文。道德经与金刚经"
+              "现在呈现中文原文，反思也是中文。\n\n"
+              "**其他**\n"
+              "图书馆加载更稳定，英文通释全文过了一遍校订。"
           )
 
           # 1) Find app
