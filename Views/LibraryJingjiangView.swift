@@ -18,8 +18,12 @@ struct LibraryJingjiangView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        // 修 UI 一致性 2026-09-10：insetGrouped 行默认纯白，与宣纸底不和谐 → DS.paper。
-        .listRowBackground(DS.paper)
+        // 修 UI 一致性 2026-09-10（v3，前两版都错）：
+        // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op（v1 错这里）。
+        // ⚠️ v2 用了 DS.paper（= 页面底色）→ 行与背景完全同色，卡片"消失"，比白色更糟。
+        // ✅ 正解 DS.paperHi（卡纸色 #FDFBF5，比页面底 #F4EFE3 略亮），与「功课」页的
+        //    心情 chip（MoodChipRow）、经藏入口卡、珍藏卡一致 —— 卡片浮在纸上，有层次。
+        .listRowBackground(DS.paperHi)
         .paperBackground()
         .navigationTitle(AppState.tr("library_jingjiang"))
         .navigationBarTitleDisplayMode(.inline)

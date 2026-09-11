@@ -39,7 +39,12 @@ struct SettingsView: View {
                         .foregroundColor(DS.cinnabar)
                     }
                     .padding(.vertical, 4)
-                    .listRowBackground(DS.paper)
+                    // 修 UI 一致性 2026-09-10（v3，前两版都错）：
+                    // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op（v1 错这里）。
+                    // ⚠️ v2 用了 DS.paper（= 页面底色）→ 行与背景完全同色，卡片"消失"，比白色更糟。
+                    // ✅ 正解 DS.paperHi（卡纸色 #FDFBF5，比页面底 #F4EFE3 略亮），与「功课」页的
+                    //    心情 chip（MoodChipRow）、经藏入口卡、珍藏卡一致 —— 卡片浮在纸上，有层次。
+                    .listRowBackground(DS.paperHi)
                 } header: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
@@ -114,7 +119,7 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 8)
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
             } header: {
                 Label("TaoMind Premium", systemImage: subscriptionManager.isPro ? "crown.fill" : "crown")
             }
@@ -126,12 +131,12 @@ struct SettingsView: View {
                         Text(lang.displayName).tag(lang)
                     }
                 }
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
 
                 Text("Responses will appear in your selected language when supported.")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .listRowBackground(DS.paper)
+                    .listRowBackground(DS.paperHi)
             } header: {
                 Label("Preferences", systemImage: "gearshape")
             }
@@ -144,7 +149,7 @@ struct SettingsView: View {
                     Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                         .foregroundColor(.secondary)
                 }
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
 
                 // 评分入口（兜底：不受 7 天节点规则限制）
                 Button {
@@ -161,7 +166,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
 
                 // 推荐裂变入口（双向 7 天 Pro）
                 Button {
@@ -179,7 +184,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
 
                 HStack {
                     Text("API Status")
@@ -189,12 +194,12 @@ struct SettingsView: View {
                         .foregroundColor(DS.sage)
                         .font(.caption)
                 }
-                .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
 
                 Link("Privacy Policy", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
-                    .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
                 Link("Terms of Service", destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
-                    .listRowBackground(DS.paper)
+                .listRowBackground(DS.paperHi)
             } header: {
                 Label("About", systemImage: "info.circle")
             } footer: {
@@ -210,17 +215,6 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            // 修 UI 一致性 2026-09-10（v2）：
-            // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op（v1 就错在
-            // 这里，build 52 用户实测仍显示纯白）。必须加在**每一行内容**上，
-            // 见上面各 Section 内的 .listRowBackground(DS.paper)（共 10 处）。
-            // 用显式 DS.paper 而不是 Color.clear：不依赖「List 背景已被隐藏」这个前提，
-            // 无论 List 底层如何，行的颜色都确定为宣纸色。
-            // 不要用 paperHi(#FDFBF5)，它几乎等于白色，改了看不出差别。
-            // 修设计审计 2026-09-02 Blocker 2：List 底部加 100pt 透明 inset，
-            // 让「Privacy Policy / Terms of Service」链接不被 iOS tab bar 切掉。
-            // List 在 iOS 16+ 也会处理 safe area，但对 .scrollContentBackground(.hidden) 的 List
-            // 不自动加 bottom padding；这是 1.5.0 出现合规章节被切的根因。
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: 100)
             }

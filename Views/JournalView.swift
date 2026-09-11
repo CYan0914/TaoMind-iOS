@@ -122,7 +122,12 @@ struct JournalView: View {
                                         .foregroundColor(DS.ink)
                                 }
                             }
-                            .listRowBackground(DS.paper)
+                            // 修 UI 一致性 2026-09-10（v3，前两版都错）：
+                // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op（v1 错这里）。
+                // ⚠️ v2 用了 DS.paper（= 页面底色）→ 行与背景完全同色，卡片"消失"，比白色更糟。
+                // ✅ 正解 DS.paperHi（卡纸色 #FDFBF5，比页面底 #F4EFE3 略亮），与「功课」页的
+                //    心情 chip（MoodChipRow）、经藏入口卡、珍藏卡一致 —— 卡片浮在纸上，有层次。
+                .listRowBackground(DS.paperHi)
                         }
                     }
 
@@ -132,17 +137,12 @@ struct JournalView: View {
                             .onTapGesture {
                                 activeSheet = .detail(entry)
                             }
-                            .listRowBackground(DS.paper)
+                            .listRowBackground(DS.paperHi)
                     }
                     .onDelete(perform: deleteEntries)
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
-                // 修 UI 一致性 2026-09-10（v2）：
-                // ⚠️ listRowBackground 是**行级**修饰符 —— 加在 List 上是 no-op
-                // （v1 就错在这里，build 52 用户实测仍显示纯白）。必须加在每一行内容上，
-                // 见上面 banner Button 与 ForEach 的 .listRowBackground(DS.paper)。
-                // 用显式 DS.paper 而不是 Color.clear：不依赖 List 底层是否透明。
                 .refreshable {
                     await loadEntries()
                 }
