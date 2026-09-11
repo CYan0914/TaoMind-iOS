@@ -164,3 +164,7 @@
 "personalized_verse_upsell_title" = "A daily verse that knows you";
 "personalized_verse_upsell_sub" = "Tap your mood each morning. We'll pick a verse that fits. Pro.";
 "pw_ctx_personalized_daily_verse" = "Personalized daily verses — choose your mood, get a verse that fits";
+
+/* ===== 太上感应篇 (2026-09-11) ===== */
+"library_ganying" = "Treatise on Response and Retribution";
+"library_hub_treatise" = "A classic of moral cause and effect · 24 sections";

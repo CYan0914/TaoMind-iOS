@@ -108,7 +108,26 @@ struct LibraryEntry: Codable, Identifiable {
     let reflection: String
     let display_order: Int
 
+    // 双语列（2026-09-11）。Optional：道德经/金刚经的历史数据没有英文通释，
+    // 字段为空串；太上感应篇起才是完整中英双语。
+    let verse_text_en: String?
+    let commentary_en: String?
+    let reflection_en: String?
+
     var id: Int { display_order }
+
+    /// 按当前 App 语言取字段；该语言版本为空时 fallback 到另一边（老书行为不变）。
+    @MainActor
+    func localized(zh: String, en: String?) -> String {
+        let wantZh = AppState.currentLocaleId == "zh-Hans"
+        if wantZh { return zh }
+        let e = en ?? ""
+        return e.isEmpty ? zh : e
+    }
+
+    @MainActor var localizedVerse: String { localized(zh: verse_text, en: verse_text_en) }
+    @MainActor var localizedCommentary: String { localized(zh: commentary, en: commentary_en) }
+    @MainActor var localizedReflection: String { localized(zh: reflection, en: reflection_en) }
 }
 
 struct LibraryResponse: Codable {

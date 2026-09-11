@@ -69,6 +69,12 @@ struct LibraryView: View {
                     source: "Tao Te Ching",
                     entries: ttcEntries
                 )
+            case .ganying:
+                LibrarySourceView(
+                    title: AppState.tr("library_ganying"),
+                    source: "太上感应篇",
+                    entries: ganyingEntries
+                )
             case .diamondSutra:
                 LibrarySourceView(
                     title: AppState.tr("library_diamond_sutra"),
@@ -118,6 +124,13 @@ struct LibraryView: View {
             .sorted { $0.display_order < $1.display_order }
     }
 
+    /// 太上感应篇（2026-09-11 新增）。source 是中文，与后端 seed 一致。
+    private var ganyingEntries: [LibraryEntry] {
+        entries
+            .filter { $0.source == "太上感应篇" }
+            .sorted { $0.display_order < $1.display_order }
+    }
+
     private var hubItems: [LibraryHubItem] {
         var items: [LibraryHubItem] = [
             LibraryHubItem(
@@ -128,6 +141,15 @@ struct LibraryView: View {
                 icon: "book.closed.fill",
                 requiresPro: false,
                 destination: .taoTeChing
+            ),
+            LibraryHubItem(
+                id: "ganying",
+                title: AppState.tr("library_ganying"),
+                subtitle: AppState.tr("library_hub_treatise"),
+                countText: AppState.tr("library_hub_count_fmt", ganyingEntries.count),
+                icon: "scroll.fill",
+                requiresPro: false,
+                destination: .ganying
             ),
             LibraryHubItem(
                 id: "diamond",
@@ -181,6 +203,7 @@ struct LibraryView: View {
 
 private enum LibraryDestination: Hashable {
     case taoTeChing
+    case ganying
     case diamondSutra
     case jingjiang
 }

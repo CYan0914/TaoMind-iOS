@@ -14,19 +14,19 @@ struct LibraryDetailView: View {
                     .foregroundColor(.secondary)
 
                 // Verse
-                Text(entry.verse_text)
+                Text(entry.localizedVerse)
                     .font(.custom("Georgia", size: 18, relativeTo: .body))
                     .foregroundColor(DS.ink)
                     .lineSpacing(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Commentary (白话精讲)
-                if !entry.commentary.isEmpty {
+                if !entry.localizedCommentary.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(AppState.tr("Commentary"))
                             .font(.headline)
                             .foregroundColor(DS.ink)
-                        Text(entry.commentary)
+                        Text(entry.localizedCommentary)
                             .font(.body)
                             .foregroundColor(DS.inkSoft)
                             .lineSpacing(6)
@@ -38,12 +38,12 @@ struct LibraryDetailView: View {
                 }
 
                 // Reflection
-                if !entry.reflection.isEmpty {
+                if !entry.localizedReflection.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(AppState.tr("The Reflection"))
                             .font(.headline)
                             .foregroundColor(DS.ink)
-                        Text(entry.reflection)
+                        Text(entry.localizedReflection)
                             .font(.custom("Georgia", size: 16, relativeTo: .body))
                             .italic()
                             .foregroundColor(.secondary)

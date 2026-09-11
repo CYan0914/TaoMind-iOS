@@ -45,6 +45,7 @@ struct LibrarySourceView: View {
         }
     }
 
+    @MainActor
     private func row(_ entry: LibraryEntry) -> some View {
         let locked = isLocked(entry)
         return Button {
@@ -60,7 +61,7 @@ struct LibrarySourceView: View {
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(DS.ink)
-                    Text(entry.verse_text)
+                    Text(entry.localizedVerse)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)

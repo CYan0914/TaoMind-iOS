@@ -290,3 +290,7 @@
 "personalized_verse_upsell_title" = "专属于你的每日经文";
 "personalized_verse_upsell_sub" = "每天点一下心情,我们为你挑一句当下合用的经文。Pro 专属。";
 "pw_ctx_personalized_daily_verse" = "每日情绪定制经文——点心情,给你一句当下合用的";
+
+/* ===== 太上感应篇 (2026-09-11) ===== */
+"library_ganying" = "太上感应篇";
+"library_hub_treatise" = "劝善文 · 24 节";
