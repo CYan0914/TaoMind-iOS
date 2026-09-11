@@ -294,3 +294,7 @@
 /* ===== 太上感应篇 (2026-09-11) ===== */
 "library_ganying" = "太上感应篇";
 "library_hub_treatise" = "劝善文 · 24 节";
+
+/* ===== 清静经 + 列子 (2026-09-11) ===== */
+"library_qingjing" = "清静经";
+"library_liezi" = "列子";

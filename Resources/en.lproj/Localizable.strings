@@ -168,3 +168,7 @@
 /* ===== 太上感应篇 (2026-09-11) ===== */
 "library_ganying" = "Treatise on Response and Retribution";
 "library_hub_treatise" = "A classic of moral cause and effect · 24 sections";
+
+/* ===== 清静经 + 列子 (2026-09-11) ===== */
+"library_qingjing" = "Qingjing Jing";
+"library_liezi" = "Liezi";

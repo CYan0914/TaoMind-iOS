@@ -75,6 +75,18 @@ struct LibraryView: View {
                     source: "太上感应篇",
                     entries: ganyingEntries
                 )
+            case .qingjing:
+                LibrarySourceView(
+                    title: AppState.tr("library_qingjing"),
+                    source: "清静经",
+                    entries: qingjingEntries
+                )
+            case .liezi:
+                LibrarySourceView(
+                    title: AppState.tr("library_liezi"),
+                    source: "列子",
+                    entries: lieziEntries
+                )
             case .diamondSutra:
                 LibrarySourceView(
                     title: AppState.tr("library_diamond_sutra"),
@@ -131,6 +143,14 @@ struct LibraryView: View {
             .sorted { $0.display_order < $1.display_order }
     }
 
+    /// 清静经 / 列子（2026-09-11 第二批）
+    private var qingjingEntries: [LibraryEntry] {
+        entries.filter { $0.source == "清静经" }.sorted { $0.display_order < $1.display_order }
+    }
+    private var lieziEntries: [LibraryEntry] {
+        entries.filter { $0.source == "列子" }.sorted { $0.display_order < $1.display_order }
+    }
+
     private var hubItems: [LibraryHubItem] {
         var items: [LibraryHubItem] = [
             LibraryHubItem(
@@ -161,6 +181,28 @@ struct LibraryView: View {
                 destination: .diamondSutra
             ),
         ]
+        if !qingjingEntries.isEmpty {
+            items.append(LibraryHubItem(
+                id: "qingjing",
+                title: AppState.tr("library_qingjing"),
+                subtitle: AppState.tr("library_hub_treatise"),
+                countText: AppState.tr("library_hub_count_fmt", qingjingEntries.count),
+                icon: "leaf.fill",
+                requiresPro: false,
+                destination: .qingjing
+            ))
+        }
+        if !lieziEntries.isEmpty {
+            items.append(LibraryHubItem(
+                id: "liezi",
+                title: AppState.tr("library_liezi"),
+                subtitle: AppState.tr("library_hub_treatise"),
+                countText: AppState.tr("library_hub_count_fmt", lieziEntries.count),
+                icon: "book.pages.fill",
+                requiresPro: false,
+                destination: .liezi
+            ))
+        }
         if !jingjiang.chapters.isEmpty {
             items.append(LibraryHubItem(
                 id: "jingjiang",
@@ -204,6 +246,8 @@ struct LibraryView: View {
 private enum LibraryDestination: Hashable {
     case taoTeChing
     case ganying
+    case qingjing
+    case liezi
     case diamondSutra
     case jingjiang
 }
