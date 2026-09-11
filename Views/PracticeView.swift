@@ -26,7 +26,7 @@ struct PracticeView: View {
     @State private var showMonthlyReport = false
     @State private var newCard: CommemorativeCard?
     @State private var showCardCollection = false
-    // 修设计审计 2026-09-02 QW2：Library 从底 tab 移到 Practice 主屏入口。
+    // Library 另有底 tab（2026-09-10 恢复）；这里是 Practice 内的场景入口（双通道）。
     @State private var showLibrary = false
 
     private let service = CheckinService()
@@ -91,8 +91,8 @@ struct PracticeView: View {
         .sheet(isPresented: $showMonthlyReport) {
             MonthlyReportView(month: currentMonthString)
         }
-        // 修设计审计 2026-09-02 QW2：Library（经藏）从底 tab 移到 Practice。
-        // LibraryView 自身已带 NavigationStack（见 LibraryView.swift line 17），sheet 里直接调用即可。
+        // LibraryView 自身已带 NavigationStack（见 LibraryView.swift line 20），
+        // 无论放在 tab 还是 sheet 里都直接调用即可，不要外面再包一层。
         .sheet(isPresented: $showLibrary) {
             LibraryView()
         }
@@ -478,7 +478,10 @@ struct PracticeView: View {
         return f.string(from: Date())
     }
 
-    // MARK: - 经藏入口（QW2：5→4 tab 后从底 tab 迁入 Practice）
+    // MARK: - 经藏入口
+    // 2026-09-02 QW2 曾把 Library 从底 tab 迁到这里；2026-09-10 用户决定恢复底 tab
+    // （理由见 ContentView：Library 是 Pro 核心资产，藏二级入口用户看不见）。
+    // 此入口**保留**，形成「tab 常驻 + Practice 场景入口」双通道。
 
     private var libraryEntry: some View {
         Button(action: { showLibrary = true }) {

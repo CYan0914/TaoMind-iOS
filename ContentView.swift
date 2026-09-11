@@ -19,13 +19,28 @@ struct ContentView: View {
             }
             .tag(0)
 
+            // 2026-09-10 恢复为独立 tab（用户决定，部分回退 2026-09-02 QW2）：
+            // QW2 当时把 Library 从底 tab 移到 Practice 的 libraryEntry，理由是
+            // 「5 tab 拥挤 + iOS 默认纯黑 tab bar 拉低高级感」。
+            // 但实测下来：Library 是 Pro 转化的核心资产（81 章精讲 + 原文书库），
+            // 藏在 Practice 二级入口 → 用户不进 Practice 就完全不知道这块的价值。
+            // 取舍反转：tab bar 用 .warmTabBar() 已解决「纯黑」问题；多一个 tab
+            // 换来核心资产常驻可见，值得。
+            // ⚠️ Practice 里的 libraryEntry **保留**（双入口），不删。
+            // LibraryView 自带 NavigationStack，这里不要再包一层。
+            LibraryView()
+                .tabItem {
+                    Label("Library", systemImage: "books.vertical")
+                }
+                .tag(1)
+
             NavigationStack {
                 JournalView()
             }
             .tabItem {
                 Label("Journal", systemImage: "book")
             }
-            .tag(1)
+            .tag(2)
 
             NavigationStack {
                 PracticeView()
@@ -33,13 +48,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Practice", systemImage: "flame")
             }
-            .tag(2)
-
-            // 修设计审计 2026-09-02 QW2：5 tab → 4 tab。
-            // Library（经藏 / 《道德经》《金刚经》）从底 tab 移走，
-            // 在 Practice 主屏里加一个 libraryEntry 入口（同 Commemorative Cards 入口模式）。
-            // 原因：5 tab 拥挤 + iOS 默认纯黑 tab bar 拉低「高级感」。
-            // Settings 保留在底 tab（不可替代的强入口）。
+            .tag(3)
 
             NavigationStack {
                 SettingsView()
@@ -47,7 +56,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
             }
-            .tag(3)
+            .tag(4)
         }
         .tint(DS.bronze)
         // 修设计审计 2026-09-02 QW2：iOS 默认纯黑 tab bar → 暖宣纸 92% 透明。
