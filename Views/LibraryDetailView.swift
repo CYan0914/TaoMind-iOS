@@ -9,7 +9,7 @@ struct LibraryDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 // Attribution
-                Text("\(entry.source) · \(entry.chapter)")
+                Text("\(entry.source) · \(entry.localizedChapter)")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -54,7 +54,7 @@ struct LibraryDetailView: View {
             .padding()
         }
         .paperBackground()
-        .navigationTitle(entry.chapter)
+        .navigationTitle(entry.localizedChapter)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

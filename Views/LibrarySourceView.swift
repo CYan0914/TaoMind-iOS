@@ -57,7 +57,7 @@ struct LibrarySourceView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.chapter)
+                    Text(entry.localizedChapter)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(DS.ink)

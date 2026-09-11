@@ -113,6 +113,8 @@ struct LibraryEntry: Codable, Identifiable {
     let verse_text_en: String?
     let commentary_en: String?
     let reflection_en: String?
+    /// 章节标题的英文版（太上感应篇用；道德经/金刚经的 chapter 本身已是英文）
+    let chapter_en: String?
 
     var id: Int { display_order }
 
@@ -125,6 +127,7 @@ struct LibraryEntry: Codable, Identifiable {
         return e.isEmpty ? zh : e
     }
 
+    @MainActor var localizedChapter: String { localized(zh: chapter, en: chapter_en) }
     @MainActor var localizedVerse: String { localized(zh: verse_text, en: verse_text_en) }
     @MainActor var localizedCommentary: String { localized(zh: commentary, en: commentary_en) }
     @MainActor var localizedReflection: String { localized(zh: reflection, en: reflection_en) }
