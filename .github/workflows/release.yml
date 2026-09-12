@@ -85,34 +85,54 @@ jobs:
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
           # 1.7.3 用户能感知的增量：
           #   - 《庄子》精选 16 篇上线（图书馆新分类，与后端 seed 的 source="庄子" 对齐）
+          #   - 道德经 81 章 / 金刚经 32 品 由「节选」升级为「全文」，配完整英译
+          #     （后端已部署，线上实测：道德经 verse 6432 字 / verse_en 39850 字符）
           #   - 中文界面修复：道德经/金刚经原本把英文存在非 _en 列，中文模式看到的是
           #     英文章节标题 / 英译经文 / 英文反思 → 现补中文原文与中文反思
           #   - 英文通释校订：修掉 CJK 泄漏进英文经文、字面 \n、不渲染的粗体标记等 32 处
           WHATS_NEW_EN = (
               "**The Zhuangzi arrives**\n"
-              "Sixteen selections, each with verse, plain commentary, and one "
-              "question to carry into your day. The Inner Chapters in full — Free "
-              "and Easy Wandering, the fasting of the heart, sitting and forgetting, "
-              "the mirror that keeps nothing — plus Autumn Floods, the woodworker "
-              "who fasted seven days, and the drum on the basin.\n\n"
+              "Sixteen selections, each with its original text, a plain-language "
+              "commentary, and one question to carry into your day. All seven Inner "
+              "Chapters — Free and Easy Wandering, the fasting of the heart, sitting "
+              "and forgetting, the mirror that keeps nothing — plus Autumn Floods, "
+              "the woodworker who fasted seven days, and the drum on the basin.\n\n"
+              "**The classics are now complete**\n"
+              "The Tao Te Ching and the Diamond Sutra used to show selected lines. "
+              "All 81 chapters and all 32 sections now appear in full, each with a "
+              "complete English translation beside the Chinese, and the Diamond "
+              "Sutra commentary has been rewritten to follow the whole text.\n\n"
               "**Chinese readers now see Chinese**\n"
-              "If your app runs in Chinese, chapter titles and verses were showing "
-              "up in English. The Tao Te Ching and the Diamond Sutra now display "
-              "their original Chinese text, with Chinese reflections.\n\n"
+              "If the app ran in Chinese, chapter titles, verses, and reflections "
+              "still came through in English. They are now in Chinese.\n\n"
               "**Also**\n"
-              "Library loading is steadier, and the English commentaries have been "
-              "proofread and cleaned up throughout."
+              "The first 30 commemorative cards have been redrawn with chapter "
+              "number, source line, and credit. The Library loads more steadily."
           )
           WHATS_NEW_ZH = (
               "**《庄子》上线**\n"
-              "精选 16 篇，每篇都配原文、白话通释，以及一条留给你今天的追问。"
+              "精选十六篇，每篇都是原文、白话通释，加一条留给你今天的追问。"
               "内篇七篇全收——逍遥游、心斋、坐忘、那面什么都不留的镜子——"
-              "另加秋水、斋戒七日的木匠、鼓盆而歌。\n\n"
+              "另有秋水、斋戒七日的木匠、鼓盆而歌。\n\n"
+              "**两部经典，补全为全文**\n"
+              "道德经与金刚经此前只呈现节选。现在 81 章、32 品全部完整呈现，"
+              "中文旁边配完整英译；金刚经的白话通释也依全文重写了一遍。\n\n"
               "**中文界面，现在真的是中文了**\n"
-              "此前中文模式下，章节标题与经文显示的是英文。道德经与金刚经"
-              "现在呈现中文原文，反思也是中文。\n\n"
+              "此前中文模式下，章节标题、经文、反思显示的仍是英文。现在都是中文。\n\n"
               "**其他**\n"
-              "图书馆加载更稳定，英文通释全文过了一遍校订。"
+              "珍藏卡前 30 张重新绘制，补上章号、出处与署名。经藏加载更稳定。"
+          )
+          # 推广文本（Promotional Text，170 字符上限）—— 可随时改，不需要送审
+          # 上线后想换主打卖点（如节日、新功能）直接改这两条重跑本 workflow 即可
+          PROMO_EN = (
+              "Stuck on something? Write it down and get a verse from the Tao Te "
+              "Ching, the Diamond Sutra, or the new Zhuangzi, with a plain reading "
+              "and one thing to do today."
+          )
+          PROMO_ZH = (
+              "道德经 81 章、金刚经 32 品现在都是全文，中英对照；新增《庄子》十六篇。"
+              "困住的时候把处境写下来，它会给你一句对症的经文、一段白话，"
+              "和今天就能做的一件事。"
           )
 
           # 1) Find app
@@ -184,6 +204,7 @@ jobs:
                   ),
                   "keywords": "wisdom,taoism,reflection,buddhism,meditation,mindfulness,zen,dao,AI,philosophy,sutra,tao te ching",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
+                  "promotionalText": PROMO_EN,
               },
               "zh-Hans": {
                   "description": (
@@ -198,6 +219,7 @@ jobs:
                   ),
                   "keywords": "智慧,道家,反思,佛教,冥想,正念,禅,道,AI,哲学,佛经,道德经,金刚经,语音",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
+                  "promotionalText": PROMO_ZH,
               },
           }
 
@@ -207,10 +229,12 @@ jobs:
 
           def set_whats_new(locale, text):
               meta = LOCALE_META[locale]
+              # promotionalText 随时可改、不需送审 → 每次都覆盖
+              # description / keywords 只补缺失，避免覆盖用户在 ASC 里手工调过的版本
               if locale in have:
                   lid = have[locale]
                   cur = api("GET", f"/appStoreVersionLocalizations/{lid}")["data"]["attributes"]
-                  attrs = {"whatsNew": text}
+                  attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"]}
                   for f in ("description", "keywords", "supportUrl"):
                       if not cur.get(f):
                           attrs[f] = meta[f]
@@ -218,13 +242,14 @@ jobs:
                       "type": "appStoreVersionLocalizations", "id": lid,
                       "attributes": attrs,
                   }})
-                  print("whatsNew set:", locale, "(missing fields filled:", [f for f in ("description", "keywords", "supportUrl") if not cur.get(f)], ")")
+                  print("whatsNew+promo set:", locale, "(missing fields filled:", [f for f in ("description", "keywords", "supportUrl") if not cur.get(f)], ")")
               else:
                   created = api("POST", "/appStoreVersionLocalizations", {"data": {
                       "type": "appStoreVersionLocalizations",
                       "attributes": {
                           "locale": locale,
                           "whatsNew": text,
+                          "promotionalText": meta["promotionalText"],
                           "description": meta["description"],
                           "keywords": meta["keywords"],
                           "supportUrl": meta["supportUrl"],
