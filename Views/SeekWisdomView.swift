@@ -416,6 +416,9 @@ struct SeekWisdomView: View {
                     appState.incrementDailyUsage()
                     Analytics.track("seek_completed", ["pro": subscriptionManager.isPro ? "1" : "0"])
 
+                    // 第 2 次求取成功弹评分：用户刚拿到价值 → 此时转化率最高
+                    ReviewPromptService.shared.promptAfterSeek(totalSeeks: appState.totalSeekCount)
+
                     // Auto-save to journal
                     saveToJournal(response: response)
                 }
@@ -443,6 +446,9 @@ struct SeekWisdomView: View {
     /// Free tier journal entry cap (Pro is unlimited)
     static let freeJournalLimit = 20
 
+    /// 经藏邀请终身只弹一次
+    private static let libraryInviteShownKey = "library.invite.shown"
+
     private func saveToJournal(response: WisdomResponse) {
         Task {
             do {
@@ -467,6 +473,17 @@ struct SeekWisdomView: View {
                     reflection: response.reflection,
                     wayForward: response.way_forward
                 )
+
+                // 保存成功后引导进经藏（增值型邀请，不是付费墙）：用户刚把一次洞见存下来，
+                // 此刻是「想更系统地学」的意愿峰值。仅非 Pro、且终身只弹一次 ——
+                // 每次 seek 都弹会变成骚扰，反而压低留存。
+                // 时序上与评分弹窗天然错开：首次 seek 走这里，第 2 次 seek 才触发评分。
+                await MainActor.run {
+                    guard !subscriptionManager.isPro,
+                          !UserDefaults.standard.bool(forKey: Self.libraryInviteShownKey) else { return }
+                    UserDefaults.standard.set(true, forKey: Self.libraryInviteShownKey)
+                    appState.showingLibraryInvite = true
+                }
             } catch {
                 // Silent fail — journal save is non-critical
                 print("Failed to save journal: \(error)")

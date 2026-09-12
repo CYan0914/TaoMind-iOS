@@ -6,42 +6,37 @@ import UIKit
 
 /// Wraps `SKStoreReviewController.requestReview()` with milestone gating.
 ///
-/// Apple limits the OS-level prompt to ≤3 times per 365-day window per app, so we
-/// additionally gate it by check-in count: trigger only at 7-day and 30-day
-/// milestones, and only if we have not already prompted at that milestone.
+/// Apple limits the OS-level prompt to ≤3 times per 365-day window per app, so the
+/// three exits are deliberately capped:
+///   ① 第 2 次求取智慧成功 — 用户刚拿到价值，情绪最高
+///   ② 连续打卡 3 天     — 用户在养成习惯，满意度最高
+///   ③ Settings → "Rate TaoMind" — 用户主动，不算打扰
 ///
-/// The Settings → "Rate TaoMind" row calls `promptNow()` which is the
-/// "always-on" exit hatch and is not subject to the milestone gate.
+/// 前两个由 `promptAfterSeek` / `promptOnStreak` 触发，各只弹一次；
+/// `promptNow()` 不受里程碑门槛限制。
 @MainActor
 final class ReviewPromptService {
     static let shared = ReviewPromptService()
 
     private let defaults = UserDefaults.standard
-    private let prompted7Key = "review.prompted.at7"
-    private let prompted30Key = "review.prompted.at30"
+    private let promptedSeek2Key = "review.prompted.at2seeks"
+    private let promptedStreak3Key = "review.prompted.atStreak3"
     private let lastPromptedKey = "review.last_prompted_at"
 
     private init() {}
 
-    /// If the user is hitting a check-in milestone (7 or 30 total checkins) and we
-    /// have not prompted at this milestone before, ask the OS to show the rating
-    /// sheet. Safe to call on every view appearance — the gate prevents spam.
-    func promptIfAtMilestone(totalCheckins: Int) {
-        guard totalCheckins >= 7 else { return }
+    /// 第 2 次求取智慧成功时调用（传 `AppState.totalSeekCount`）。仅弹一次。
+    func promptAfterSeek(totalSeeks: Int) {
+        guard totalSeeks >= 2, !defaults.bool(forKey: promptedSeek2Key) else { return }
+        requestReview()
+        defaults.set(true, forKey: promptedSeek2Key)
+    }
 
-        // 7-day milestone
-        if totalCheckins >= 7, !defaults.bool(forKey: prompted7Key) {
-            requestReview()
-            defaults.set(true, forKey: prompted7Key)
-            return
-        }
-
-        // 30-day milestone (only meaningful after the 7-day mark)
-        if totalCheckins >= 30, !defaults.bool(forKey: prompted30Key) {
-            requestReview()
-            defaults.set(true, forKey: prompted30Key)
-            return
-        }
+    /// 连续打卡满 3 天时调用（传 `streak.currentStreak`）。仅弹一次。
+    func promptOnStreak(_ currentStreak: Int) {
+        guard currentStreak >= 3, !defaults.bool(forKey: promptedStreak3Key) else { return }
+        requestReview()
+        defaults.set(true, forKey: promptedStreak3Key)
     }
 
     /// Unconditional prompt: used by the "Rate TaoMind" row in Settings.
@@ -53,7 +48,8 @@ final class ReviewPromptService {
 
     private func requestReview() {
         // Cooldown 1 day between attempts — guards against users reopening
-        // the app rapidly and triggering repeat requests.
+        // the app rapidly, and blocks the "第 2 次 seek / 连续打卡 3 天" double-fire
+        // when both milestones land on the same day.
         if let last = defaults.object(forKey: lastPromptedKey) as? Date,
            Date().timeIntervalSince(last) < 24 * 3600 {
             return

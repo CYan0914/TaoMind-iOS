@@ -28,6 +28,11 @@ struct PracticeView: View {
     @State private var showCardCollection = false
     // Library 另有底 tab（2026-09-10 恢复）；这里是 Practice 内的场景入口（双通道）。
     @State private var showLibrary = false
+    /// 7 天体验卡刚发放时的到期时间（非 nil 即弹告知）
+    @State private var trialGrantedUntil: Date?
+
+    /// 连续打卡换体验卡的门槛，与后端 TRIAL_STREAK_THRESHOLD 对齐
+    private static let trialStreakGoal = 7
 
     private let service = CheckinService()
 
@@ -96,6 +101,27 @@ struct PracticeView: View {
         .sheet(isPresented: $showLibrary) {
             LibraryView()
         }
+        // 7 天体验卡到手：打卡页本来就会弹纪念卡，这里只做一次简短告知，
+        // 不再另开庆祝页抢镜。
+        .alert(AppState.tr("trial_granted_title"), isPresented: Binding(
+            get: { trialGrantedUntil != nil },
+            set: { if !$0 { trialGrantedUntil = nil } }
+        )) {
+            Button("OK") { trialGrantedUntil = nil }
+        } message: {
+            if let until = trialGrantedUntil {
+                Text(AppState.tr("trial_granted_body", Self.trialDateText(until)))
+            }
+        }
+    }
+
+    /// 体验卡到期日的展示文本（跟随 app 语言）
+    private static func trialDateText(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        f.locale = Locale(identifier: AppState.currentLocaleId.hasPrefix("zh") ? "zh_Hans_CN" : "en_US")
+        return f.string(from: date)
     }
 
     // MARK: - Signed out
@@ -172,6 +198,9 @@ struct PracticeView: View {
                 // Streak header
                 streakHeader
 
+                // 连续打卡 7 天 → 7 天 Pro 体验卡的进度（让用户看得见奖励）
+                trialProgressBanner
+
                 // build 50: Mood chip row — Pro/trial 才显,签到后引导用户选心情
                 if showMoodRow {
                     moodRow
@@ -244,6 +273,44 @@ struct PracticeView: View {
     }
 
     // MARK: - Sections
+
+    /// 连续打卡 7 天 → 7 天 Pro 体验卡（终身一次）的进度曝光。
+    /// 这是「让用户看得见」的主入口：不显示进度，用户根本不知道打卡能换来什么。
+    @ViewBuilder
+    private var trialProgressBanner: some View {
+        let streak = status?.streak.currentStreak ?? 0
+        // 已是 Pro（含体验期内）或已领过 → 不显示，
+        // 否则等于在承诺一个不会再兑现的奖励。
+        if !subscriptionManager.isPro && !subscriptionManager.hasClaimedTrial {
+            HStack(spacing: 12) {
+                Image(systemName: "gift")
+                    .font(.title3)
+                    .foregroundColor(DS.bronze)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(AppState.tr("trial_progress_title"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(DS.ink)
+                    Text(AppState.tr("trial_progress_fmt",
+                                     min(streak, Self.trialStreakGoal), Self.trialStreakGoal))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Text("\(min(streak, Self.trialStreakGoal))/\(Self.trialStreakGoal)")
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundColor(DS.bronze)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 14)
+            .background(DS.paperHi)
+            .cornerRadius(14)
+        }
+    }
 
     private var streakHeader: some View {
         HStack(spacing: 16) {
@@ -1017,8 +1084,18 @@ struct PracticeView: View {
                     errorMessage = nil
                     // 打卡成功随即揭示新纪念卡（第 N 次打卡 = 第 N 章）
                     presentNewCardIfUnlocked()
-                    // 7/30 节点弹评分：用户在持续使用 → 此时弹转化率最高
-                    ReviewPromptService.shared.promptIfAtMilestone(totalCheckins: result.streak.totalCheckins)
+                    // 连续打卡 3 天弹评分：用户在养成习惯 → 此时满意度最高
+                    ReviewPromptService.shared.promptOnStreak(result.streak.currentStreak)
+
+                    // 连续 7 天的 7 天 Pro 体验卡：本地解锁 UI + 告知用户。
+                    // 必须显式解析并 applyTrial —— 客户端 isPro 读的是 RevenueCat
+                    // entitlement，服务端写的 pro_until 它不认，不处理的话
+                    // 用户拿到了卡界面照样全锁着。
+                    if let raw = result.trial_granted_until,
+                       let until = ISO8601DateFormatter().date(from: raw) {
+                        subscriptionManager.applyTrial(until: until)
+                        trialGrantedUntil = until
+                    }
                 }
                 // 打卡成功后重排习惯通知（今日已完成 → 18:00 预警/19:00 激励应取消）
                 await NotificationService.shared.scheduleHabitNotifications()

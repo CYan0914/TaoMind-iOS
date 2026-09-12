@@ -177,6 +177,18 @@ class AppState: ObservableObject {
     /// 当日 LLM 失败标记：避免无意义重试；同时驱动 PracticeView 的 upgrade banner 显隐
     @Published var personalizedVerseFailedToday: Bool = false
 
+    // MARK: - 跨视图导航（增值型邀请：seek 保存到日志 → 引导进经藏）
+
+    /// 底部 tab 选中项。提到 AppState 是为了让 SeekWisdomView 保存日志后能跳到经藏 tab。
+    /// 值语义与原来的 @State 完全一致（都是值变才重绘），不增加重绘次数。
+    @Published var selectedTab: Int = 0
+
+    /// 经藏邀请弹窗显隐。sheet 统一挂 ContentView 顶层，理由见 ContentView 注释。
+    @Published var showingLibraryInvite = false
+
+    /// 经藏 tab 在 ContentView TabView 中的 tag
+    static let libraryTabTag = 1
+
     private static let languageOverrideKey = "languageOverride"
     private static let onboardingSeenKey = "hasSeenOnboarding"
     private static let userIntentKey = "userIntent"
@@ -222,24 +234,42 @@ class AppState: ObservableObject {
     private let defaults = UserDefaults.standard
     private let usageCountKey = "dailySeekCount"
     private let usageDateKey = "dailySeekDate"
-    let freeLimit = 3
+    private let totalSeekCountKey = "totalSeekCount"
+
+    /// 免费额度分两档：首日 3 次（尝到完整价值），次日起每天 1 次（制造付费动因）。
+    /// 首日按 installDate 的本地日历日判定 —— 装机当天就该算首日，与账号注册时间无关。
+    private let firstDayFreeLimit = 3
+    private let subsequentFreeLimit = 1
+
+    private var isFirstDay: Bool {
+        Calendar.current.isDate(installDate, inSameDayAs: Date())
+    }
+
+    @MainActor private var currentFreeLimit: Int {
+        isFirstDay ? firstDayFreeLimit : subsequentFreeLimit
+    }
+
+    /// 终身累计求取次数（跨日不重置）：评分触发点「第 2 次求取智慧」据此判定
+    var totalSeekCount: Int { defaults.integer(forKey: totalSeekCountKey) }
 
     /// Whether the user can perform another Seak Wisdom this day
     @MainActor var canSeekWisdom: Bool {
         if SubscriptionManager.shared.isPro { return true }
         resetDailyIfNeeded()
-        return defaults.integer(forKey: usageCountKey) < freeLimit
+        return defaults.integer(forKey: usageCountKey) < currentFreeLimit
     }
 
     /// Number of seeks remaining today
     @MainActor var seeksRemainingToday: Int {
         if SubscriptionManager.shared.isPro { return Int.max }
         resetDailyIfNeeded()
-        return max(0, freeLimit - defaults.integer(forKey: usageCountKey))
+        return max(0, currentFreeLimit - defaults.integer(forKey: usageCountKey))
     }
 
     /// Call after each successful Seek Wisdom
     @MainActor func incrementDailyUsage() {
+        // 累计计数对所有用户生效（含 Pro）—— 评分触发点不区分付费状态
+        defaults.set(defaults.integer(forKey: totalSeekCountKey) + 1, forKey: totalSeekCountKey)
         guard !SubscriptionManager.shared.isPro else { return }
         resetDailyIfNeeded()
         let count = defaults.integer(forKey: usageCountKey) + 1

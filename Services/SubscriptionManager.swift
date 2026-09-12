@@ -59,6 +59,12 @@ final class SubscriptionManager: NSObject, ObservableObject {
 
     override private init() {
         super.init()
+        // 读回本地体验卡：不读的话，进程重启到 refreshStatus 返回之间
+        // 体验期内的用户会看到 Pro 权益闪断成付费墙。
+        if let saved = UserDefaults.standard.object(forKey: Self.trialUntilKey) as? Date {
+            trialUntil = saved
+            if saved > Date() { isPro = true }
+        }
         Purchases.shared.delegate = self
         Task { await refreshStatus() }
     }
@@ -73,6 +79,41 @@ final class SubscriptionManager: NSObject, ObservableObject {
         )
     }
 
+    // MARK: - Trial（连续打卡奖励的 7 天体验卡）
+
+    private static let trialUntilKey = "trial.pro.until"
+
+    /// 本地记录的体验卡到期时间。
+    /// 服务端发放时只写 pro_until，而客户端 isPro 读的是 RevenueCat entitlement ——
+    /// 两者不通，所以必须把到期时间回传并在本地也记一份，否则用户拿到了卡界面照样全锁着。
+    @Published var trialUntil: Date?
+
+    var isTrialActive: Bool {
+        guard let until = trialUntil else { return false }
+        return until > Date()
+    }
+
+    /// RevenueCat 权益 ∨ 体验卡。**所有 isPro 赋值都必须走这里** ——
+    /// 直接赋值会让任何一次 refreshStatus / delegate 回调把体验卡解锁的 Pro 抹掉。
+    private func setPro(rcActive: Bool) {
+        isPro = rcActive || isTrialActive
+    }
+
+    /// 体验卡是否已领过（终身一次）。领过后打卡进度条要撤掉 ——
+    /// 否则等于承诺一个永远不会再兑现的奖励。
+    static let trialClaimedKey = "trial.claimed"
+    var hasClaimedTrial: Bool { UserDefaults.standard.bool(forKey: Self.trialClaimedKey) }
+
+    /// 应用后端发放的 7 天体验卡（连续打卡 7 天的奖励）：落盘 + 立即解锁 UI。
+    /// 刻意不调 syncEntitlementToBackend —— 后端刚在 /checkin 里写好 pro_until，
+    /// 而这里能上报的只有 RevenueCat 的 false，多此一举还平添被覆盖的机会。
+    func applyTrial(until date: Date) {
+        trialUntil = date
+        UserDefaults.standard.set(date, forKey: Self.trialUntilKey)
+        UserDefaults.standard.set(true, forKey: Self.trialClaimedKey)
+        isPro = true
+    }
+
     // MARK: - Status
 
     func refreshStatus() async {
@@ -80,7 +121,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
         for attempt in 1...3 {
             do {
                 let customerInfo = try await Purchases.shared.customerInfo()
-                isPro = customerInfo.entitlements["pro"]?.isActive == true
+                setPro(rcActive: customerInfo.entitlements["pro"]?.isActive == true)
                 if isPro { print("[RevenueCat] Premium active ✅") }
                 Task { await syncEntitlementToBackend() }
                 return
@@ -142,13 +183,16 @@ final class SubscriptionManager: NSObject, ObservableObject {
         Analytics.purchaseStart(packageID: package.identifier)
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            isPro = result.customerInfo.entitlements["pro"]?.isActive == true
-            if isPro {
+            let rcActive = result.customerInfo.entitlements["pro"]?.isActive == true
+            setPro(rcActive: rcActive)
+            if rcActive {
                 Analytics.purchaseSuccess(packageID: package.identifier)
                 showingPaywall = false
             }
             Task { await syncEntitlementToBackend() }
-            return isPro
+            // 返回真实购买结果，不是 isPro —— 体验期内 isPro 恒为 true，
+            // 拿它当返回值会让「购买失败」被误报成成功。
+            return rcActive
         } catch {
             Analytics.purchaseFail(packageID: package.identifier)
             print("[RevenueCat] Purchase failed: \(error)")
@@ -163,10 +207,13 @@ final class SubscriptionManager: NSObject, ObservableObject {
         defer { isLoading = false }
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
-            isPro = customerInfo.entitlements["pro"]?.isActive == true
-            Analytics.track(isPro ? "restore_success" : "restore_empty")
+            let rcActive = customerInfo.entitlements["pro"]?.isActive == true
+            setPro(rcActive: rcActive)
+            // 同上：体验期内 isPro 恒为 true，用它判断会把「没有可恢复的购买」
+            // 误报成"恢复成功"。这里只看 RevenueCat 的真实结果。
+            Analytics.track(rcActive ? "restore_success" : "restore_empty")
             Task { await syncEntitlementToBackend() }
-            return isPro
+            return rcActive
         } catch {
             print("[RevenueCat] Restore failed: \(error)")
             return false
@@ -179,7 +226,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
 extension SubscriptionManager: PurchasesDelegate {
     nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
-            isPro = customerInfo.entitlements["pro"]?.isActive == true
+            setPro(rcActive: customerInfo.entitlements["pro"]?.isActive == true)
             Task { await syncEntitlementToBackend() }
         }
     }

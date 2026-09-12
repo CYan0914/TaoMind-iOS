@@ -67,6 +67,10 @@ struct Checkin: Codable, Identifiable {
 struct CheckinSaveResponse: Codable {
     let checkin: Checkin
     let streak: Streak
+    /// 连续打卡满 7 天时后端发放的 7 天 Pro 体验卡到期时间（ISO8601）。
+    /// 未触发或已领过为 nil。客户端 isPro 读的是 RevenueCat entitlement，
+    /// 认不到服务端写的 pro_until —— 必须靠这个字段在本地解锁 UI。
+    let trial_granted_until: String?
 }
 
 struct CheckinListResponse: Codable {

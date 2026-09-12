@@ -183,6 +183,17 @@ struct PaywallView: View {
                                 .foregroundColor(DS.nightSoft)
                                 .transition(.opacity)
                         }
+
+                        // 打卡换 7 天 Pro：付费墙是唯一能触达「还没养成打卡习惯」的用户的位置，
+                        // 也是把「不想现在付钱」的人转成「先白拿 7 天试试」的最低门槛路径。
+                        // 已领过就不显示，否则是在承诺一个不会再兑现的奖励。
+                        if !subscriptionManager.hasClaimedTrial {
+                            Text(AppState.tr("paywall_trial_hint"))
+                                .font(.caption)
+                                .foregroundColor(DS.nightSoft)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 2)
+                        }
                     }
 
                     // MARK: - Restore + Footer

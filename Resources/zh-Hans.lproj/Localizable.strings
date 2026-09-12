@@ -190,7 +190,7 @@
 
 /* ===== 付费墙场景条 ===== */
 "pw_ctx_generic" = "解锁 TaoMind 全部能力";
-"pw_ctx_seek_limit" = "今日 3 次免费求取智慧已用完";
+"pw_ctx_seek_limit" = "今日免费求取智慧已用完";
 "pw_ctx_journal_full" = "免费版日志已存满 20 条";
 "pw_ctx_library_locked" = "免费试读已结束，全部 113 章精读等你解锁";
 "pw_ctx_backfill" = "补卡修复连击——Pro 每月 1 次";
@@ -203,7 +203,8 @@
 
 /* ===== 额度用尽提示（HTTP 429，与网络错误区分）===== */
 "quota_reached_title" = "今天的求取次数用完了";
-"quota_reached_body" = "免费版每天可求取 3 次，明天恢复。升级 Pro 可无限求取，还能听取完整的经文旁白。";
+/* 1.7.4 起免费额度改为「首日 3 次、次日起 1 次」→ 文案不再写死次数 */
+"quota_reached_body" = "今天的免费次数用完了，明天恢复。升级 Pro 可无限求取，还能听取完整的经文旁白。";
 "quota_reached_cta" = "升级 Pro · 无限求取";
 "quota_reached_generic" = "今天的免费额度已用完，明天恢复。";
 "share_card_download_hint" = "扫码下载 TaoMind";
@@ -301,3 +302,16 @@
 
 /* ===== 庄子精选 (2026-09-12) ===== */
 "library_zhuangzi" = "庄子";
+
+/* ===== 打卡换 7 天 Pro 体验卡（1.7.4）===== */
+"trial_progress_title" = "连续打卡 7 天，得 7 天 Pro";
+"trial_progress_fmt" = "已连续 %d 天，共 %d 天";
+"trial_granted_title" = "连续打卡 7 天，7 天 Pro 到手";
+"trial_granted_body" = "经藏全文与无限求取已为你开放，有效期至 %@。";
+"paywall_trial_hint" = "或者：连续打卡 7 天，免费得 7 天 Pro。";
+
+/* ===== 经藏邀请：保存求取结果后引导进经藏（1.7.4）===== */
+"library_invite_title" = "想读原文吗？";
+"library_invite_body" = "这次求取已存入修行日志。道德经、金刚经、庄子的完整原文与逐章精讲都在经藏里——原文与译文对照，一章一章读下去。";
+"library_invite_cta" = "去看看经藏";
+"library_invite_later" = "以后再说";

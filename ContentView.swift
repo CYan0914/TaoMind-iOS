@@ -6,11 +6,12 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Binding var dailyVerse: DailyVerse?
-    @State private var selectedTab = 0
     @State private var showOnboarding = false
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        // selectedTab 住在 AppState 里而不是 @State —— SeekWisdomView 保存日志后
+        // 要能直接跳到经藏 tab，@State 在 ContentView 内部无法被别的视图驱动。
+        TabView(selection: $appState.selectedTab) {
             NavigationStack {
                 SeekWisdomView()
             }
@@ -77,6 +78,11 @@ struct ContentView: View {
         // 统一提到 ContentView 顶层（一个 binding 驱动一个 sheet），行为可预期。
         .sheet(isPresented: $subscriptionManager.showingPaywall) {
             PaywallView(context: subscriptionManager.paywallContext)
+        }
+        // 增值型邀请（区别于上面的惩罚型付费墙）：seek 保存到日志后引导进经藏。
+        // 与付费墙是两个独立 binding，不会重演「同一 @Published 驱动两个 sheet」的冲突。
+        .sheet(isPresented: $appState.showingLibraryInvite) {
+            LibraryInviteView()
         }
     }
 }

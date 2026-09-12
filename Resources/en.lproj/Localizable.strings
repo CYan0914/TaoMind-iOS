@@ -62,7 +62,7 @@
 /* ===== Paywall context banners (弹墙场景条，slug keys need explicit English) ===== */
 "upgrade_for_styles" = "Free plan uses the classic style. Upgrade to unlock all styles.";
 "pw_ctx_generic" = "Unlock everything TaoMind has to offer";
-"pw_ctx_seek_limit" = "Today's 3 free wisdom sessions are used up";
+"pw_ctx_seek_limit" = "Today's free wisdom sessions are used up";
 "pw_ctx_journal_full" = "Your free journal is full — 20 entries saved";
 "pw_ctx_library_locked" = "Free preview complete — the full 113-chapter library awaits";
 "pw_ctx_backfill" = "Heal your streak — backfill is a Pro feature";
@@ -75,7 +75,8 @@
 
 /* ===== Quota exhausted (HTTP 429, shown instead of a network error) ===== */
 "quota_reached_title" = "Today's wisdom sessions are used up";
-"quota_reached_body" = "The free plan includes 3 sessions a day, resetting tomorrow. Pro is unlimited — and unlocks the full chapter narrations.";
+/* 1.7.4 起免费额度改为「首日 3 次、次日起 1 次」→ 文案不再写死次数 */
+"quota_reached_body" = "Your free sessions for today are used up — they reset tomorrow. Pro is unlimited, and unlocks the full chapter narrations.";
 "quota_reached_cta" = "Go Pro · Unlimited";
 "quota_reached_generic" = "Today's free limit is used up — it resets tomorrow.";
 "share_card_download_hint" = "Scan to get TaoMind";
@@ -175,3 +176,16 @@
 
 /* ===== Zhuangzi (2026-09-12) ===== */
 "library_zhuangzi" = "Zhuangzi";
+
+/* ===== 打卡换 7 天 Pro 体验卡（1.7.4）===== */
+"trial_progress_title" = "7 days in a row earns 7 days of Pro";
+"trial_progress_fmt" = "%d of %d days in a row";
+"trial_granted_title" = "7 days in a row — 7 days of Pro is yours";
+"trial_granted_body" = "The full Library and unlimited readings are unlocked until %@.";
+"paywall_trial_hint" = "Or: check in 7 days in a row and get 7 days of Pro, free.";
+
+/* ===== Library invite after saving a reading (1.7.4) ===== */
+"library_invite_title" = "Want to read the originals?";
+"library_invite_body" = "This reading is saved. The full Tao Te Ching, Diamond Sutra, and Zhuangzi live in the Library — original text beside translation, chapter by chapter.";
+"library_invite_cta" = "Open the Library";
+"library_invite_later" = "Not now";
