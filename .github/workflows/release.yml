@@ -71,12 +71,17 @@ jobs:
           #    且 "must contain a higher version than the previously approved version"）。
           #   历史：1.6.0 (47) 批准 → 关闭；1.7.0 (50) 批准 → 关闭；1.7.2 批准 → 关闭。
           #   所以每次上传前必须确认要传的 version > 已批准版本。
-          # 1.7.4 (build 63) — Pro 转化四改 + 功课页语音输入：
+          # 1.7.5 (build 63) — Pro 转化四改 + 功课页语音输入：
           #   ① 连续打卡 7 天 → 发一次 7 天 Pro 体验卡（终身一次）
           #   ② 免费额度改「首日 3 次 / 次日起 1 次」
           #   ③ 求取结果存入日志后，引导进经藏（增值型邀请，非付费墙）
           #   ④ 评分弹窗改挂高情绪时刻（第 2 次求取 / 连续打卡 3 天）
-          VERSION = "1.7.4"
+          #   ⑤ 功课页「写感悟」加语音输入；中文来源 chip「读了经文」改「今日感悟」
+          # ⚠️ 版本号必须 > 已批准二进制里声明的 CFBundleShortVersionString。
+          #    1.7.3 那次是拿自称 1.7.4 的 build 62 挂在 1.7.3 版本名下送审通过的，
+          #    Apple 记的是二进制里的字符串 → 任何自称 1.7.4 的包都被拒
+          #    （409 Invalid Pre-Release Train，且 1.7.4 train 一起关闭）。
+          VERSION = "1.7.5"
           BUILD = "63"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
@@ -355,4 +360,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.7.4 (63) — What's New filled, submitted for App Store review."
+          echo "Published 1.7.5 (63) — What's New filled, submitted for App Store review."
