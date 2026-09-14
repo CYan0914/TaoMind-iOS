@@ -30,6 +30,9 @@ struct PracticeView: View {
     @State private var showLibrary = false
     /// 7 天体验卡刚发放时的到期时间（非 nil 即弹告知）
     @State private var trialGrantedUntil: Date?
+    /// 写感悟的语音输入（与求取智慧页共用 SpeechService）
+    @StateObject private var speechService = SpeechService()
+    @State private var showSpeechPermissionDenied = false
 
     /// 连续打卡换体验卡的门槛，与后端 TRIAL_STREAK_THRESHOLD 对齐
     private static let trialStreakGoal = 7
@@ -112,6 +115,11 @@ struct PracticeView: View {
             if let until = trialGrantedUntil {
                 Text(AppState.tr("trial_granted_body", Self.trialDateText(until)))
             }
+        }
+        .alert(AppState.tr("Microphone access needed"), isPresented: $showSpeechPermissionDenied) {
+            Button(AppState.tr("OK"), role: .cancel) {}
+        } message: {
+            Text(AppState.tr("Allow microphone and speech recognition in Settings to use voice input."))
         }
     }
 
@@ -703,6 +711,74 @@ struct PracticeView: View {
                     .scrollContentBackground(.hidden)
                     .background(DS.ink.opacity(0.045))
                     .cornerRadius(DS.Radius.card)
+
+                // 语音输入 —— 与求取智慧页同一交互：按钮压在编辑区右下角
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        micButton
+                    }
+                }
+                .padding(10)
+            }
+
+            if speechService.isRecording {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(DS.cinnabar)
+                        .frame(width: 8, height: 8)
+                    Text(AppState.tr("Recording…"))
+                        .font(.caption)
+                        .foregroundColor(DS.cinnabar)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: speechService.isRecording)
+    }
+
+    // MARK: - Voice Input (写感悟)
+
+    private var micButton: some View {
+        Button(action: toggleRecording) {
+            Image(systemName: speechService.isRecording ? "stop.fill" : "mic.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(speechService.isRecording ? DS.paperHi : DS.bronze)
+                .frame(width: 34, height: 34)
+                .background(
+                    Circle().fill(speechService.isRecording ? DS.cinnabar : DS.paperHi)
+                )
+                .overlay(
+                    Circle().stroke(DS.bronze.opacity(0.35), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(AppState.tr(speechService.isRecording ? "Stop recording" : "Voice input"))
+        .opacity(speechService.isAvailable ? 1 : 0.4)
+        .disabled(!speechService.isAvailable)
+    }
+
+    /// 识别结果追加到感悟末尾（不覆盖用户已写的字）。
+    private func toggleRecording() {
+        if speechService.isRecording {
+            let transcript = speechService.stopRecording()
+            let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+            if reflection.isEmpty {
+                reflection = trimmed
+            } else {
+                reflection += " " + trimmed
+            }
+        } else {
+            Task {
+                guard await SpeechService.requestPermission() else {
+                    showSpeechPermissionDenied = true
+                    return
+                }
+                if !speechService.startRecording(localeId: appState.language.localeId) {
+                    errorMessage = AppState.tr("Speech recognition isn't available here.")
+                }
             }
         }
     }

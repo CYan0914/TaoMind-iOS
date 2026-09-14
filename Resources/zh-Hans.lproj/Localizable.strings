@@ -315,3 +315,11 @@
 "library_invite_body" = "这次求取已存入修行日志。道德经、金刚经、庄子的完整原文与逐章精讲都在经藏里——原文与译文对照，一章一章读下去。";
 "library_invite_cta" = "去看看经藏";
 "library_invite_later" = "以后再说";
+
+/* ===== 语音输入（求取智慧 + 写感悟）===== */
+"Microphone access needed" = "需要麦克风权限";
+"Allow microphone and speech recognition in Settings to use voice input." = "请在「设置」中允许麦克风与语音识别，才能使用语音输入。";
+"Speech recognition isn't available here." = "当前环境无法使用语音识别。";
+"Recording…" = "正在聆听…";
+"Voice input" = "语音输入";
+"Stop recording" = "停止录音";

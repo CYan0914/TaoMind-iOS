@@ -189,3 +189,11 @@
 "library_invite_body" = "This reading is saved. The full Tao Te Ching, Diamond Sutra, and Zhuangzi live in the Library — original text beside translation, chapter by chapter.";
 "library_invite_cta" = "Open the Library";
 "library_invite_later" = "Not now";
+
+/* ===== Voice input (求取智慧 + 写感悟) ===== */
+"Microphone access needed" = "Microphone access needed";
+"Allow microphone and speech recognition in Settings to use voice input." = "Allow microphone and speech recognition in Settings to use voice input.";
+"Speech recognition isn't available here." = "Speech recognition isn't available here.";
+"Recording…" = "Recording…";
+"Voice input" = "Voice input";
+"Stop recording" = "Stop recording";
