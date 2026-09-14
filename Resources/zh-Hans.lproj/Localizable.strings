@@ -100,7 +100,7 @@
 "days" = "天";
 "today" = "今天";
 "signed_in_as" = "已登录：%@";
-"read_verse" = "读了经文";
+"read_verse" = "今日感悟";
 "seek_wisdom_short" = "求取智慧";
 "write_once_daily" = "每天一次";
 "reflection_placeholder" = "写下这段智慧对你今天的意义……";
