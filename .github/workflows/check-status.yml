@@ -76,7 +76,11 @@ jobs:
               if sub:
                   print("SUBMISSION_STATE:", sub["data"]["attributes"].get("state"))
           # build 状态
-          builds = get(f"/apps/{app_id}/builds?limit=5&sort=-uploadedDate")
+          # ⚠️ 不能带 sort —— ASC 的 /builds 拒绝该参数：
+          #   400 PARAMETER_ERROR.ILLEGAL "The parameter 'sort' can not be used with this request"
+          #   而且这个 400 会让整个 builds 查询失败、BUILD 行整段不打印，
+          #   看起来像「没有 build」而不是「查询出错」。2026-09-17 修。
+          builds = get(f"/apps/{app_id}/builds?limit=5")
           for b in (builds or {}).get("data", []):
               print("BUILD:", b["attributes"].get("version"),
                     b["attributes"].get("processingState"),
