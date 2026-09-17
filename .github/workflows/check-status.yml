@@ -11,6 +11,10 @@ on:
         description: 'Build number to check'
         required: false
         default: '30'
+      app_version:
+        description: 'App version to filter builds (e.g. 1.7.6). Empty = all'
+        required: false
+        default: ''
 
 jobs:
   check:
@@ -80,8 +84,18 @@ jobs:
           #   400 PARAMETER_ERROR.ILLEGAL "The parameter 'sort' can not be used with this request"
           #   而且这个 400 会让整个 builds 查询失败、BUILD 行整段不打印，
           #   看起来像「没有 build」而不是「查询出错」。2026-09-17 修。
-          builds = get(f"/apps/{app_id}/builds?limit=5")
-          for b in (builds or {}).get("data", []):
+          # ⚠️ 也不能只靠 limit —— 默认排序**不是**最新在前（实测 limit=5 回的是
+          #   build 33/32/31/30/26，最新那个根本不在里面）。必须按 app 版本过滤，
+          #   否则查最新 build 会一直看到半个月前的旧包还以为没上传成功。
+          want_ver = "${{ github.event.inputs.app_version }}".strip()
+          url = f"/apps/{app_id}/builds?limit=20"
+          if want_ver:
+              url += f"&filter[preReleaseVersion.version]={want_ver}"
+          builds = get(url)
+          rows = (builds or {}).get("data", [])
+          if not rows:
+              print("BUILD: (none — 检查 app_version 是否写对)")
+          for b in rows:
               print("BUILD:", b["attributes"].get("version"),
                     b["attributes"].get("processingState"),
                     b["attributes"].get("uploadedDate"))
