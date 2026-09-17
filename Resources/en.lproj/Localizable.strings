@@ -107,9 +107,6 @@
 "jingjiang_scene_title" = "A scene: the 30-year-old product manager";
 "jingjiang_tension_title" = "Tension with the previous chapter";
 "jingjiang_action_title" = "One action today";
-"jingjiang_play_audio" = "Listen";
-"jingjiang_pause_audio" = "Pause";
-"jingjiang_no_audio" = "Audio coming soon";
 
 /* ===== Commemorative cards（修行纪念卡，slug keys need explicit English）===== */
 "card_unlock_title" = "New card collected";

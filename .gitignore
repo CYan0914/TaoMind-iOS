@@ -25,6 +25,11 @@ Thumbs.db
 # Card art source images (kept locally, only compressed imagesets ship)
 Card/
 
+# 道德经精讲音频（81 × ~5.7MB ≈ 462MB）。2026-09-17 音频功能下架：
+# 已从 bundle 排除（project.yml excludes）、从 git 移出跟踪。
+# 文件仍留在本地磁盘，未删除。
+Resources/jingjiang_audio/
+
 # Local-only working files (not for commit; safe to delete on dev machine)
 # Note: glob by English prefix to avoid UTF-8 path issues on Windows.
 .commit_msg_*.txt

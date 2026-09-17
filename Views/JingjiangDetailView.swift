@@ -1,24 +1,19 @@
 import SwiftUI
-import AVFoundation
 
 // MARK: - 道德经·精讲 详情页
 //
-// 6 个 section: 原文 (含 audio player) → 通释 → 反常识点 → 30yr PM scene → 张力 → 一句行动
-// Audio 用 AVFoundation 的 AVAudioPlayer, 文件从 bundle 读 {slug}_{lang}.mp3
-// （XcodeGen 会把 Resources 子目录拍平到 bundle 根,见 resolveAudioURL 注释）
+// 5 个 section: 原文 → 通释 → 反常识点 → 30yr PM scene → 张力 → 一句行动
+// 2026-09-17：音频已下架（IPA 541MB → <80MB），本页只留文字。
 
 struct JingjiangDetailView: View {
     let chapter: JingjiangChapter
     @Environment(\.dismiss) private var dismiss
-
-    @StateObject private var audio = JingjiangAudioPlayer()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 attribution
                 originalVerse
-                audioCard
                 tongshiBlock
                 counterBlock
                 sceneBlock
@@ -32,12 +27,6 @@ struct JingjiangDetailView: View {
         .paperBackground()
         .navigationTitle(AppState.tr("library_jingjiang"))
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            audio.loadIfNeeded(fileName: chapter.audioFileName)
-        }
-        .onDisappear {
-            audio.stop()
-        }
     }
 
     // MARK: - 头标
@@ -58,45 +47,6 @@ struct JingjiangDetailView: View {
                 .lineSpacing(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-    }
-
-    // MARK: - 音频卡 (AVAudioPlayer)
-
-    private var audioCard: some View {
-        HStack(spacing: 14) {
-            Button {
-                audio.toggle()
-            } label: {
-                Image(systemName: audio.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.system(size: 38))
-                    .foregroundColor(DS.cinnabar)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(AppState.tr(audio.isPlaying ? "jingjiang_pause_audio" : "jingjiang_play_audio"))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(DS.ink)
-                Text(audio.statusLine)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-            if audio.isReady {
-                Text(timeString(audio.duration))
-                    .font(.caption2.monospacedDigit())
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: DS.Radius.card)
-                .fill(DS.paperHi)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.card)
-                .stroke(DS.ink.opacity(0.08), lineWidth: 1)
-        )
     }
 
     // MARK: - 通释 (主文)
@@ -213,109 +163,11 @@ struct JingjiangDetailView: View {
                 .foregroundColor(DS.ink)
         }
     }
-
-    private func timeString(_ seconds: TimeInterval) -> String {
-        guard seconds.isFinite, seconds > 0 else { return "—" }
-        let m = Int(seconds) / 60
-        let s = Int(seconds) % 60
-        return String(format: "%d:%02d", m, s)
-    }
 }
 
-// MARK: - Audio Player (per-instance, holds AVAudioPlayer)
-
-@MainActor
-final class JingjiangAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
-    @Published private(set) var isPlaying = false
-    @Published private(set) var isReady = false
-    @Published private(set) var duration: TimeInterval = 0
-    @Published private(set) var statusLine: String = ""
-
-    private var player: AVAudioPlayer?
-    private var loadedFileName: String?
-
-    func loadIfNeeded(fileName: String?) {
-        guard let fileName else {
-            statusLine = AppState.tr("jingjiang_no_audio")
-            return
-        }
-        if loadedFileName == fileName { return }
-        loadedFileName = fileName
-
-        guard let url = Self.resolveAudioURL(fileName) else {
-            statusLine = AppState.tr("jingjiang_no_audio")
-            isReady = false
-            return
-        }
-        do {
-            let p = try AVAudioPlayer(contentsOf: url)
-            p.delegate = self
-            p.prepareToPlay()
-            self.player = p
-            self.duration = p.duration
-            self.isReady = p.duration > 0
-            self.statusLine = isReady ? "\(AppState.tr("jingjiang_play_audio")) · \(timeString(p.duration))" : AppState.tr("jingjiang_no_audio")
-        } catch {
-            statusLine = AppState.tr("jingjiang_no_audio")
-            isReady = false
-        }
-    }
-
-    func toggle() {
-        guard let p = player, p.duration > 0 else { return }
-        if p.isPlaying {
-            p.pause()
-            isPlaying = false
-            statusLine = AppState.tr("jingjiang_play_audio")
-        } else {
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-            try? AVAudioSession.sharedInstance().setActive(true)
-            p.play()
-            isPlaying = true
-            statusLine = AppState.tr("jingjiang_pause_audio")
-        }
-    }
-
-    func stop() {
-        player?.stop()
-        isPlaying = false
-    }
-
-    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor in
-            self.isPlaying = false
-            self.statusLine = AppState.tr("jingjiang_play_audio")
-        }
-    }
-
-    /// 解析 bundle 里的音频 URL，兼容两种布局：
-    ///   1. 文件在 bundle 根目录（XcodeGen 对 `Resources` 子目录的**实际行为**，会拍平）
-    ///   2. 保留了 `jingjiang_audio/` 子目录（若将来改用 folder reference）
-    ///
-    /// 输入可以是 `ch01_en.mp3`，也可以是 `jingjiang_audio/ch01_en.mp3`。
-    /// 2026-09-10 修：实测 IPA 里 mp3 全在根目录，而原实现按
-    /// `url(forResource: "jingjiang_audio/ch01_en.mp3", withExtension: nil)` 找，
-    /// 永远 miss → 播放器一直显示「无音频」。
-    private static func resolveAudioURL(_ fileName: String) -> URL? {
-        let ns = fileName as NSString
-        let dir = ns.deletingLastPathComponent
-        let leaf = ns.lastPathComponent as NSString
-        let name = leaf.deletingPathExtension
-        let ext = leaf.pathExtension
-
-        // 1) 名字里带目录 → 先按子目录找
-        if !dir.isEmpty,
-           let url = Bundle.main.url(forResource: name, withExtension: ext, subdirectory: dir) {
-            return url
-        }
-        // 2) 兜底：bundle 根目录
-        return Bundle.main.url(forResource: name, withExtension: ext)
-    }
-
-    private func timeString(_ seconds: TimeInterval) -> String {
-        guard seconds.isFinite, seconds > 0 else { return "—" }
-        let m = Int(seconds) / 60
-        let s = Int(seconds) % 60
-        return String(format: "%d:%02d", m, s)
-    }
-}
+// MARK: - 音频播放器已于 2026-09-17 移除
+//
+// 原来这里有个 `JingjiangAudioPlayer`（AVAudioPlayer 从 bundle 读 {slug}_{lang}.mp3）。
+// 音频（81 × ~5.7MB ≈ 462MB）是 IPA 体积的 85%，且 81 个文件全是 `_en.mp3` ——
+// 中文界面取 `chXX_cn.mp3` 永远 404，中文用户从来没听到过声音。
+// 现已整块下架，App 只保留文字精讲。若要恢复，见 git 历史 96ce123。

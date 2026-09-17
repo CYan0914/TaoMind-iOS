@@ -235,9 +235,6 @@
 "jingjiang_scene_title" = "一个场景：30 岁的产品经理";
 "jingjiang_tension_title" = "张力：跟上一章的连接";
 "jingjiang_action_title" = "今天一句行动";
-"jingjiang_play_audio" = "收听";
-"jingjiang_pause_audio" = "暂停";
-"jingjiang_no_audio" = "音频即将上线";
 
 /* ===== 修行纪念卡 ===== */
 "card_unlock_title" = "收藏到新纪念卡";

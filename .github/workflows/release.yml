@@ -71,18 +71,17 @@ jobs:
           #    且 "must contain a higher version than the previously approved version"）。
           #   历史：1.6.0 (47) 批准 → 关闭；1.7.0 (50) 批准 → 关闭；1.7.2 批准 → 关闭。
           #   所以每次上传前必须确认要传的 version > 已批准版本。
-          # 1.7.5 (build 63) — Pro 转化四改 + 功课页语音输入：
-          #   ① 连续打卡 7 天 → 发一次 7 天 Pro 体验卡（终身一次）
-          #   ② 免费额度改「首日 3 次 / 次日起 1 次」
-          #   ③ 求取结果存入日志后，引导进经藏（增值型邀请，非付费墙）
-          #   ④ 评分弹窗改挂高情绪时刻（第 2 次求取 / 连续打卡 3 天）
-          #   ⑤ 功课页「写感悟」加语音输入；中文来源 chip「读了经文」改「今日感悟」
+          # 1.7.6 (build 64) — 精讲音频下架，IPA 541MB → <80MB：
+          #   道德经精讲的 81 个朗读 mp3（462MB，占安装包 85%）已从 bundle 排除。
+          #   内容零删减（81 章精讲文字全在），只是不再随包分发音频。
+          #   副产品：跌破 Apple 200MB 蜂窝下载阈值 → 不开 WiFi 也能装。
           # ⚠️ 版本号必须 > 已批准二进制里声明的 CFBundleShortVersionString。
           #    1.7.3 那次是拿自称 1.7.4 的 build 62 挂在 1.7.3 版本名下送审通过的，
           #    Apple 记的是二进制里的字符串 → 任何自称 1.7.4 的包都被拒
           #    （409 Invalid Pre-Release Train，且 1.7.4 train 一起关闭）。
-          VERSION = "1.7.5"
-          BUILD = "63"
+          #    1.7.5 已于 2026-09-17 确认 READY_FOR_SALE（train 关闭）→ 必须升 1.7.6。
+          VERSION = "1.7.6"
+          BUILD = "64"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
@@ -96,37 +95,36 @@ jobs:
           #     英文章节标题 / 英译经文 / 英文反思 → 现补中文原文与中文反思
           #   - 英文通释校订：修掉 CJK 泄漏进英文经文、字面 \n、不渲染的粗体标记等 32 处
           WHATS_NEW_EN = (
-              "**Seven days in a row unlocks Pro**\n"
-              "Keep a 7-day streak and the whole Library opens for a week: all 81 "
-              "chapters of the Tao Te Ching, the full Diamond Sutra, the Zhuangzi "
-              "selections, and unlimited readings. No card, no trial to cancel.\n\n"
-              "**A reading now leads somewhere**\n"
-              "Once a reading is saved to your journal, TaoMind points you to the "
-              "chapter it came from, so you can read the original beside its "
-              "commentary — the full context, not just the line you were given.\n\n"
-              "**Also**\n"
-              "The free plan now gives three readings on your first day and one a "
-              "day after that. The rating prompt no longer interrupts at odd moments."
+              "**85% smaller — under 80 MB**\n"
+              "TaoMind used to install at over 500 MB. It now fits in under 80 MB, "
+              "which means it installs on any phone, downloads over cellular data, "
+              "and opens faster. Nothing you read has changed: all 81 chapters of "
+              "the Tao Te Ching, the full Diamond Sutra, and the Zhuangzi "
+              "selections, with every commentary intact.\n\n"
+              "**Chapter audio has been retired**\n"
+              "The spoken narration for the Tao Te Ching chapters has been removed, "
+              "and that is where nearly all of the size went. It was English-only, "
+              "so readers on the Chinese interface never had it. The written "
+              "commentary is unchanged."
           )
           WHATS_NEW_ZH = (
-              "**连续七天，换来一周 Pro**\n"
-              "保持连续打卡 7 天，整座经藏为你开放一周：道德经 81 章、金刚经全文、"
-              "庄子精选，外加无限次求取。不用绑卡，也没有需要取消的试用。\n\n"
-              "**每次求取，都能顺着读下去**\n"
-              "求取结果存入修行日志后，会告诉你它出自哪一章，让你回到原文与精讲里"
-              "读完整的上下文，而不只是拿到的那一句。\n\n"
-              "**其他**\n"
-              "免费版改为首日 3 次求取、次日起每天 1 次。评分邀请不再在不合适的时刻打断。"
+              "**体积缩小 85%，不到 80 MB**\n"
+              "TaoMind 安装包原本 500 多 MB，现在不到 80 MB。任何手机都装得下，"
+              "用流量也能下载，启动更快。你读的内容一样没少：道德经 81 章、"
+              "金刚经全文、庄子精选，精讲全部保留。\n\n"
+              "**章节朗读已下架**\n"
+              "道德经章节的朗读音频已移除，安装包的大部分体积就来自这里。"
+              "它只有英文版，中文界面的读者此前也听不到。文字精讲完全不变。"
           )
           # 推广文本（Promotional Text，170 字符上限）—— 可随时改，不需要送审
           # 上线后想换主打卖点（如节日、新功能）直接改这两条重跑本 workflow 即可
           PROMO_EN = (
-              "Stuck on something? Write it down and get a verse from the Tao Te "
-              "Ching, with a plain reading and one thing to do today. Seven days "
-              "in a row earns a week of Pro."
+              "Now under 80 MB. Write down what's troubling you and get a verse "
+              "from the Tao Te Ching, plus one thing to do today. Seven days in a "
+              "row earns a week of Pro."
           )
           PROMO_ZH = (
-              "困住的时候把处境写下来，它会给你一句对症的经文、一段白话，"
+              "体积降到 80MB 以内。困住的时候把处境写下来，它会给你一句对症的经文，"
               "和今天就能做的一件事。连续打卡 7 天，免费得 7 天 Pro。"
           )
 
@@ -360,4 +358,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.7.5 (63) — What's New filled, submitted for App Store review."
+          echo "Published 1.7.6 (64) — What's New filled, submitted for App Store review."

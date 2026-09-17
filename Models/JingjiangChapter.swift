@@ -75,17 +75,4 @@ struct JingjiangChapter: Codable, Identifiable {
     var localizedAction: String {
         AppState.currentLocaleId == "zh-Hans" ? action_cn : action_en
     }
-
-    /// Audio file name for the localized 通释 (TTS narration).
-    /// `nil` if the audio hasn't been generated yet.
-    ///
-    /// ⚠️ 2026-09-10：XcodeGen 会把 `Resources` 子目录下的文件**拍平**到 bundle 根目录
-    /// （实测 build 51 的 IPA：`Payload/TaoMind.app/ch01_en.mp3`，没有 `jingjiang_audio/`
-    /// 这一层）。所以这里返回**根目录文件名**，不要加目录前缀 —— 加了就找不到文件。
-    /// （播放侧 `JingjiangAudioPlayer.resolveAudioURL` 仍兼容带子目录前缀的名字。）
-    @MainActor
-    var audioFileName: String? {
-        let lang = AppState.currentLocaleId == "zh-Hans" ? "cn" : "en"
-        return "\(slug)_\(lang).mp3"
-    }
 }

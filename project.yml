@@ -18,8 +18,8 @@ settings:
     SWIFT_VERSION: "5.9"
     ALWAYS_SEARCH_USER_PATHS: NO
     DEVELOPMENT_TEAM: H4VQ9X6KYK
-    MARKETING_VERSION: "1.7.5"
-    CURRENT_PROJECT_VERSION: "63"
+    MARKETING_VERSION: "1.7.6"
+    CURRENT_PROJECT_VERSION: "64"
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_KEY_CFBundleDisplayName: "TaoMind"
     INFOPLIST_KEY_UILaunchScreenGeneration: "Default"
@@ -53,6 +53,12 @@ targets:
       - path: Services
       - path: Views
       - path: Resources
+        excludes:
+          # 2026-09-17：精讲音频（81 × ~5.7MB ≈ 462MB）已下架，App 只保留文字。
+          # 文件仍在磁盘上，但不进 bundle —— 这是 IPA 541MB → <80MB 的唯一原因。
+          # 未加前缀的 glob 相对本 source path，见 XcodeGen ProjectSpec.excludes。
+          - "jingjiang_audio/**"
+          - "jingjiang_audio"
     entitlements:
       path: Resources/TaoMind.entitlements
     settings:

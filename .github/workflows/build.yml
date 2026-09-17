@@ -358,6 +358,29 @@ jobs:
             -exportOptionsPlist Resources/ExportOptions.plist
         working-directory: .
 
+      - name: Assert audio stripped from bundle
+        run: |
+          # 2026-09-17：81 个精讲 mp3（462MB）已从 bundle 排除，靠 project.yml 的
+          # sources.excludes。XcodeGen 对**写错的 excludes 不报错** —— 写错时 IPA
+          # 照样 541MB 且构建全绿。所以在这里硬断言，否则会推出一个没瘦身的包还以为成功。
+          # 改前 ~541MB，改后预期 <80MB；阈值 150MB 留足余量又不至于漏掉 462MB 的差量。
+          IPA=TaoMind.ipa/TaoMind.ipa
+          ls -lh "$IPA"
+          SIZE_MB=$(du -m "$IPA" | cut -f1)
+          echo "IPA size: ${SIZE_MB} MB"
+          MP3=$(unzip -l "$IPA" | grep -c '\.mp3$' || true)
+          echo "mp3 entries in IPA: ${MP3} (expected 0)"
+          if [ "$MP3" != "0" ]; then
+            echo "::error::IPA still contains ${MP3} mp3 files — project.yml excludes did not take effect"
+            unzip -l "$IPA" | grep '\.mp3$' | head -5
+            exit 1
+          fi
+          if [ "$SIZE_MB" -ge 150 ]; then
+            echo "::error::IPA is ${SIZE_MB}MB (expected <150MB) — audio seems still bundled"
+            exit 1
+          fi
+          echo "OK: audio stripped, IPA down to ${SIZE_MB}MB"
+
       - name: Capture Distribution Logs (on failure)
         if: failure()
         run: |
