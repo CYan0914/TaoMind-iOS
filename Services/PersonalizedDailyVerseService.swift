@@ -193,31 +193,67 @@ struct PersonalizedDailyVerseService {
             language: language,
             authToken: token
         )
-        return parseToVerse(resp)
+        return parseToVerse(resp, language: language)
     }
 
     /// 4 层 fallback:JSON shape → markdown fence → WisdomResponse 字段直读 → VerseFallback
-    private func parseToVerse(_ resp: WisdomResponse) -> DailyVerse {
+    ///
+    /// `language` 决定 LLM 输出的语言（prompt 里已带 `Language: en|zh`），
+    /// 而这个语种的内容必须同时写进 `_en` 三列 —— 否则 `DailyVerse.localized*`
+    /// 在英文模式下读到空的 `_en` 会回落中文，个性化经文就永远是中文的。
+    private func parseToVerse(_ resp: WisdomResponse, language: String) -> DailyVerse {
         // 1) LLM 期望输出 JSON shape;在 passage 里取
-        if let v = parseJSONShape(in: resp.passage) { return v }
+        if let v = parseJSONShape(in: resp.passage, language: language) { return v }
         // 2) regex 提取 ```json ... ``` 块
-        if let v = parseMarkdownFence(in: resp.passage) { return v }
+        if let v = parseMarkdownFence(in: resp.passage, language: language) { return v }
         // 3) WisdomResponse 直读:passage 当 verse_text,reflection 当 reflection
         if !resp.passage.isEmpty {
-            return DailyVerse(
+            return bilingual(
                 source: "Tao Te Ching",
                 chapter: "",
-                verse_text: stripMarkdown(stripEmoji(resp.passage)),
-                reflection: stripMarkdown(stripEmoji(resp.reflection))
+                text: stripMarkdown(stripEmoji(resp.passage)),
+                reflection: stripMarkdown(stripEmoji(resp.reflection)),
+                language: language
             )
         }
         // 4) Final fallback
         let fb = VerseFallback.verseForToday()
+        // VerseFallback 的文案本身是英文的,不论当前语言都塞进 `_en`,
+        // 中文模式下 localized() 读主字段(中文原文)不受影响。
         return DailyVerse(
             source: fb.source,
             chapter: fb.chapter,
             verse_text: fb.text,
-            reflection: fb.reflection
+            reflection: fb.reflection,
+            chapter_en: fb.chapter,
+            verse_text_en: fb.text,
+            reflection_en: fb.reflection
+        )
+    }
+
+    /// 把一份内容按当前语言同时落到主字段与 `_en` 三列。
+    ///
+    /// LLM 已按 `language` 输出对应语言，所以这里不做翻译：英文内容进 `_en`，
+    /// 中文内容进主字段，两边都填一份保证 `localized*` 在两个模式下都有值。
+    /// cache key 含 language，切语言会重新生成，不会串味。
+    private func bilingual(
+        source: String,
+        chapter: String,
+        text: String,
+        reflection: String,
+        language: String
+    ) -> DailyVerse {
+        let isEnglish = language != "zh"
+        return DailyVerse(
+            source: source,
+            // 主字段照填：`recordShown()` 用 source · chapter 去重，主字段空会
+            // 让去重失效。英文模式下客户端读的是 `_en`，主字段只作兼容。
+            chapter: chapter,
+            verse_text: text,
+            reflection: reflection,
+            chapter_en: isEnglish ? chapter : nil,
+            verse_text_en: isEnglish ? text : nil,
+            reflection_en: isEnglish ? reflection : nil
         )
     }
 
@@ -228,17 +264,17 @@ struct PersonalizedDailyVerseService {
         let reflection: String?
     }
 
-    private func parseJSONShape(in text: String) -> DailyVerse? {
+    private func parseJSONShape(in text: String, language: String) -> DailyVerse? {
         // 直 JSON
         if let data = text.data(using: .utf8),
            let parsed = try? JSONDecoder().decode(ParsedJSON.self, from: data),
            let passage = parsed.passage, !passage.isEmpty {
-            return verseFromParsed(parsed, fallbackPassage: passage)
+            return verseFromParsed(parsed, fallbackPassage: passage, language: language)
         }
         return nil
     }
 
-    private func parseMarkdownFence(in text: String) -> DailyVerse? {
+    private func parseMarkdownFence(in text: String, language: String) -> DailyVerse? {
         // ```json ... ``` block
         let pattern = "```(?:json)?\\s*\\n([\\s\\S]*?)\\n```"
         guard let regex = try? NSRegularExpression(pattern: pattern),
@@ -248,19 +284,20 @@ struct PersonalizedDailyVerseService {
         guard let data = jsonStr.data(using: .utf8),
               let parsed = try? JSONDecoder().decode(ParsedJSON.self, from: data),
               let passage = parsed.passage, !passage.isEmpty else { return nil }
-        return verseFromParsed(parsed, fallbackPassage: passage)
+        return verseFromParsed(parsed, fallbackPassage: passage, language: language)
     }
 
-    private func verseFromParsed(_ parsed: ParsedJSON, fallbackPassage: String) -> DailyVerse {
+    private func verseFromParsed(_ parsed: ParsedJSON, fallbackPassage: String, language: String) -> DailyVerse {
         let source = (parsed.source?.isEmpty == false) ? parsed.source! : "Tao Te Ching"
         let chapter = parsed.chapter ?? ""
         let passage = cleanText(fallbackPassage, max: 200)
         let reflection = cleanText(parsed.reflection ?? "", max: 200)
-        return DailyVerse(
+        return bilingual(
             source: source,
             chapter: chapter,
-            verse_text: passage,
-            reflection: reflection
+            text: passage,
+            reflection: reflection,
+            language: language
         )
     }
 
