@@ -37,3 +37,11 @@ TaoMind*.docx
 TaoMind*.md
 TaoMind*.mp4
 Taomind*/
+
+# CI logs and throwaway scratch files that leaked in on 2026-09-30.
+# The first one is a path flattened into a filename (a `gh run view --log`
+# redirect into a missing directory), so match the tail rather than the head.
+*joblog.txt
+_cmp*.jpg
+_sim.jpg
+gen_cicc_interview.py
