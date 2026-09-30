@@ -7,12 +7,15 @@ struct DailyVerseCard: View {
     /// build 50: 个性化 verse 走"为你而选"eyebrow + 朱砂色,跟固定 verse 视觉区分
     var isPersonalized: Bool = false
 
+    // 双语列由 verse 的 localized* 访问器按当前语言选择（2026-09-30），
+    // 这里不再直接读 verse_text / reflection。
+
     var body: some View {
         VStack(spacing: 12) {
             Text(AppState.tr(isPersonalized ? "personalized_verse_eyebrow" : "daily_verse_eyebrow"))
                 .eyebrowStyle(isPersonalized ? DS.cinnabar : DS.bronze)
 
-            Text(verse.verse_text)
+            Text(verse.localizedVerse)
                 .font(DS.verse(16, relativeTo: .body))
                 .foregroundColor(DS.ink)
                 .lineSpacing(6)
@@ -23,14 +26,14 @@ struct DailyVerseCard: View {
                     .foregroundColor(DS.inkFaint)
                 Text(verse.source)
                     .fontWeight(.semibold)
-                if !verse.chapter.isEmpty {
-                    Text("· \(verse.chapter)")
+                if !verse.localizedChapter.isEmpty {
+                    Text("· \(verse.localizedChapter)")
                 }
             }
             .font(.caption)
             .foregroundColor(DS.inkSoft)
 
-            Text(verse.reflection)
+            Text(verse.localizedReflection)
                 .font(DS.verse(14, relativeTo: .footnote))
                 .foregroundColor(DS.inkSoft)
                 .lineSpacing(4)

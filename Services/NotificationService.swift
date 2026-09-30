@@ -51,8 +51,8 @@ final class NotificationService: NSObject, ObservableObject {
         // Build notification content
         let content = UNMutableNotificationContent()
         content.title = AppState.tr("☯ Daily Wisdom")
-        content.subtitle = "\(verse.source) · \(verse.chapter)"
-        content.body = verse.verse_text
+        content.subtitle = "\(verse.source) · \(verse.localizedChapter)"
+        content.body = verse.localizedVerse
         content.sound = .default
 
         // Schedule for tomorrow at 8:00 AM local time
@@ -141,7 +141,7 @@ final class NotificationService: NSObject, ObservableObject {
                 scheduleOneShot(
                     hour: 10, minute: 0, id: churnRecallId,
                     title: AppState.tr("churn_recall_title"),
-                    body: "\(verse.verse_text)\n\n\(AppState.tr("churn_recall_body"))"
+                    body: "\(verse.localizedVerse)\n\n\(AppState.tr("churn_recall_body"))"
                 )
             }
 

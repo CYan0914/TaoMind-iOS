@@ -457,7 +457,7 @@ struct PracticeView: View {
     private func shareStreak() {
         // 分享对全部用户开放：连击卡是最强裂变素材，卡内已画下载二维码（ShareCardView）
         let days = status?.streak.currentStreak ?? 0
-        let verse = appState.dailyVerse.map { $0.verse_text } ?? ""
+        let verse = appState.dailyVerse.map { $0.localizedVerse } ?? ""
         shareCardContent = ShareCardContent(
             title: String(format: AppState.tr("streak_days_fmt"), days),
             verse: verse,
@@ -1145,7 +1145,7 @@ struct PracticeView: View {
         Task {
             do {
                 let verseText = appState.dailyVerse.map {
-                    "\($0.source) · \($0.chapter): \($0.verse_text)"
+                    "\($0.source) · \($0.localizedChapter): \($0.localizedVerse)"
                 } ?? ""
                 let result = try await service.saveCheckin(
                     source: source,

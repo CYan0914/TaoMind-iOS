@@ -8,10 +8,31 @@ struct DailyVerse: Codable, Identifiable {
     let chapter: String
     let verse_text: String
     let reflection: String
+    /// 双语列（后端 /daily-verse 2026-09-30 起返回）。老缓存 / 老后端可能为空。
+    ///
+    /// 用 `var` + 默认值而非 `let`：`PersonalizedDailyVerse` 会把这个结构体
+    /// 编进 UserDefaults 缓存，升级后解旧缓存时缺这三个 key 会解码失败
+    /// （`try?` 静默返回 nil → 用户当天的个性化经文丢失）。
+    var chapter_en: String? = nil
+    var verse_text_en: String? = nil
+    var reflection_en: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case source, chapter, verse_text, reflection
+        case chapter_en, verse_text_en, reflection_en
     }
+
+    /// 按当前界面语言选字段，缺英文回落中文。
+    /// 与 `LibraryEntry.localized(zh:en:)` 同一套语义。
+    @MainActor private func localized(_ zh: String, _ en: String?) -> String {
+        if AppState.currentLocaleId == "zh-Hans" { return zh }
+        let e = en ?? ""
+        return e.isEmpty ? zh : e
+    }
+
+    @MainActor var localizedChapter: String { localized(chapter, chapter_en) }
+    @MainActor var localizedVerse: String { localized(verse_text, verse_text_en) }
+    @MainActor var localizedReflection: String { localized(reflection, reflection_en) }
 }
 
 // MARK: - Personalized Daily Verse (build 50: 情绪化每日经文)

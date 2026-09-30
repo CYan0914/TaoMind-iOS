@@ -71,17 +71,17 @@ jobs:
           #    且 "must contain a higher version than the previously approved version"）。
           #   历史：1.6.0 (47) 批准 → 关闭；1.7.0 (50) 批准 → 关闭；1.7.2 批准 → 关闭。
           #   所以每次上传前必须确认要传的 version > 已批准版本。
-          # 1.7.6 (build 64) — 精讲音频下架，IPA 541MB → <80MB：
-          #   道德经精讲的 81 个朗读 mp3（462MB，占安装包 85%）已从 bundle 排除。
-          #   内容零删减（81 章精讲文字全在），只是不再随包分发音频。
-          #   副产品：跌破 Apple 200MB 蜂窝下载阈值 → 不开 WiFi 也能装。
+          # 1.7.7 (build 65) — 英文界面每日经文双语修复：
+          #   英文用户切到 English 后，DAILY VERSE 的原文/章节/反思一直显示中文
+          #   （后端 /daily-verse 只返回中文列，daily_verses 表无 _en 列）。
+          #   现在后端返回中英双列，客户端按语言选择，老行自动回填。
           # ⚠️ 版本号必须 > 已批准二进制里声明的 CFBundleShortVersionString。
           #    1.7.3 那次是拿自称 1.7.4 的 build 62 挂在 1.7.3 版本名下送审通过的，
           #    Apple 记的是二进制里的字符串 → 任何自称 1.7.4 的包都被拒
           #    （409 Invalid Pre-Release Train，且 1.7.4 train 一起关闭）。
-          #    1.7.5 已于 2026-09-17 确认 READY_FOR_SALE（train 关闭）→ 必须升 1.7.6。
-          VERSION = "1.7.6"
-          BUILD = "64"
+          #    1.7.6 (build 64) 已提交审核 → 必须升 1.7.7。
+          VERSION = "1.7.7"
+          BUILD = "65"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
