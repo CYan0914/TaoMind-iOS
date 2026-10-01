@@ -111,7 +111,10 @@ struct PersonalizedDailyVerseService {
     }
 
     private func recordShown(verse: DailyVerse) {
-        let entry = "\(verse.source) · \(verse.chapter)"
+        // 去重键取 `chapter_en ?? chapter`：英文模式的 verse 主字段留空
+        // （主字段是中文槽位，见 bilingual()），章节号只在 `_en` 里。
+        let chapter = verse.chapter_en ?? verse.chapter
+        let entry = "\(verse.source) · \(chapter)"
         var arr = UserDefaults.standard.array(forKey: Self.recentlyShownKey) as? [String] ?? []
         arr.append(entry)
         if arr.count > 14 { arr = Array(arr.suffix(14)) }
@@ -218,24 +221,29 @@ struct PersonalizedDailyVerseService {
         }
         // 4) Final fallback
         let fb = VerseFallback.verseForToday()
-        // VerseFallback 的文案本身是英文的,不论当前语言都塞进 `_en`,
-        // 中文模式下 localized() 读主字段(中文原文)不受影响。
+        // VerseFallback 的文案本身是英文的 → 只进 `_en` 三列，主字段留空。
+        // 中文模式下 localized() 读主字段拿到空串会回落 `_en`（英文），
+        // 至少不会出现「英文模式的文本滞留在中文界面」这种串语言。
         return DailyVerse(
             source: fb.source,
-            chapter: fb.chapter,
-            verse_text: fb.text,
-            reflection: fb.reflection,
+            chapter: "",
+            verse_text: "",
+            reflection: "",
             chapter_en: fb.chapter,
             verse_text_en: fb.text,
             reflection_en: fb.reflection
         )
     }
 
-    /// 把一份内容按当前语言同时落到主字段与 `_en` 三列。
+    /// 把一份内容按当前语言落到 `DailyVerse` 的两个语言槽位。
     ///
-    /// LLM 已按 `language` 输出对应语言，所以这里不做翻译：英文内容进 `_en`，
-    /// 中文内容进主字段，两边都填一份保证 `localized*` 在两个模式下都有值。
-    /// cache key 含 language，切语言会重新生成，不会串味。
+    /// **英文内容只进 `_en` 三列，绝不写主字段。** 主字段是「中文原文」槽位：
+    /// `DailyVerse.localized()` 在中文模式下直接读主字段，如果英文模式把英文
+    /// 灌进主字段，用户从英文切回中文时就会看到一段滞留的英文（build 66 的
+    /// 线上 bug）。留空时 `localized()` 的 `e.isEmpty ? zh : e` 会回落英文，
+    /// 至少不会串语言。
+    ///
+    /// `recordShown()` 去重仍需要 chapter 有值，所以这里单给 `chapter` 兜底。
     private func bilingual(
         source: String,
         chapter: String,
@@ -244,13 +252,13 @@ struct PersonalizedDailyVerseService {
         language: String
     ) -> DailyVerse {
         let isEnglish = language != "zh"
+        // 中文内容进主字段；英文内容只进 `_en`。
+        // 去重键 `source · chapter` 需要 chapter 非空 → 英文模式也回填 chapter。
         return DailyVerse(
             source: source,
-            // 主字段照填：`recordShown()` 用 source · chapter 去重，主字段空会
-            // 让去重失效。英文模式下客户端读的是 `_en`，主字段只作兼容。
-            chapter: chapter,
-            verse_text: text,
-            reflection: reflection,
+            chapter: isEnglish ? "" : chapter,
+            verse_text: isEnglish ? "" : text,
+            reflection: isEnglish ? "" : reflection,
             chapter_en: isEnglish ? chapter : nil,
             verse_text_en: isEnglish ? text : nil,
             reflection_en: isEnglish ? reflection : nil

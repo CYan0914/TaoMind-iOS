@@ -102,6 +102,10 @@ final class SubscriptionManager: NSObject, ObservableObject {
     /// 体验卡是否已领过（终身一次）。领过后打卡进度条要撤掉 ——
     /// 否则等于承诺一个永远不会再兑现的奖励。
     static let trialClaimedKey = "trial.claimed"
+
+    /// 权益未能上报后端时的 pending 标记（未登录 / 网络失败）。
+    /// 登录成功后 `flushPendingEntitlementSync()` 会补传并清掉它。
+    static let pendingSyncKey = "entitlement.sync.pending"
     var hasClaimedTrial: Bool { UserDefaults.standard.bool(forKey: Self.trialClaimedKey) }
 
     /// 应用后端发放的 7 天体验卡（连续打卡 7 天的奖励）：落盘 + 立即解锁 UI。
@@ -138,9 +142,18 @@ final class SubscriptionManager: NSObject, ObservableObject {
     // MARK: - Entitlement sync to backend (W1 服务端权益校验骨架)
 
     /// 把 RevenueCat 权益状态上报给服务端，使 require_pro 端点可用。
-    /// 未登录时跳过（服务端按 session 归户）。
+    ///
+    /// 服务端按 session 归户，所以没登录时**上报不了** —— 但绝不能静默吞掉：
+    /// 永久会员在未登录状态下买到 Pro（或登录态过期、换设备未登录），
+    /// 凭证不上报的话后端 `is_user_pro()` 一直是 false，用户按免费额度被限流，
+    /// 当天第一次提问就撞 429「免费次数已用完」。所以这里落一个 pending 标记，
+    /// 等登录成功后由 `flushPendingEntitlementSync()` 立刻补传。
     func syncEntitlementToBackend() async {
-        guard AuthService.shared.isSignedIn else { return }
+        guard AuthService.shared.isSignedIn else {
+            UserDefaults.standard.set(true, forKey: Self.pendingSyncKey)
+            print("[RevenueCat] Not signed in — entitlement sync deferred (pending flag set)")
+            return
+        }
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
             let isPro = customerInfo.entitlements["pro"]?.isActive == true
@@ -150,10 +163,19 @@ final class SubscriptionManager: NSObject, ObservableObject {
             // 客户端上报的 isPro 仅作 RevenueCat 不可用时的回退（防伪造）。
             let appUserID = Purchases.shared.appUserID
             _ = try await CheckinService().syncEntitlement(isPro: isPro, proUntil: proUntil, appUserID: appUserID)
+            UserDefaults.standard.removeObject(forKey: Self.pendingSyncKey)
             print("[RevenueCat] Entitlement synced: isPro=\(isPro)")
         } catch {
-            print("[RevenueCat] Entitlement sync failed: \(error)")
+            UserDefaults.standard.set(true, forKey: Self.pendingSyncKey)
+            print("[RevenueCat] Entitlement sync failed (pending flag set): \(error)")
         }
+    }
+
+    /// 登录成功后立刻补传一次被推迟的权益（幂等：无 pending 也会跑一次，
+    /// 因为登录后服务端本来就该知道当前权益）。
+    func flushPendingEntitlementSync() async {
+        guard AuthService.shared.isSignedIn else { return }
+        await syncEntitlementToBackend()
     }
 
     func fetchOfferings() async {

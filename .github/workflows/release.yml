@@ -80,8 +80,8 @@ jobs:
           #    Apple 记的是二进制里的字符串 → 任何自称 1.7.4 的包都被拒
           #    （409 Invalid Pre-Release Train，且 1.7.4 train 一起关闭）。
           #    1.7.6 (build 64) 已提交审核 → 必须升 1.7.7。
-          VERSION = "1.7.8"
-          BUILD = "66"
+          VERSION = "1.7.9"
+          BUILD = "67"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"

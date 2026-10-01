@@ -185,6 +185,12 @@ final class AuthService: NSObject, ObservableObject {
             self.token = auth.token
             persist()
             print("[Auth] Signed in as user \(auth.user.id) via \(auth.user.provider) ✅")
+            // 登录成功 = 有了 session，权益终于上报得出去。之前若在未登录状态下
+            // 买过 Pro（或登录态过期 / 换设备未登录），syncEntitlementToBackend
+            // 会落一个 pending 标记然后放弃；后端 is_user_pro() 一直是 false，
+            // 用户按免费额度被限流，当天第一次提问就撞 429「免费次数已用完」。
+            // 这里补传，把「终身会员在 TF 上被告知免费次数已用完」那个 bug 收口。
+            Task { await SubscriptionManager.shared.flushPendingEntitlementSync() }
             return true
         } catch {
             print("[Auth] Network error: \(error)")

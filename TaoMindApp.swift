@@ -58,6 +58,15 @@ struct TaoMindApp: App {
                     // Refresh subscription status on every cold launch
                     await SubscriptionManager.shared.refreshStatus()
                 }
+                .onChange(of: appState.language) { _ in
+                    // 切中英文 → 经文必须跟着换。DailyVerse 的双语是靠 `localized()`
+                    // 在渲染时按当前语言挑字段，但个性化 verse 的缓存 key 含 language，
+                    // 且未登录时 PersonalizedDailyVerseService.isEligible() 直接 false
+                    // （旧代码路径下 appState.dailyVerse 就永远停在上一语言）。
+                    // 这里重跑完整 loadDailyVerse：先取该语言的 base verse，
+                    // 再让个性化的缓存/LLM 按新语言覆盖。
+                    Task { await loadDailyVerse() }
+                }
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {
                         // 回到前台时重排习惯通知（打卡状态可能已变）
