@@ -37,10 +37,10 @@ struct SeekWisdomView: View {
                             .overlay(alignment: .topTrailing) {
                                 collapseButton
                             }
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .transition(.opacity)
                     } else {
                         collapsedVerseBar(verse: verse, isPersonalized: isPersonalized)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .transition(.opacity)
                     }
                 }
 
@@ -349,7 +349,7 @@ struct SeekWisdomView: View {
 
     // MARK: - Daily Verse Collapse / Expand
 
-    /// 展开态左上角（topTrailing）的收起入口。
+    /// 展开态右上角（topTrailing）的收起入口。
     /// 单独做成按钮而不是给整卡挂手势——避免"点正文 = 内容消失"。
     private var collapseButton: some View {
         Button {
