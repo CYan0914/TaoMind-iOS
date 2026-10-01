@@ -122,6 +122,8 @@
 "seal_seek_caption" = "Press the seal · Seek";
 "seal_seeking" = "Consulting the sage…";
 "daily_verse_eyebrow" = "Daily Verse";
+"daily_verse_collapse" = "Collapse daily verse";
+"daily_verse_expand" = "Expand daily verse";
 
 /* ===== Paywall 夜底改版 ===== */
 "pw_eyebrow" = "Disciple's Path";

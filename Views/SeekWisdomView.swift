@@ -24,10 +24,24 @@ struct SeekWisdomView: View {
         ScrollView {
             VStack(spacing: 20) {
                 // MARK: - Daily Verse Banner
-                if showDailyVerse, let verse = appState.dailyVerse {
-                    DailyVerseCard(verse: verse)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .onTapGesture { withAnimation { showDailyVerse.toggle() } }
+                //
+                // 2026-10-01 修：原实现把 onTapGesture 挂在整张卡片上，点任意处
+                // （含经文正文）都 toggle showDailyVerse → 卡片被 if 直接移除，
+                // 且页面上没有恢复入口，用户当场找不回来。
+                // 现改为「展开态 ↔ 收起态」两分支：收起后留一条可点回来的细横条，
+                // 展开态只保留角落里一个独立的收起按钮，正文区域不再响应点击。
+                if let verse = appState.dailyVerse {
+                    let isPersonalized = appState.personalizedVerse != nil
+                    if showDailyVerse {
+                        DailyVerseCard(verse: verse, isPersonalized: isPersonalized)
+                            .overlay(alignment: .topTrailing) {
+                                collapseButton
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    } else {
+                        collapsedVerseBar(verse: verse, isPersonalized: isPersonalized)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
 
                 // MARK: - Header
@@ -331,6 +345,57 @@ struct SeekWisdomView: View {
 
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    // MARK: - Daily Verse Collapse / Expand
+
+    /// 展开态左上角（topTrailing）的收起入口。
+    /// 单独做成按钮而不是给整卡挂手势——避免"点正文 = 内容消失"。
+    private var collapseButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) { showDailyVerse = false }
+        } label: {
+            Image(systemName: "chevron.up")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(DS.inkFaint)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(6)
+        .accessibilityLabel(AppState.tr("daily_verse_collapse"))
+    }
+
+    /// 收起态：一条可点回来的细横条。
+    /// 保留「出自哪一章」信息，让用户知道收起的是哪一段。
+    private func collapsedVerseBar(verse: DailyVerse, isPersonalized: Bool) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) { showDailyVerse = true }
+        } label: {
+            HStack(spacing: 8) {
+                Text(AppState.tr(isPersonalized ? "personalized_verse_eyebrow" : "daily_verse_eyebrow"))
+                    .eyebrowStyle(isPersonalized ? DS.cinnabar : DS.bronze)
+
+                Spacer(minLength: 8)
+
+                Text(verse.source)
+                    .fontWeight(.semibold)
+                if !verse.localizedChapter.isEmpty {
+                    Text("· \(verse.localizedChapter)")
+                }
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(DS.inkFaint)
+            }
+            .font(.caption)
+            .foregroundColor(DS.inkSoft)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .paperCard(padding: 12)
+        .accessibilityLabel(AppState.tr("daily_verse_expand"))
     }
 
     // MARK: - Voice Input

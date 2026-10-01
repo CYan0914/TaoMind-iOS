@@ -248,6 +248,8 @@
 "seal_seek_caption" = "按印 · 开始求取";
 "seal_seeking" = "推演中…";
 "daily_verse_eyebrow" = "每 日 经 文";
+"daily_verse_collapse" = "收起每日经文";
+"daily_verse_expand" = "展开每日经文";
 
 /* ===== 付费墙夜底改版 ===== */
 "pw_eyebrow" = "入室弟子";

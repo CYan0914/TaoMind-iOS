@@ -80,8 +80,15 @@ jobs:
           #    Apple 记的是二进制里的字符串 → 任何自称 1.7.4 的包都被拒
           #    （409 Invalid Pre-Release Train，且 1.7.4 train 一起关闭）。
           #    1.7.6 (build 64) 已提交审核 → 必须升 1.7.7。
-          VERSION = "1.7.9"
-          BUILD = "67"
+          # 1.8.0 (build 68) — 每日经文卡片点击后整卡消失的修复：
+          #   Seek Wisdom 页原把 onTapGesture 挂在整张 DailyVerseCard 上，
+          #   点任意处（含经文正文）即 toggle showDailyVerse → 卡片被 if 移除，
+          #   且页面无恢复入口，用户当场找不回来。
+          #   现改为「展开态 ↔ 收起态」：收起后留一条可点回来的细横条（显示出自哪章），
+          #   展开态只在右上角保留独立的收起按钮，正文区域不再响应点击。
+          #   附带修复：该页漏传 isPersonalized，个性化经文的朱砂色眉标一直没生效。
+          VERSION = "1.8.0"
+          BUILD = "68"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
