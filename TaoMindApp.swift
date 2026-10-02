@@ -59,13 +59,19 @@ struct TaoMindApp: App {
                     await SubscriptionManager.shared.refreshStatus()
                 }
                 .onChange(of: appState.language) { _ in
-                    // 切中英文 → 经文必须跟着换。DailyVerse 的双语是靠 `localized()`
-                    // 在渲染时按当前语言挑字段，但个性化 verse 的缓存 key 含 language，
-                    // 且未登录时 PersonalizedDailyVerseService.isEligible() 直接 false
-                    // （旧代码路径下 appState.dailyVerse 就永远停在上一语言）。
-                    // 这里重跑完整 loadDailyVerse：先取该语言的 base verse，
-                    // 再让个性化的缓存/LLM 按新语言覆盖。
-                    Task { await loadDailyVerse() }
+                    // 切中英文 → 换文案的活全在渲染层：`DailyVerse.localized()` 按
+                    // 当前语言挑字段，base verse 自带中英双列，个性化 verse 的中英
+                    // 两槽也都躺在同一个日期实体里。所以这里**只补一条可能为空的槽**。
+                    //
+                    // 1.8.0 的写法是重跑整个 `loadDailyVerse()`，而它无条件先把 base
+                    // verse 写进 `appState.dailyVerse`（base 的章由后端按日期定，与
+                    // LLM 选的那章本就无关）；个性化一旦失败就永久停在 base —— 这是
+                    // 「中文金刚经 28 章、切英文变道德经」的必经中间态。
+                    //
+                    // 只调 loadPersonalizedVerse 还有一个好处：未登录 / 非 Pro 时它
+                    // 第一行就 return，`dailyVerse` 分毫不动。原来那条路径会把
+                    // `dailyVerse` 冲成 base，正是「切语言经文消失」的一条通路。
+                    Task { await loadPersonalizedVerse(recentReflections: nil) }
                 }
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {
@@ -110,10 +116,11 @@ struct TaoMindApp: App {
         await loadPersonalizedVerse(recentReflections: nil)
     }
 
-    /// build 50: 个性化 verse 拉取。
-    /// - 无登录/不在 trial/Pro  → skip
-    /// - 已 cache 当日 → skip LLM,直接覆盖
-    /// - 成功 → 覆盖 dailyVerse + 写 personalizedVerse
+    /// build 50: 个性化 verse 拉取。1.8.1 起是**幂等**的:目标语言槽已有内容
+    /// 就是一次纯本地读,不发请求 —— 切语言走的就是这条路。
+    /// - 无登录/不在 trial/Pro  → skip(`appState.dailyVerse` 分毫不动)
+    /// - 目标语言槽已有 → 本地返回
+    /// - 目标语言槽为空 → 补一次 LLM,用另一槽锁死章节
     /// - 失败 → personalizedVerseFailedToday = true(PracticeView 据此显 upgrade banner)
     private func loadPersonalizedVerse(recentReflections: [String]?) async {
         let svc = PersonalizedDailyVerseService()

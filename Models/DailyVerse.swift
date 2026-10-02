@@ -22,11 +22,16 @@ struct DailyVerse: Codable, Identifiable {
         case chapter_en, verse_text_en, reflection_en
     }
 
-    /// 按当前界面语言选字段，缺英文回落中文。
+    /// 按当前界面语言选字段，**两个方向都回落**（哪一槽为空就取另一槽）。
+    ///
+    /// 老版本中文分支是裸 `return zh`，不检查空：个性化 verse 在英文模式下
+    /// 只写 `_en` 三列、主字段留空（见 PersonalizedDailyVerseService.bilingual），
+    /// 用户从英文切回中文时 `Text("")` → 整张卡空白（1.8.0 线上 bug）。
+    /// 回落成英文总好过空白。
     /// 与 `LibraryEntry.localized(zh:en:)` 同一套语义。
     @MainActor private func localized(_ zh: String, _ en: String?) -> String {
-        if AppState.currentLocaleId == "zh-Hans" { return zh }
         let e = en ?? ""
+        if AppState.currentLocaleId == "zh-Hans" { return zh.isEmpty ? e : zh }
         return e.isEmpty ? zh : e
     }
 
@@ -44,11 +49,31 @@ struct DailyVerse: Codable, Identifiable {
 // 注意：`verse` 的 `id` 是 `let id = UUID()` —— 跨日 cache miss 时
 // SwiftUI 不会因为 id 相同而误判是同一条。
 
+/// 1.8.1 起：一天一条「日期实体」，两个语言槽住在实体内部。
+///
+/// 老结构只有单个 `verse`（且缓存 key 带 language 后缀）→ 切语言必然 cache miss
+/// → 重选一次经。现在 key 去掉 language，中英两份挂在同一个实体上，切语言通常
+/// 只是换槽位读，不发网络请求，章节也就固定住了。
+///
+/// 兼容性：两个新字段都是 Optional。Swift 合成 Codable 对 Optional 属性走
+/// `decodeIfPresent`，老缓存缺这两个 key 不会解码失败；老数据里 `verse` 存的
+/// 正是「中文那次」的产出，所以直接当中文槽用（英文槽为空 → 首切英文才补一次）。
 struct PersonalizedDailyVerse: Codable {
-    let verse: DailyVerse
+    /// 中文槽。老缓存解码出来直接落这里。
+    var verse: DailyVerse? = nil
+    /// 英文槽（1.8.1 新增）。
+    var en: DailyVerse? = nil
     let generatedAt: Date
-    let moodRaw: String?
-    let userIntent: String?
+    /// 原为 `let`；补槽时会更新，改成 `var`（老缓存解码不受影响）。
+    var moodRaw: String?
+    var userIntent: String?
+
+    /// 把新生成的一份文案落进目标语言槽，另一槽原样不动。
+    func writing(_ v: DailyVerse, isEnglish: Bool) -> PersonalizedDailyVerse {
+        var updated = self
+        if isEnglish { updated.en = v } else { updated.verse = v }
+        return updated
+    }
 }
 
 // MARK: - Wisdom Response Model

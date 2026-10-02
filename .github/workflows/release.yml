@@ -87,8 +87,22 @@ jobs:
           #   现改为「展开态 ↔ 收起态」：收起后留一条可点回来的细横条（显示出自哪章），
           #   展开态只在右上角保留独立的收起按钮，正文区域不再响应点击。
           #   附带修复：该页漏传 isPersonalized，个性化经文的朱砂色眉标一直没生效。
-          VERSION = "1.8.0"
-          BUILD = "68"
+          # 1.8.1 (build 69) — 切中英文导致经文换章 / 消失的修复：
+          #   根因是「切语言被当成了重新选经」+「英文产物的中文槽位留空」：
+          #   ① 个性化经文缓存 key 带 language 后缀 → 切语言必 cache miss → 重调 LLM，
+          #      而 prompt 的 Recently shown (do NOT repeat) 刚写入上一章 → 必然换章
+          #      （中文金刚经 28 章切英文变道德经）。
+          #   ② 切语言重跑 loadDailyVerse() → 无条件先写 base verse(后端按日期定的章)，
+          #      个性化失败就永久停在 base。
+          #   ③ 英文模式只写 _en 三列、主字段留空，而 localized() 中文分支裸返回不检查空
+          #      → Text("") 整卡空白。
+          #   ④ TaoMindApp 与 PracticeView 各挂一条 language onChange → 并发跨语言覆盖。
+          #   现改为「一天一条语言无关的日期实体」：中英两槽住在实体内部，切语言通常
+          #   纯本地读（0 网络 / 0 LLM 额度 / 章节绝对不变），只在目标槽为空时补一次，
+          #   且用另一槽锁死 source + chapter。
+          # ⚠️ train 关闭规律：1.8.0 已批准上线 → 新 build 必须严格高于 1.8.0，否则 409。
+          VERSION = "1.8.1"
+          BUILD = "69"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"

@@ -71,11 +71,20 @@ struct PersonalizedDailyVerseService {
         }
     }
 
-    // MARK: - Cache
+    // MARK: - Cache（1.8.1:一天一条「日期实体」,语言槽住在实体内部）
 
-    private func cacheKey(language: String, date: Date = Date()) -> String {
+    /// 语言无关的实体 key。**切语言不换 key** —— 这是 1.8.0 切语言换章的根修:
+    /// 老 key 带 language 后缀,切语言必然 cache miss,于是重挑一次经(而 prompt
+    /// 里的 Recently shown 又刚把上一章写进去,逼它必须换,金刚经就变道德经了)。
+    private func entityKey(date: Date = Date()) -> String {
         let userId = AuthService.shared.user.map { "u\($0.id)" } ?? "anon"
-        return "\(Self.personalizedCachePrefix).\(userId).\(dayString(date)).\(language)"
+        return "\(Self.personalizedCachePrefix).\(userId).\(dayString(date))"
+    }
+
+    /// 1.8.0 及更早的 key(带 language 后缀)。**只读**,用于升级当天把老数据
+    /// 搬进实体;不再往这里写。
+    private func legacyCacheKey(language: String, date: Date = Date()) -> String {
+        "\(entityKey(date: date)).\(language)"
     }
 
     private func dayString(_ date: Date) -> String {
@@ -85,37 +94,125 @@ struct PersonalizedDailyVerseService {
         return f.string(from: date)
     }
 
-    /// 同步读今日缓存(给 NotificationService 用,不阻塞)
-    func cachedForToday(language: String) -> DailyVerse? {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey(language: language)) else { return nil }
+    private func decodeEntity(key: String) -> PersonalizedDailyVerse? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        guard let env = try? decoder.decode(PersonalizedDailyVerse.self, from: data) else { return nil }
-        return env.verse
+        return try? decoder.decode(PersonalizedDailyVerse.self, from: data)
     }
 
-    private func saveCache(_ verse: DailyVerse, mood: Mood?, userIntent: String?, language: String) {
-        let env = PersonalizedDailyVerse(
-            verse: verse,
-            generatedAt: Date(),
-            moodRaw: mood?.apiValue,
-            userIntent: userIntent
-        )
+    private func loadEntity(date: Date = Date()) -> PersonalizedDailyVerse? {
+        decodeEntity(key: entityKey(date: date))
+    }
+
+    private func saveEntity(_ env: PersonalizedDailyVerse) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         if let data = try? encoder.encode(env) {
-            UserDefaults.standard.set(data, forKey: cacheKey(language: language))
+            UserDefaults.standard.set(data, forKey: entityKey())
         }
-        // 顺便记入"最近展示过的 chapter"列表,服务下次的 LLM prompt 去重
-        recordShown(verse: verse)
+    }
+
+    /// 同步读今日缓存(给 NotificationService 用,不阻塞)。
+    /// 签名与老 key 字符串保持不变 → NotificationService 零改动。
+    func cachedForToday(language: String) -> DailyVerse? {
+        let isEnglish = language != "zh"
+        if let env = loadEntity(),
+           let v = slot(of: env, isEnglish: isEnglish), hasContent(v) {
+            return v
+        }
+        // 升级后今天还没走过 fetch(实体尚未生成)→ 老 key 只读兜底
+        if let env = decodeEntity(key: legacyCacheKey(language: language)),
+           let v = env.verse, hasContent(v) {
+            return v
+        }
+        return nil
+    }
+
+    private func slot(of env: PersonalizedDailyVerse, isEnglish: Bool) -> DailyVerse? {
+        isEnglish ? env.en : env.verse
+    }
+
+    /// 槽位是否真有内容。空壳 verse(主字段与 `_en` 都为空)不算命中 ——
+    /// 否则切语言会拿到一份空白,等于 1.8.0 的「经文消失」。
+    private func hasContent(_ v: DailyVerse) -> Bool {
+        !v.verse_text.isEmpty || !(v.verse_text_en ?? "").isEmpty
+    }
+
+    /// 老数据形态判定:主字段有内容 = 中文形态;只有 `_en` 有内容 = 英文形态。
+    private func isChineseForm(_ v: DailyVerse) -> Bool {
+        !v.verse_text.isEmpty || !v.chapter.isEmpty || !v.reflection.isEmpty
+    }
+
+    private func isEnglishForm(_ v: DailyVerse) -> Bool {
+        !(v.verse_text_en ?? "").isEmpty
+            || !(v.chapter_en ?? "").isEmpty
+            || !(v.reflection_en ?? "").isEmpty
+    }
+
+    /// 把 1.8.0 的两条老 key(`.zh` / `.en`)搬进一个语言无关的实体。
+    ///
+    /// 按**内容**判槽位,不看 key 后缀 —— 老代码在中文模式下也可能产出纯英文
+    /// 形态(`parseToVerse` 的最终 fallback 就是),后缀不可信。
+    private func migratedEntity() -> PersonalizedDailyVerse? {
+        let legacy = [decodeEntity(key: legacyCacheKey(language: "zh")),
+                      decodeEntity(key: legacyCacheKey(language: "en"))].compactMap { $0 }
+        guard !legacy.isEmpty else { return nil }
+
+        var zhSlot: DailyVerse?
+        var enSlot: DailyVerse?
+        for env in legacy {
+            guard let v = env.verse else { continue }
+            if isChineseForm(v) {
+                if zhSlot == nil { zhSlot = v }
+            } else if isEnglishForm(v) {
+                if enSlot == nil { enSlot = v }
+            }
+        }
+        guard zhSlot != nil || enSlot != nil else { return nil }
+
+        return PersonalizedDailyVerse(
+            verse: zhSlot,
+            en: enSlot,
+            generatedAt: legacy.map(\.generatedAt).max() ?? Date(),
+            moodRaw: legacy.first?.moodRaw,
+            userIntent: legacy.first?.userIntent
+        )
+    }
+
+    /// 生成某一语言槽时用来「锁章」的参照物 —— 取自**另一槽**。
+    struct VerseLock {
+        let source: String
+        /// 目标语言下的章名无从得知,所以这里存的是另一槽的章名(可能是中文)。
+        let chapter: String
+        let referenceText: String
+    }
+
+    /// 从"另一个槽"取锁。另一个槽为空 → nil,回到自由选章(当天第一次生成)。
+    private func reference(from env: PersonalizedDailyVerse, targetIsEnglish: Bool) -> VerseLock? {
+        guard let o = targetIsEnglish ? env.verse : env.en else { return nil }
+        let chapter = ((o.chapter_en?.isEmpty == false) ? o.chapter_en! : o.chapter)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = ((o.verse_text_en?.isEmpty == false) ? o.verse_text_en! : o.verse_text)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !chapter.isEmpty || !text.isEmpty else { return nil }
+        return VerseLock(
+            source: o.source,
+            chapter: chapter,
+            referenceText: String(text.prefix(200))
+        )
     }
 
     private func recordShown(verse: DailyVerse) {
         // 去重键取 `chapter_en ?? chapter`：英文模式的 verse 主字段留空
         // （主字段是中文槽位，见 bilingual()），章节号只在 `_en` 里。
-        let chapter = verse.chapter_en ?? verse.chapter
+        let chapter = (verse.chapter_en?.isEmpty == false) ? verse.chapter_en! : verse.chapter
+        guard !chapter.isEmpty else { return }
         let entry = "\(verse.source) · \(chapter)"
-        var arr = UserDefaults.standard.array(forKey: Self.recentlyShownKey) as? [String] ?? []
+        var arr = recentlyShown()
+        // 同日同章不重复记。1.8.0 里每次 saveCache 都无条件 append,一天切几次
+        // 语言就能把 14 条上限刷满,之后几天的选章被这条黑名单持续带偏。
+        guard !arr.contains(entry) else { return }
         arr.append(entry)
         if arr.count > 14 { arr = Array(arr.suffix(14)) }
         UserDefaults.standard.set(arr, forKey: Self.recentlyShownKey)
@@ -127,24 +224,46 @@ struct PersonalizedDailyVerseService {
 
     // MARK: - Fetch
 
-    /// 取今日个性化 verse(已缓存则不重 LLM)。失败抛错让 caller 走 VerseFallback。
+    /// 取今日个性化 verse。**幂等**:目标语言槽已有内容就纯本地返回,不碰网络。
+    /// 失败抛错让 caller 走 VerseFallback。
     func fetchTodaysPersonalizedVerse(
         mood: Mood?,
         recentReflections: [String],
         userIntent: String?,
         language: String
     ) async throws -> DailyVerse {
-        if let cached = cachedForToday(language: language) {
-            return cached
+        let targetIsEnglish = language != "zh"
+
+        // 1) 今日实体:新 key → 老 key 迁移 → 空实体
+        let existing = loadEntity()
+        let migrated = existing == nil ? migratedEntity() : nil
+        var env = existing ?? migrated
+            ?? PersonalizedDailyVerse(verse: nil, en: nil, generatedAt: Date(), moodRaw: nil, userIntent: nil)
+
+        // 2) 目标槽已有内容 → 本地读返回。切语言的常见路径走这里:
+        //    0 网络、0 LLM 额度、章节绝对不变。
+        if let hit = slot(of: env, isEnglish: targetIsEnglish), hasContent(hit) {
+            if migrated != nil { saveEntity(env) }   // 迁移结果落地,免得下次再搬
+            return hit
         }
-        let verse = try await callLLM(
+
+        // 3) 目标槽为空(典型:老用户第一次切到另一种语言)→ 补一次,
+        //    用另一槽锁死 source + chapter,强制同一章。
+        let lock = reference(from: env, targetIsEnglish: targetIsEnglish)
+        let fresh = try await callLLM(
             mood: mood,
             recentReflections: recentReflections,
             userIntent: userIntent,
-            language: language
+            language: language,
+            lock: lock
         )
-        saveCache(verse, mood: mood, userIntent: userIntent, language: language)
-        return verse
+        env = env.writing(fresh, isEnglish: targetIsEnglish)
+        env.moodRaw = mood?.apiValue ?? env.moodRaw
+        env.userIntent = userIntent ?? env.userIntent
+        saveEntity(env)
+        // 只在真正新生成时记去重(本地读那条路径绝不记)
+        recordShown(verse: fresh)
+        return fresh
     }
 
     // MARK: - LLM call + parse
@@ -153,13 +272,15 @@ struct PersonalizedDailyVerseService {
         mood: Mood?,
         recentReflections: [String],
         userIntent: String?,
-        language: String
+        language: String,
+        lock: VerseLock?
     ) async throws -> DailyVerse {
         let prompt = buildQuestionPrompt(
             mood: mood,
             recentReflections: recentReflections,
             userIntent: userIntent,
-            language: language
+            language: language,
+            lock: lock
         )
         let token = AuthService.shared.token
 
@@ -169,7 +290,8 @@ struct PersonalizedDailyVerseService {
                 question: prompt,
                 scenarioType: "personalized_daily_verse",
                 language: language,
-                token: token
+                token: token,
+                lock: lock
             )
         } catch {
             // 2nd: 降级到 "personal" (最可能产生 verse 内容的现有 scenario_type)
@@ -177,7 +299,8 @@ struct PersonalizedDailyVerseService {
                 question: prompt,
                 scenarioType: "personal",
                 language: language,
-                token: token
+                token: token,
+                lock: lock
             )
         }
     }
@@ -186,7 +309,8 @@ struct PersonalizedDailyVerseService {
         question: String,
         scenarioType: String,
         language: String,
-        token: String?
+        token: String?,
+        lock: VerseLock?
     ) async throws -> DailyVerse {
         let client = APIClient(baseURL: apiBaseURL)
         let resp = try await client.seekWisdom(
@@ -196,7 +320,7 @@ struct PersonalizedDailyVerseService {
             language: language,
             authToken: token
         )
-        return parseToVerse(resp, language: language)
+        return parseToVerse(resp, language: language, lock: lock)
     }
 
     /// 4 层 fallback:JSON shape → markdown fence → WisdomResponse 字段直读 → VerseFallback
@@ -204,16 +328,17 @@ struct PersonalizedDailyVerseService {
     /// `language` 决定 LLM 输出的语言（prompt 里已带 `Language: en|zh`），
     /// 而这个语种的内容必须同时写进 `_en` 三列 —— 否则 `DailyVerse.localized*`
     /// 在英文模式下读到空的 `_en` 会回落中文，个性化经文就永远是中文的。
-    private func parseToVerse(_ resp: WisdomResponse, language: String) -> DailyVerse {
+    private func parseToVerse(_ resp: WisdomResponse, language: String, lock: VerseLock?) -> DailyVerse {
         // 1) LLM 期望输出 JSON shape;在 passage 里取
-        if let v = parseJSONShape(in: resp.passage, language: language) { return v }
+        if let v = parseJSONShape(in: resp.passage, language: language, lock: lock) { return v }
         // 2) regex 提取 ```json ... ``` 块
-        if let v = parseMarkdownFence(in: resp.passage, language: language) { return v }
-        // 3) WisdomResponse 直读:passage 当 verse_text,reflection 当 reflection
+        if let v = parseMarkdownFence(in: resp.passage, language: language, lock: lock) { return v }
+        // 3) WisdomResponse 直读:passage 当 verse_text,reflection 当 reflection。
+        //    ⚠️ 这层拿不到章名 —— 若手上有锁,宁可用锁也不要让卡片退化成无章可显。
         if !resp.passage.isEmpty {
             return bilingual(
-                source: "Tao Te Ching",
-                chapter: "",
+                source: lock?.source ?? "Tao Te Ching",
+                chapter: lock?.chapter ?? "",
                 text: stripMarkdown(stripEmoji(resp.passage)),
                 reflection: stripMarkdown(stripEmoji(resp.reflection)),
                 language: language
@@ -221,17 +346,18 @@ struct PersonalizedDailyVerseService {
         }
         // 4) Final fallback
         let fb = VerseFallback.verseForToday()
-        // VerseFallback 的文案本身是英文的 → 只进 `_en` 三列，主字段留空。
-        // 中文模式下 localized() 读主字段拿到空串会回落 `_en`（英文），
-        // 至少不会出现「英文模式的文本滞留在中文界面」这种串语言。
-        return DailyVerse(
+        // VerseFallback 的文案本身是英文的 → 只进 `_en` 三列，主字段留空，
+        // 避免英文文本滞留在中文界面（串语言）。
+        //
+        // 1.8.0 这里曾少写 `chapter_en`（只给「中文槽位留空」的形态，章名却丢在
+        // 主字段），而当时 localized() 的中文分支又不检查空 → 中文界面整卡空白。
+        // 现在 localized() 两个方向都回落，这里也统一走 bilingual() 保持形态一致。
+        return bilingual(
             source: fb.source,
-            chapter: "",
-            verse_text: "",
-            reflection: "",
-            chapter_en: fb.chapter,
-            verse_text_en: fb.text,
-            reflection_en: fb.reflection
+            chapter: fb.chapter,
+            text: fb.text,
+            reflection: fb.reflection,
+            language: "en"
         )
     }
 
@@ -272,17 +398,17 @@ struct PersonalizedDailyVerseService {
         let reflection: String?
     }
 
-    private func parseJSONShape(in text: String, language: String) -> DailyVerse? {
+    private func parseJSONShape(in text: String, language: String, lock: VerseLock?) -> DailyVerse? {
         // 直 JSON
         if let data = text.data(using: .utf8),
            let parsed = try? JSONDecoder().decode(ParsedJSON.self, from: data),
            let passage = parsed.passage, !passage.isEmpty {
-            return verseFromParsed(parsed, fallbackPassage: passage, language: language)
+            return verseFromParsed(parsed, fallbackPassage: passage, language: language, lock: lock)
         }
         return nil
     }
 
-    private func parseMarkdownFence(in text: String, language: String) -> DailyVerse? {
+    private func parseMarkdownFence(in text: String, language: String, lock: VerseLock?) -> DailyVerse? {
         // ```json ... ``` block
         let pattern = "```(?:json)?\\s*\\n([\\s\\S]*?)\\n```"
         guard let regex = try? NSRegularExpression(pattern: pattern),
@@ -292,12 +418,15 @@ struct PersonalizedDailyVerseService {
         guard let data = jsonStr.data(using: .utf8),
               let parsed = try? JSONDecoder().decode(ParsedJSON.self, from: data),
               let passage = parsed.passage, !passage.isEmpty else { return nil }
-        return verseFromParsed(parsed, fallbackPassage: passage, language: language)
+        return verseFromParsed(parsed, fallbackPassage: passage, language: language, lock: lock)
     }
 
-    private func verseFromParsed(_ parsed: ParsedJSON, fallbackPassage: String, language: String) -> DailyVerse {
-        let source = (parsed.source?.isEmpty == false) ? parsed.source! : "Tao Te Ching"
-        let chapter = parsed.chapter ?? ""
+    private func verseFromParsed(_ parsed: ParsedJSON, fallbackPassage: String, language: String, lock: VerseLock?) -> DailyVerse {
+        // 有锁时**无条件用锁**:模型偶尔会无视 prompt 自选一章,那正是
+        // 「同一天中英不是同一章」的复发路径,这里从数据上兜死。
+        let source = lock?.source
+            ?? ((parsed.source?.isEmpty == false) ? parsed.source! : "Tao Te Ching")
+        let chapter = lock?.chapter ?? (parsed.chapter ?? "")
         let passage = cleanText(fallbackPassage, max: 200)
         let reflection = cleanText(parsed.reflection ?? "", max: 200)
         return bilingual(
@@ -347,7 +476,8 @@ struct PersonalizedDailyVerseService {
         mood: Mood?,
         recentReflections: [String],
         userIntent: String?,
-        language: String
+        language: String,
+        lock: VerseLock?
     ) -> String {
         let moodStr = mood?.apiValue ?? "none"
         let focusStr = (userIntent?.isEmpty == false) ? userIntent! : "not specified"
@@ -364,6 +494,36 @@ struct PersonalizedDailyVerseService {
                 .joined(separator: "\n")
         }
         let shownLines = recentlyShown().suffix(7).joined(separator: ", ")
+
+        if let lock = lock {
+            // 补另一语言槽:章节已经被另一槽钉死,模型只负责把这一章写成目标语言。
+            //
+            // 注意 Recently shown 那行必须**显式豁免**、且和 Required verse 挨着:
+            // 只写 "Required verse: X" 而留着 "do NOT repeat" 会让模型收到两条
+            // 冲突指令,而它偏向更靠后的否定指令 → 又把章换掉(这正是 1.8.0 的 bug)。
+            // source/chapter 也已从严格 JSON schema 里挪走,模型没有可填的章名槽位。
+            return """
+            Daily verse request — TRANSLATION TASK, NOT A SELECTION TASK.
+            Mood: \(moodStr)
+            Life focus: \(focusStr)
+            Recent reflections (last 7 days):
+            \(reflectionLines)
+            Recently shown (context only — IGNORE for this request): \(shownLines.isEmpty ? "(none)" : shownLines)
+            Date: \(dateStr)
+            Language: \(langStr)
+
+            Required verse: \(lock.source) · \(lock.chapter)
+            This verse is already fixed for today. Do NOT choose a different chapter.
+            The recently-shown list above does NOT apply to this request.
+            Write the passage and the reflection of the required verse in \(langStr).
+            The text below is a meaning anchor only — do not copy it verbatim, do not echo its language:
+            \(lock.referenceText)
+
+            Output JSON exactly:
+            {"passage": "<required verse's text in \(langStr), 200 chars max>", "reflection": "<2-line reflection in \(langStr), 200 chars max>"}
+            No prose outside JSON. No markdown. No emoji.
+            """
+        }
 
         return """
         Daily verse request.

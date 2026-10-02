@@ -66,10 +66,11 @@ struct PracticeView: View {
         .onChange(of: appState.todaysMood) { _ in
             Task { await loadPersonalizedVerseIfEligible() }
         }
-        .onChange(of: appState.language) { _ in
-            // 切语言时 cache key 变 → 重新拉(当天 1 次 LLM 接受)
-            Task { await loadPersonalizedVerseIfEligible() }
-        }
+        // 切语言不再单独订阅:1.8.0 这里和 TaoMindApp 各挂了一条 onChange,
+        // 同一次切语言派发两个并发 Task 各跑完整网络流程,谁后写谁赢 ——
+        // 英文模式下发起、用户已切回中文后才返回的结果会把一份「中文槽为空」
+        // 的英文产物写进 appState.dailyVerse,中文界面读到空白。语言变化只由
+        // TaoMindApp 一处处理;进 Practice 时 loadStatus() 末尾仍会补一次。
         .sheet(isPresented: $showBackfill) {
             if let date = status?.backfill?.targetDate {
                 BackfillView(targetDate: date) {
