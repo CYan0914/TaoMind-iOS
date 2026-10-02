@@ -108,34 +108,35 @@ jobs:
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
 
           # App Store 的 What's New 不接受 emoji（✨ 会 409 INVALID_CHARACTERS）
-          # 1.7.3 用户能感知的增量：
-          #   - 《庄子》精选 16 篇上线（图书馆新分类，与后端 seed 的 source="庄子" 对齐）
-          #   - 道德经 81 章 / 金刚经 32 品 由「节选」升级为「全文」，配完整英译
-          #     （后端已部署，线上实测：道德经 verse 6432 字 / verse_en 39850 字符）
-          #   - 中文界面修复：道德经/金刚经原本把英文存在非 _en 列，中文模式看到的是
-          #     英文章节标题 / 英译经文 / 英文反思 → 现补中文原文与中文反思
-          #   - 英文通释校订：修掉 CJK 泄漏进英文经文、字面 \n、不渲染的粗体标记等 32 处
+          # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
+          #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
+          #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
+          # 1.8.1 用户能感知的增量：
+          #   - 修复切语言导致经文换章 / 整块消失（详见上方 1.8.1 根因注释）
+          # 面向终端读者写，不写 localized() / cache key / LLM prompt 这类实现细节
           WHATS_NEW_EN = (
-              "**85% smaller — under 80 MB**\n"
-              "TaoMind used to install at over 500 MB. It now fits in under 80 MB, "
-              "which means it installs on any phone, downloads over cellular data, "
-              "and opens faster. Nothing you read has changed: all 81 chapters of "
-              "the Tao Te Ching, the full Diamond Sutra, and the Zhuangzi "
-              "selections, with every commentary intact.\n\n"
-              "**Chapter audio has been retired**\n"
-              "The spoken narration for the Tao Te Ching chapters has been removed, "
-              "and that is where nearly all of the size went. It was English-only, "
-              "so readers on the Chinese interface never had it. The written "
-              "commentary is unchanged."
+              "Fixed: your verse no longer changes when you switch languages\n"
+              "\n"
+              "If you read TaoMind in Chinese and then switched the app to English, "
+              "today's verse could vanish or swap to a different chapter — a Diamond "
+              "Sutra passage turning into something from the Tao Te Ching. The verse "
+              "for the day is now fixed. Switching languages shows the same passage in "
+              "the other language instead of choosing a new one, and it happens "
+              "instantly with no network needed.\n"
+              "\n"
+              "Today's verse, chapter, and reflection stay the same all day in both "
+              "languages. Anything saved before this update is kept."
           )
           WHATS_NEW_ZH = (
-              "**体积缩小 85%，不到 80 MB**\n"
-              "TaoMind 安装包原本 500 多 MB，现在不到 80 MB。任何手机都装得下，"
-              "用流量也能下载，启动更快。你读的内容一样没少：道德经 81 章、"
-              "金刚经全文、庄子精选，精讲全部保留。\n\n"
-              "**章节朗读已下架**\n"
-              "道德经章节的朗读音频已移除，安装包的大部分体积就来自这里。"
-              "它只有英文版，中文界面的读者此前也听不到。文字精讲完全不变。"
+              "修复：切换语言不再更换经文\n"
+              "\n"
+              "在中文界面读到的每日经文，切到英文时可能整块消失，或换成另一章"
+              "——比如金刚经的一段变成道德经的内容。现在每天的经文是固定的："
+              "切换语言只是把同一段经文换成另一种语言，不会再重新选经，"
+              "瞬间完成且无需联网。\n"
+              "\n"
+              "经文、章节和反思在一天之内中英两个界面完全一致。"
+              "本次更新前已保存的内容同样保留。"
           )
           # 推广文本（Promotional Text，170 字符上限）—— 可随时改，不需要送审
           # 上线后想换主打卖点（如节日、新功能）直接改这两条重跑本 workflow 即可
