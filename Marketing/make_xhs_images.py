@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 # 生成 TaoMind 小红书首篇的 4 张图（不依赖真机截图的那些）
 # 输出目录见下方 OUT 常量
-#
-# 2026-10-01：全部改用 layout_check.Layout —— 跑完直接打印每行真实 y 区间并报重叠。
-# 不要再 Read 回 PNG 判断"挤不挤"：图像里没有几何信息，那样判永远收敛不了。
-import os, sys
+import os
 from PIL import Image, ImageDraw, ImageFont
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from layout_check import Layout
 
 CARD = r"C:\Users\Cyan\Desktop\TaoMind-iOS\Card"
 OUT  = r"C:\Users\Cyan\Desktop\TaoMind-iOS\Marketing\xhs"
@@ -32,87 +26,85 @@ def f(size, bold=True):
         return ImageFont.truetype(r"C:\Windows\Fonts\simhei.ttf", size)
 
 
-def text_block(L, y, lines, font, fill, gap=24):
-    """逐行绘制并登记。每行的步进由 Layout.text 按真实字形高度算。"""
-    for ln in lines:
-        y = L.text(y, ln, font, fill) + gap
-    return y
+def center(draw, y, text, font, fill, W=W):
+    """按文字实际宽度居中绘制，返回下一行顶部 y。
 
-
-def footer(L, lines, min_top=None):
-    """把脚注贴到底部安全区（小红书底部约留 90px）。
-
-    min_top: 内容实际结束的 y。若脚注起点会越过它，说明内容太长——
-    此时把脚注压在 min_top 之下，宁可整体下移也不让两段重叠。
+    ⚠️ 必须用 font.getmetrics() 的行高做步进，不能用 textbbox 的墨迹高度——
+    textbbox 只量字形实际占的像素（size 58 只有 58px），而字体行盒是 78px，
+    用墨迹高度步进会让上下两行字形重叠。
     """
-    heights = [sum(font.getmetrics()) for _, font, _ in lines]
-    total = sum(heights) + 22 * (len(lines) - 1)
-    y = H - 90 - total
-    if min_top is not None and y < min_top + 30:
-        y = min_top + 30
-    for (text, font, fill) in lines:
-        L.text(y, text, font, fill)
-        y += sum(font.getmetrics()) + 22
+    box = draw.textbbox((0, 0), text, font=font)
+    w = box[2] - box[0]
+    draw.text(((W - w) / 2 - box[0], y - box[1]), text, font=font, fill=fill)
+    return y + sum(font.getmetrics())
+
+
+def text_block(draw, y, lines, font, fill, gap=24, W=W):
+    for ln in lines:
+        y = center(draw, y, ln, font, fill, W) + gap
     return y
 
 
-def dump(L, tag):
-    print(f"--- {tag} geometry ---")
-    for label, x, yy, w, h, kind in L.items:
-        print(f"  {label:<26} y {yy:7.1f} .. {yy + h:7.1f}   h={h:5.1f}  [{kind}]")
-    print()
+def footer(draw, lines):
+    """把脚注贴到底部安全区（小红书底部约留 90px），倒推算起点，避免重叠"""
+    y = H - 90
+    heights = []
+    for text, font, fill in lines:
+        heights.append(sum(font.getmetrics()))
+    total = sum(heights) + 22 * (len(lines) - 1)
+    y -= total
+    for (text, font, fill), h in zip(lines, heights):
+        center(draw, y, text, font, fill)
+        y += h + 22
 
 
 # ---------------------------------------------------------------- 图 3 产品内核
 def img3():
-    L = Layout(W, H, PAPER)
-    canvas, d = L.canvas, L.draw
-
+    canvas = Image.new("RGB", (W, H), PAPER)
     # 三张珍藏卡横排
     cards = [Image.open(os.path.join(CARD, f"{n}_final.jpg")).convert("RGB")
              for n in (7, 20, 46)]
     cw, ch = 340, 604                     # 3:4 裁切后的卡片尺寸
     xs = [58, 451, 844]
     for im, x in zip(cards, xs):
+        # 居中裁成 3:4
         im2 = im.copy()
         tw, th = im2.width, int(im2.width * ch / cw)
         top = (im2.height - th) // 2
         im2 = im2.crop((0, top, tw, top + th)).resize((cw, ch), Image.LANCZOS)
+        # 细边框
         bd = Image.new("RGB", (cw + 6, ch + 6), (214, 206, 192))
         bd.paste(im2, (3, 3))
         canvas.paste(bd, (x, 150))
 
-    # 三张卡片整体登记成一个占位块：文字不许压到它们
-    L.block(55, 147, W - 110, 610, "珍藏卡横排 y150..757")
-
+    d = ImageDraw.Draw(canvas)
     y = 830
-    y = text_block(L, y, ["你输入今天的困境"], f(78), INK, gap=18)
-    y = text_block(L, y, ["它用 2500 年前的智慧回答你"], f(58), ACCENT, gap=18)
+    y = text_block(d, y, ["你输入今天的困境"], f(78), INK, gap=18)
+    y = text_block(d, y, ["它用 2500 年前的智慧回答你"], f(58), ACCENT, gap=18)
 
-    L.text(1500, "TaoMind · 道德经 81 章 + 金刚经 32 品 + 庄子精选",
+    # 底部小字
+    center(d, 1500, "TaoMind · 道德经 81 章 + 金刚经 32 品 + 庄子精选",
            f(34, False), INK_SOFT)
-
-    dump(L, "03 产品内核")
-    L.report(out_path=os.path.join(OUT, "03_产品内核.png"))
+    canvas.save(os.path.join(OUT, "03_产品内核.png"))
     print("03 ok")
 
 
 # ---------------------------------------------------------------- 图 4 数据面板
 def img4():
-    L = Layout(W, H, PAPER)
-    d = L.draw
+    canvas = Image.new("RGB", (W, H), (28, 28, 32))
+    d = ImageDraw.Draw(canvas)
 
-    L.text(170, "TaoMind 上线至今", f(48, False), INK_SOFT)
-    L.rule(250, x0=W / 2 - 60, x1=W / 2 + 60)
+    center(d, 170, "TaoMind 上线至今", f(48, False), (150, 148, 144))
+    d.line([(W / 2 - 60, 250), (W / 2 + 60, 250)], fill=(72, 72, 78), width=3)
 
     rows = [
-        ("60",  "个用户",          INK),
-        ("0",   "个人付费",        ACCENT),
-        ("166", "条经文内容",      INK),
-        ("60",  "张珍藏卡插画",    INK),
-        ("5.0", "App Store 评分",  INK),
+        ("60",    "个用户",        (245, 243, 238)),
+        ("0",     "个人付费",      (232, 128, 100)),
+        ("166",   "条经文内容",    (245, 243, 238)),
+        ("60",    "张珍藏卡插画",  (245, 243, 238)),
+        ("5.0",   "App Store 评分", (245, 243, 238)),
     ]
-    y = 380
+    y = 370
     for num, label, col in rows:
         nb = d.textbbox((0, 0), num, font=f(120))
         nw = nb[2] - nb[0]
@@ -122,57 +114,48 @@ def img4():
         x = (W - total) / 2
         d.text((x - nb[0], y - nb[1]), num, font=f(120), fill=col)
         d.text((x + nw + 30 - lb[0], y + 62 - lb[1]), label,
-               font=f(40, False), fill=INK_SOFT)
-        # 数字和标签同属一行，整体按 y..y+168 登记（含下方分隔线）
-        L.block(x, y, total, 168, f"{num} {label}")
-        if num != "5.0":
-            d.line([(230, y + 168), (W - 230, y + 168)], fill=(228, 220, 206), width=2)
+               font=f(40, False), fill=(160, 158, 154))
         y += 210
 
-    footer(L, [("数字都是真的，包括那个 0", f(38, False), ACCENT)], min_top=y)
-
-    dump(L, "04 数据面板")
-    L.report(out_path=os.path.join(OUT, "04_数据面板.png"))
+    footer(d, [("数字都是真的，包括那个 0", f(38, False), (140, 138, 134))])
+    canvas.save(os.path.join(OUT, "04_数据面板.png"))
     print("04 ok")
 
 
 # ---------------------------------------------------------------- 图 5 IAP bug
 def img5():
-    L = Layout(W, H, PAPER)
-    d = L.draw
+    canvas = Image.new("RGB", (W, H), PAPER)
+    d = ImageDraw.Draw(canvas)
 
-    # 顶部引号装饰（不算正文，体积很小，仍然登记避免被压）
-    L.text(110, "“", f(200), (214, 205, 190))
+    # 顶部引号装饰
+    center(d, 110, "“", f(200), (214, 205, 190))
 
     y = 300
-    y = text_block(L, y, ["苹果拒了我一次"], f(74), INK, gap=30)
-    y = text_block(L, y, ["理由是："], f(74), INK, gap=48)
+    y = text_block(d, y, ["苹果拒了我一次"], f(74), INK, gap=30)
+    y = text_block(d, y, ["理由是："], f(74), INK, gap=48)
 
     # 引用框
     box_t, box_b = 530, 730
     d.rectangle([110, box_t, W - 110, box_b], fill=(240, 234, 222))
     d.text((165, box_t + 45), "App 内购买项目", font=f(48), fill=INK)
     d.text((165, box_t + 122), "不易找到", font=f(48), fill=INK)
-    L.block(110, box_t, W - 220, box_b - box_t, "引用框 y530..730")
 
-    y = 810
-    y = text_block(L, y, ["我当时觉得挺冤"], f(54), INK, gap=10)
-    y = text_block(L, y, ["我明明做了付费墙"], f(54), INK, gap=52)
+    y = 830
+    y = text_block(d, y, ["我当时觉得挺冤"], f(58), INK, gap=44)
+    y = text_block(d, y, ["我明明做了付费墙"], f(58), INK, gap=64)
 
-    y = text_block(L, y, ["查了两天才发现"], f(50), INK_SOFT, gap=16)
-    y = text_block(L, y, ["有个终身买断选项"], f(58), INK, gap=8)
-    y = text_block(L, y, ["挂在了 app 根本没读取的地方"], f(58), ACCENT, gap=26)
+    y = text_block(d, y, ["查了两天才发现"], f(54), INK_SOFT, gap=34)
+    y = text_block(d, y, ["有个终身买断选项"], f(64), INK, gap=26)
+    y = text_block(d, y, ["挂在了 app 根本没读取的地方"], f(64), ACCENT, gap=54)
 
-    y = text_block(L, y, ["从上线那天起"], f(54), INK, gap=8)
-    y = text_block(L, y, ["没有任何一个用户能看到它"], f(54), INK, gap=8)
+    y = text_block(d, y, ["从上线那天起"], f(56), INK, gap=26)
+    y = text_block(d, y, ["没有任何一个用户能看到它"], f(56), INK, gap=26)
 
-    footer(L, [
+    footer(d, [
         ("所以我以为的「0 付费」", f(40, False), INK_SOFT),
         ("有一部分是：有个东西根本买不到", f(40, False), ACCENT),
-    ], min_top=y)
-
-    dump(L, "05 IAP bug")
-    L.report(out_path=os.path.join(OUT, "05_IAP_bug.png"))
+    ])
+    canvas.save(os.path.join(OUT, "05_IAP_bug.png"))
     print("05 ok")
 
 
@@ -180,6 +163,7 @@ def img5():
 def img6():
     # 珍藏卡做底 + 半透明蒙版 + 文字
     base = Image.open(os.path.join(CARD, "46_final.jpg")).convert("RGB")
+    # 裁成 3:4 并放大到画布
     th = int(base.width * H / W)
     top = max(0, (base.height - th) // 2)
     base = base.crop((0, top, base.width, top + th)).resize((W, H), Image.LANCZOS)
@@ -187,25 +171,24 @@ def img6():
     veil = Image.new("RGB", (W, H), (250, 246, 238))
     base = Image.blend(base, veil, 0.62)
 
-    L = Layout(W, H, PAPER)
-    L.canvas = base                       # 直接在底图上画
-    L.draw = ImageDraw.Draw(base)
+    d = ImageDraw.Draw(base)
 
+    # 上部：核心信息
     y = 440
-    y = text_block(L, y, ["它现在国内也能下载了"], f(70), INK, gap=34)
-    y = text_block(L, y, ["免费，搜 TaoMind"], f(70), ACCENT, gap=30)
+    y = text_block(d, y, ["它现在国内也能下载了"], f(70), INK, gap=34)
+    y = text_block(d, y, ["免费，搜 TaoMind"], f(70), ACCENT, gap=30)
 
-    L.rule(y + 70, x0=340, x1=W - 340, color=(198, 190, 176))
+    # 分隔线
+    d.line([(340, y + 70), (W - 340, y + 70)], fill=(198, 190, 176), width=3)
 
+    # 下部：下一篇预告
     y = y + 170
-    y = text_block(L, y, ["下一篇"], f(44, False), INK_SOFT, gap=30)
-    y = text_block(L, y, ["我怎么发现有个付费项"], f(56), INK, gap=20)
-    y = text_block(L, y, ["从来没人能买到"], f(56), INK, gap=20)
+    y = text_block(d, y, ["下一篇"], f(44, False), INK_SOFT, gap=30)
+    y = text_block(d, y, ["我怎么发现有个付费项"], f(56), INK, gap=20)
+    y = text_block(d, y, ["从来没人能买到"], f(56), INK, gap=20)
 
-    footer(L, [("TaoMind", f(40, False), INK_SOFT)])
-
-    dump(L, "06 结尾")
-    L.report(out_path=os.path.join(OUT, "06_结尾.png"))
+    footer(d, [("TaoMind", f(40, False), INK_SOFT)])
+    base.save(os.path.join(OUT, "06_结尾.png"))
     print("06 ok")
 
 
