@@ -100,9 +100,9 @@ jobs:
           #   现改为「一天一条语言无关的日期实体」：中英两槽住在实体内部，切语言通常
           #   纯本地读（0 网络 / 0 LLM 额度 / 章节绝对不变），只在目标槽为空时补一次，
           #   且用另一槽锁死 source + chapter。
-          # ⚠️ train 关闭规律：1.8.0 已批准上线 → 新 build 必须严格高于 1.8.0，否则 409。
-          VERSION = "1.8.1"
-          BUILD = "69"
+          # ⚠️ train 关闭规律：1.8.1 已批准上线 → 新 build 必须严格高于 1.8.1，否则 409。
+          VERSION = "1.8.2"
+          BUILD = "70"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
@@ -111,32 +111,25 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.1 用户能感知的增量：
-          #   - 修复切语言导致经文换章 / 整块消失（详见上方 1.8.1 根因注释）
+          # 1.8.2 用户能感知的增量：
+          #   - 珍藏卡补齐至 81 章（新增 61-81 共 21 张卡面；纯资源，代码零改动）
           # 面向终端读者写，不写 localized() / cache key / LLM prompt 这类实现细节
           WHATS_NEW_EN = (
-              "Fixed: your verse no longer changes when you switch languages\n"
+              "New: 21 more commemorative cards\n"
               "\n"
-              "If you read TaoMind in Chinese and then switched the app to English, "
-              "today's verse could vanish or swap to a different chapter — a Diamond "
-              "Sutra passage turning into something from the Tao Te Ching. The verse "
-              "for the day is now fixed. Switching languages shows the same passage in "
-              "the other language instead of choosing a new one, and it happens "
-              "instantly with no network needed.\n"
+              "The card collection now covers all 81 chapters. Cards 61 through 81 "
+              "are in, drawn in the same style as the rest: chapter number, the "
+              "passage in vertical type, and an English line alongside.\n"
               "\n"
-              "Today's verse, chapter, and reflection stay the same all day in both "
-              "languages. Anything saved before this update is kept."
+              "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "修复：切换语言不再更换经文\n"
+              "新增：21 张珍藏卡\n"
               "\n"
-              "在中文界面读到的每日经文，切到英文时可能整块消失，或换成另一章"
-              "——比如金刚经的一段变成道德经的内容。现在每天的经文是固定的："
-              "切换语言只是把同一段经文换成另一种语言，不会再重新选经，"
-              "瞬间完成且无需联网。\n"
+              "珍藏卡补齐至八十一章。61 至 81 章入册，沿用同一套画风："
+              "章号、竖排经文、英文对照与太极落款齐备。\n"
               "\n"
-              "经文、章节和反思在一天之内中英两个界面完全一致。"
-              "本次更新前已保存的内容同样保留。"
+              "其余功能与之前一致。"
           )
           # 推广文本（Promotional Text，170 字符上限）—— 可随时改，不需要送审
           # 上线后想换主打卖点（如节日、新功能）直接改这两条重跑本 workflow 即可
@@ -380,4 +373,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.7.6 (64) — What's New filled, submitted for App Store review."
+          echo "Published 1.8.2 (70) — What's New filled, submitted for App Store review."
