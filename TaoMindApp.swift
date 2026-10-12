@@ -252,10 +252,12 @@ class AppState: ObservableObject {
     private let usageDateKey = "dailySeekDate"
     private let totalSeekCountKey = "totalSeekCount"
 
-    /// 免费额度分两档：首日 3 次（尝到完整价值），次日起每天 1 次（制造付费动因）。
+    /// 免费额度：每天 3 次。
+    /// 分档结构（首日 / 次日起）保留备用 —— 2026-10-12 起两档取同值，
+    /// 将来若要恢复「首日多、之后少」，只改下面两个数值即可。
     /// 首日按 installDate 的本地日历日判定 —— 装机当天就该算首日，与账号注册时间无关。
     private let firstDayFreeLimit = 3
-    private let subsequentFreeLimit = 1
+    private let subsequentFreeLimit = 3
 
     private var isFirstDay: Bool {
         Calendar.current.isDate(installDate, inSameDayAs: Date())

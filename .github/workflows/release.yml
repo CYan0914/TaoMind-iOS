@@ -100,9 +100,9 @@ jobs:
           #   现改为「一天一条语言无关的日期实体」：中英两槽住在实体内部，切语言通常
           #   纯本地读（0 网络 / 0 LLM 额度 / 章节绝对不变），只在目标槽为空时补一次，
           #   且用另一槽锁死 source + chapter。
-          # ⚠️ train 关闭规律：1.8.1 已批准上线 → 新 build 必须严格高于 1.8.1，否则 409。
-          VERSION = "1.8.2"
-          BUILD = "70"
+          # ⚠️ train 关闭规律：1.8.2 已批准上线（2026-10-06）→ 新 build 必须严格高于 1.8.2，否则 409。
+          VERSION = "1.8.3"
+          BUILD = "71"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
@@ -111,23 +111,24 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.2 用户能感知的增量：
-          #   - 珍藏卡补齐至 81 章（新增 61-81 共 21 张卡面；纯资源，代码零改动）
-          # 面向终端读者写，不写 localized() / cache key / LLM prompt 这类实现细节
+          # 1.8.3 用户能感知的增量：
+          #   - 免费额度由「首日 3 次、次日起每天 1 次」改为「每天 3 次」
+          # 面向终端读者写，不写 currentFreeLimit / _free_daily_limit 这类实现细节
           WHATS_NEW_EN = (
-              "New: 21 more commemorative cards\n"
+              "More free sessions every day\n"
               "\n"
-              "The card collection now covers all 81 chapters. Cards 61 through 81 "
-              "are in, drawn in the same style as the rest: chapter number, the "
-              "passage in vertical type, and an English line alongside.\n"
+              "You now get three free wisdom sessions each day, instead of three on "
+              "your first day and one after that. The way it works has not changed: "
+              "write down what you are stuck on, and you get the chapter that speaks "
+              "to it.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "新增：21 张珍藏卡\n"
+              "每天免费次数增至 3 次\n"
               "\n"
-              "珍藏卡补齐至八十一章。61 至 81 章入册，沿用同一套画风："
-              "章号、竖排经文、英文对照与太极落款齐备。\n"
+              "免费用户现在每天都能求取 3 次智慧，不再是首日 3 次、之后每天 1 次。"
+              "用法不变：写下你卡住的地方，它给你对症的那一章。\n"
               "\n"
               "其余功能与之前一致。"
           )
@@ -373,4 +374,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.8.2 (70) — What's New filled, submitted for App Store review."
+          echo "Published 1.8.3 (71) — What's New filled, submitted for App Store review."

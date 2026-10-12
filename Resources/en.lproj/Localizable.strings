@@ -75,7 +75,7 @@
 
 /* ===== Quota exhausted (HTTP 429, shown instead of a network error) ===== */
 "quota_reached_title" = "Today's wisdom sessions are used up";
-/* 1.7.4 起免费额度改为「首日 3 次、次日起 1 次」→ 文案不再写死次数 */
+/* 2026-10-12 起免费额度统一为每天 3 次 → 文案仍不写死次数 */
 "quota_reached_body" = "Your free sessions for today are used up — they reset tomorrow. Pro is unlimited, and unlocks the full chapter narrations.";
 "quota_reached_cta" = "Go Pro · Unlimited";
 "quota_reached_generic" = "Today's free limit is used up — it resets tomorrow.";
