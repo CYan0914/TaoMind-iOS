@@ -110,6 +110,7 @@ struct CommemorativeCardUnlockView: View {
     let isChinese: Bool
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.displayScale) private var displayScale
     @State private var revealed = false
     @State private var showShare = false
 
@@ -163,7 +164,7 @@ struct CommemorativeCardUnlockView: View {
             }
         }
         .sheet(isPresented: $showShare) {
-            if let img = CommemorativeCardRenderer.image(for: card, isChinese: isChinese) {
+            if let img = CommemorativeCardRenderer.image(for: card, isChinese: isChinese, scale: displayScale) {
                 ShareSheet(activityItems: [img])
             }
         }
@@ -266,6 +267,7 @@ private struct CardDetailSheet: View {
     let card: CommemorativeCard
     let isChinese: Bool
 
+    @Environment(\.displayScale) private var displayScale
     @State private var showShare = false
 
     var body: some View {
@@ -292,7 +294,7 @@ private struct CardDetailSheet: View {
         .paperBackground()
         .presentationDetents([.medium, .large])
         .sheet(isPresented: $showShare) {
-            if let img = CommemorativeCardRenderer.image(for: card, isChinese: isChinese) {
+            if let img = CommemorativeCardRenderer.image(for: card, isChinese: isChinese, scale: displayScale) {
                 ShareSheet(activityItems: [img])
             }
         }
@@ -355,9 +357,12 @@ private struct CommemorativeCardShareView: View {
 
 @MainActor
 enum CommemorativeCardRenderer {
-    static func image(for card: CommemorativeCard, isChinese: Bool, attribution: String? = nil) -> UIImage? {
+    /// `scale` 由调用方从 `@Environment(\.displayScale)` 传入。原来读 `UIScreen.main.scale`：
+    /// 那是「全局主屏」的假定，在 iPhone Duo 展开态（以及 iPad 多窗口）下取到的未必是
+    /// 当前窗口的倍率，Apple 的坏模式清单点名此 API。
+    static func image(for card: CommemorativeCard, isChinese: Bool, attribution: String? = nil, scale: CGFloat) -> UIImage? {
         let renderer = ImageRenderer(content: CommemorativeCardShareView(card: card, isChinese: isChinese, attribution: attribution))
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = scale
         return renderer.uiImage
     }
 }

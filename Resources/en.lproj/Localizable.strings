@@ -176,6 +176,11 @@
 /* ===== Zhuangzi (2026-09-12) ===== */
 "library_zhuangzi" = "Zhuangzi";
 
+/* ===== Mahayana Dharma Teachings (2026-10-31) ===== */
+"library_dasheng" = "Mahayana Dharma Teachings";
+"library_hub_teachings" = "Dharma talks";
+"library_hub_talks_fmt" = "%d talks";
+
 /* ===== 打卡换 7 天 Pro 体验卡（1.7.4）===== */
 "trial_progress_title" = "7 days in a row earns 7 days of Pro";
 "trial_progress_fmt" = "%d of %d days in a row";

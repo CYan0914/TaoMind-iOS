@@ -319,11 +319,16 @@ struct SeekWisdomView: View {
             }
             .padding()
         }
-        // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
-        // 让 Wisdom Result 屏不被 iOS tab bar 切。
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 100)
-        }
+        // 原来这里有 100pt 透明 safeAreaInset「躲 tab bar」。已删：ScrollView 本身就在
+        // tab bar 的安全区内，这层是重复补偿。iPhone Duo 展开后 tab bar 移到右缘，
+        // 它会变成底部死白。
+        //
+        // 展开态限宽：本页主体是「经文卡 + 输入框 + 结果长文」，铺满内屏宽后
+        // 结果段落每行 40+ 字，眼睛找不到下一行起点。限到 640 居中；窄屏可用宽
+        // 本就不足 640，行为不变。
+        // ⚠️ 排在 `.paperBackground()` 之前 —— 纸色靠 ignoresSafeArea 铺满，
+        // 若限宽在它外层，两侧会露出 TabView 的白底。
+        .readableColumn(max: 640)
         .paperBackground()
         .scrollDismissesKeyboard(.immediately)
         .toolbar {

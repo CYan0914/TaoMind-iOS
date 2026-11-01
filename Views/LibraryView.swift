@@ -57,9 +57,14 @@ struct LibraryView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
-            // 修设计审计 2026-09-02 Blocker 2：ScrollView 内容底部加 100pt 留白，
-            // 让最后一张卡不被 iOS tab bar 切。（safeAreaPadding 是 iOS 17+，本工程部署 iOS 16，用 padding 兜底）
-            .padding(.bottom, 100)
+            // 普通内容留白。原来这里写死 100pt 去「躲 tab bar」——那是重复补偿：
+            // ScrollView 本来就在 tab bar 的安全区内。iPhone Duo 展开后 tab bar 移到
+            // 右缘，这 100pt 会变成底部死白。（safeAreaPadding 是 iOS 17+，本工程部署 iOS 16）
+            .padding(.bottom, 16)
+            // 展开态限宽：7 张入口卡是「图标 + 标题 + 副标题 + 计数 + chevron」的横向行，
+            // 铺满内屏宽后每张卡中间空出大片。限到 640 居中；窄屏可用宽本就不足 640，行为不变。
+            // 加在 VStack 上而非 ScrollView 上：滚动区域保持全宽，只有内容列居中。
+            .readableColumn(max: 640)
         }
         .navigationDestination(for: LibraryDestination.self) { dest in
             switch dest {
@@ -101,6 +106,12 @@ struct LibraryView: View {
                 )
             case .jingjiang:
                 LibraryJingjiangView()
+            case .dasheng:
+                LibrarySourceView(
+                    title: AppState.tr("library_dasheng"),
+                    source: "大乘佛法开示",
+                    entries: dashengEntries
+                )
             }
         }
     }
@@ -160,6 +171,11 @@ struct LibraryView: View {
     /// 庄子精选（2026-09-12）。source 是中文，与后端 seed 一致。
     private var zhuangziEntries: [LibraryEntry] {
         entries.filter { $0.source == "庄子" }.sorted { $0.display_order < $1.display_order }
+    }
+
+    /// 大乘佛法开示（2026-10-31）。source 是中文，与后端 seed 一致。
+    private var dashengEntries: [LibraryEntry] {
+        entries.filter { $0.source == "大乘佛法开示" }.sorted { $0.display_order < $1.display_order }
     }
 
     private var hubItems: [LibraryHubItem] {
@@ -225,6 +241,17 @@ struct LibraryView: View {
                 destination: .zhuangzi
             ))
         }
+        if !dashengEntries.isEmpty {
+            items.append(LibraryHubItem(
+                id: "dasheng",
+                title: AppState.tr("library_dasheng"),
+                subtitle: AppState.tr("library_hub_teachings"),
+                countText: AppState.tr("library_hub_talks_fmt", dashengEntries.count),
+                icon: "sparkles",
+                requiresPro: false,
+                destination: .dasheng
+            ))
+        }
         if !jingjiang.chapters.isEmpty {
             items.append(LibraryHubItem(
                 id: "jingjiang",
@@ -273,6 +300,7 @@ private enum LibraryDestination: Hashable {
     case zhuangzi
     case diamondSutra
     case jingjiang
+    case dasheng
 }
 
 // MARK: - Hub Item 描述

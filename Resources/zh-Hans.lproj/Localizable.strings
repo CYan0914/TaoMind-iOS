@@ -302,6 +302,11 @@
 /* ===== 庄子精选 (2026-09-12) ===== */
 "library_zhuangzi" = "庄子";
 
+/* ===== 大乘佛法开示 (2026-10-31) ===== */
+"library_dasheng" = "大乘佛法开示";
+"library_hub_teachings" = "师父开示";
+"library_hub_talks_fmt" = "%d 讲";
+
 /* ===== 打卡换 7 天 Pro 体验卡（1.7.4）===== */
 "trial_progress_title" = "连续打卡 7 天，得 7 天 Pro";
 "trial_progress_fmt" = "已连续 %d 天，共 %d 天";

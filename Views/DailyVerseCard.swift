@@ -47,5 +47,8 @@ struct DailyVerseCard: View {
         }
         .padding(20)
         .paperCard()
+        // 展开态限宽：卡内全是居中长句（经文 + 感悟），铺满内屏宽会读成一条横线。
+        // 限到 600 居中；窄屏可用宽本就不足 600，行为不变。
+        .readableColumn(max: 600)
     }
 }

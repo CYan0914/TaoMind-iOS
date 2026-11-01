@@ -192,11 +192,13 @@ struct PracticeView: View {
             }
             .padding(.top, 40)
         }
-        // 修设计审计 2026-09-02 Blocker 2：底 tab bar 49pt + home indicator 34pt ≈ 100pt
-        // 留白让 Practice 主屏内容不被 tab bar 覆盖。
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 100)
-        }
+        // 原来这里有 100pt 透明 safeAreaInset「躲 tab bar」。已删：内容本身就在
+        // tab bar 的安全区内，这层是重复补偿。iPhone Duo 展开后 tab bar 移到右缘，
+        // 它会变成底部死白。
+        //
+        // 展开态限宽：登录页是「☯ + 标题 + 两行说明 + 两个按钮」，铺满内屏宽后
+        // 两个按钮拉成 1000pt 长的黑条。限到 560 居中；窄屏零变化。
+        .readableColumn(max: 560)
     }
 
     // MARK: - Signed in content
@@ -262,11 +264,14 @@ struct PracticeView: View {
             }
             .padding()
         }
-        // 修设计审计 2026-09-02 Blocker 2：ScrollView 底部加 100pt 透明 inset，
-        // 避免最后一段（如历史打卡、Master Guidance、Reflection 输入框）被 iOS tab bar 切。
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 100)
-        }
+        // 原来这里有 100pt 透明 safeAreaInset「躲 tab bar」。已删：ScrollView 本身就在
+        // tab bar 的安全区内，这层是重复补偿。iPhone Duo 展开后 tab bar 移到右缘，
+        // 它会变成底部死白。
+        //
+        // 展开态限宽：本页是一列卡片（连击头 + 心情 chip + 入口卡 + 经文卡 +
+        // 输入框 + 历史），铺满内屏宽后每张卡都拉成横条。限到 680 居中；窄屏零变化。
+        // 排在 `.overlay` 之前，错误横幅一并居中。
+        .readableColumn(max: 680)
         .overlay(alignment: .top) {
             if errorMessage != nil {
                 errorBanner

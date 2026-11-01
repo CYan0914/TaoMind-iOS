@@ -23,6 +23,9 @@ struct JingjiangDetailView: View {
             .padding(.horizontal, 18)
             .padding(.top, 12)
             .padding(.bottom, 40)
+            // 展开态限宽：本页是长文精讲（原文 + 通释 + 反常识 + 场景 + 张力 + 行动），
+            // 铺满内屏宽后每行 40+ 汉字，眼睛找不到下一行起点。限到 640 居中。
+            .readableColumn(max: 640)
         }
         .paperBackground()
         .navigationTitle(AppState.tr("library_jingjiang"))

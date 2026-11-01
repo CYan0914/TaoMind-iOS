@@ -101,8 +101,8 @@ jobs:
           #   纯本地读（0 网络 / 0 LLM 额度 / 章节绝对不变），只在目标槽为空时补一次，
           #   且用另一槽锁死 source + chapter。
           # ⚠️ train 关闭规律：1.8.2 已批准上线（2026-10-06）→ 新 build 必须严格高于 1.8.2，否则 409。
-          VERSION = "1.8.3"
-          BUILD = "71"
+          VERSION = "1.8.4"
+          BUILD = "72"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
@@ -111,24 +111,29 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.3 用户能感知的增量：
-          #   - 免费额度由「首日 3 次、次日起每天 1 次」改为「每天 3 次」
-          # 面向终端读者写，不写 currentFreeLimit / _free_daily_limit 这类实现细节
+          # 1.8.4 用户能感知的增量：
+          #   - 经藏新增《大乘佛法开示》5 讲（中英双语）
+          #   - 大屏（折叠屏展开 / iPad）正文限行宽居中
+          # 面向终端读者写，不写 source 常量 / readableColumn 这类实现细节
           WHATS_NEW_EN = (
-              "More free sessions every day\n"
+              "New collection: Mahayana Dharma Teachings\n"
               "\n"
-              "You now get three free wisdom sessions each day, instead of three on "
-              "your first day and one after that. The way it works has not changed: "
-              "write down what you are stuck on, and you get the chapter that speaks "
-              "to it.\n"
+              "Five recent dharma talks are now in the library, each in Chinese and "
+              "English. Open a talk to read it in full, section by section.\n"
+              "\n"
+              "Reading on a large screen is better too: on a foldable or iPad the text "
+              "now stays in a comfortable column instead of stretching edge to edge.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "每天免费次数增至 3 次\n"
+              "新增《大乘佛法开示》\n"
               "\n"
-              "免费用户现在每天都能求取 3 次智慧，不再是首日 3 次、之后每天 1 次。"
-              "用法不变：写下你卡住的地方，它给你对症的那一章。\n"
+              "经藏新增五篇师父开示，中英双语，可在「经藏」中打开。每篇为完整讲稿，"
+              "按段落呈现，一节一节读下去。\n"
+              "\n"
+              "大屏阅读也更舒服了：折叠屏展开或 iPad 上，正文会收在合适的行宽内居中，"
+              "不再左右拉满。\n"
               "\n"
               "其余功能与之前一致。"
           )
@@ -374,4 +379,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.8.3 (71) — What's New filled, submitted for App Store review."
+          echo "Published 1.8.4 (72) — What's New filled, submitted for App Store review."

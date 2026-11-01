@@ -99,6 +99,7 @@ struct ShareCardView: View {
 /// Presents the card with a share button that renders it to an image.
 struct ShareCardPreviewSheet: View {
     let content: ShareCardContent
+    @Environment(\.displayScale) private var displayScale
     @State private var showShareSheet = false
 
     var body: some View {
@@ -126,7 +127,7 @@ struct ShareCardPreviewSheet: View {
         .padding(.top, 24)
         .presentationDetents([.medium, .large])
         .sheet(isPresented: $showShareSheet) {
-            if let img = ShareCardRenderer.image(for: content) {
+            if let img = ShareCardRenderer.image(for: content, scale: displayScale) {
                 ShareSheet(activityItems: [img])
             }
         }
@@ -138,9 +139,12 @@ struct ShareCardPreviewSheet: View {
 @MainActor
 enum ShareCardRenderer {
     /// Render a ShareCardView to a UIImage for the share sheet (iOS 16+).
-    static func image(for content: ShareCardContent) -> UIImage? {
+    /// `scale` 由调用方从 `@Environment(\.displayScale)` 传入。原来读 `UIScreen.main.scale`：
+    /// 那是「全局主屏」的假定，在 iPhone Duo 展开态（以及 iPad 多窗口）下取到的未必是
+    /// 当前窗口的倍率，Apple 的坏模式清单点名此 API。
+    static func image(for content: ShareCardContent, scale: CGFloat) -> UIImage? {
         let renderer = ImageRenderer(content: ShareCardView(content: content))
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = scale
         return renderer.uiImage
     }
 }

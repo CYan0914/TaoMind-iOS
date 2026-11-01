@@ -52,6 +52,9 @@ struct LibraryDetailView: View {
                 }
             }
             .padding()
+            // 展开态限宽：经文 + 精讲 + 感悟三段长文，铺满内屏宽会读成横线。
+            // 限到 640 居中；窄屏可用宽本就不足 640，行为不变。
+            .readableColumn(max: 640)
         }
         .paperBackground()
         .navigationTitle(entry.localizedChapter)

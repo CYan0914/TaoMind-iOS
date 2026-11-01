@@ -176,6 +176,24 @@ extension View {
         self.toolbarBackground(DS.tabBarBackground, for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
     }
+
+    /// 宽屏（iPhone Duo 展开态 / iPad）限最大行宽并居中；窄屏原样不动。
+    ///
+    /// 为什么不用 sizeClass 分支：`maxWidth` 是**上限**不是目标值 —— 窄屏（iPhone 竖屏
+    /// 可用宽 ~390）下 `min(390, 640) == 390`，两行 frame 都是 no-op，行为完全不变。
+    /// 展开态（可用宽 ~1000）下第一行收到 640、第二行把它居中。一套代码两种形态。
+    ///
+    /// 判据是「最大阅读宽度」这个排版常量，不是设备尺寸比较 —— Apple 的 iPhone Duo
+    /// prepare 页点名要消除的是 `userInterfaceIdiom` 判设备、`UIScreen.main.bounds` 取尺寸、
+    /// 以及 `bounds.height == 844` 这类具体机型比较，限行宽不在其列（官方原文建议
+    /// 「Base layout choices on size classes or available space instead」）。
+    ///
+    /// iOS 16 兼容：不读几何、不读 sizeClass、不用 `safeAreaPadding`（iOS 17+）或
+    /// `onGeometryChange`（iOS 18+）。
+    func readableColumn(max width: CGFloat = 640) -> some View {
+        self.frame(maxWidth: width)
+            .frame(maxWidth: .infinity)
+    }
 }
 
 // MARK: - Text.markdown —— 修 Wisdom Result 的 *From / ** / --- 漏出

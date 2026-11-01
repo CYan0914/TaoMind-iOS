@@ -215,9 +215,13 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .safeAreaInset(edge: .bottom) {
-                Color.clear.frame(height: 100)
-            }
+            // 原来这里有 100pt 透明 safeAreaInset「躲 tab bar」。已删：List 本身就在
+            // tab bar 的安全区内，这层是重复补偿。iPhone Duo 展开后 tab bar 移到右缘，
+            // 它会变成底部死白。
+            //
+            // 展开态限宽：设置页全是短行，铺满 1000pt 宽后「Version ————— 1.8.3」
+            // 的中间会拉出一条长空白。限到 680 居中，窄屏零变化。
+            .readableColumn(max: 680)
         }
         .sheet(isPresented: $showReferral) {
             ReferralView()
