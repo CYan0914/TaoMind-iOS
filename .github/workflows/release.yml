@@ -101,8 +101,8 @@ jobs:
           #   纯本地读（0 网络 / 0 LLM 额度 / 章节绝对不变），只在目标槽为空时补一次，
           #   且用另一槽锁死 source + chapter。
           # ⚠️ train 关闭规律：1.8.2 已批准上线（2026-10-06）→ 新 build 必须严格高于 1.8.2，否则 409。
-          VERSION = "1.8.4"
-          BUILD = "72"
+          VERSION = "1.8.5"
+          BUILD = "73"
           # 2.1(b) 被拒后新增的 Lifetime 买断：ASC 上还是 Ready to Submit，
           # 必须随本次版本一起提交审核，否则审核员在 app 里仍看不到该 IAP
           LIFETIME_PRODUCT_ID = "taomind_pro_lifetime"
@@ -111,29 +111,31 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.4 用户能感知的增量：
-          #   - 经藏新增《大乘佛法开示》5 讲（中英双语）
-          #   - 大屏（折叠屏展开 / iPad）正文限行宽居中
-          # 面向终端读者写，不写 source 常量 / readableColumn 这类实现细节
+          # 1.8.5 用户能感知的增量：
+          #   - 经藏每篇文章新增分享按钮
+          #   - 沿用 1.8.4：《大乘佛法开示》合集 + 大屏正文限行宽
+          # 面向终端读者写，不写 ShareSheet / ToolbarItem 这类实现细节
           WHATS_NEW_EN = (
-              "New collection: Mahayana Dharma Teachings\n"
+              "Share any passage\n"
               "\n"
-              "Five recent dharma talks are now in the library, each in Chinese and "
-              "English. Open a talk to read it in full, section by section.\n"
+              "Every entry in the library now has a share button. Open a chapter or a "
+              "talk and you can send the full text to a friend, save it to Notes, or "
+              "copy it anywhere.\n"
               "\n"
-              "Reading on a large screen is better too: on a foldable or iPad the text "
-              "now stays in a comfortable column instead of stretching edge to edge.\n"
+              "This build also brings the new Mahayana Dharma Teachings collection, ten "
+              "recent talks in Chinese and English, and a comfortable reading column on "
+              "a foldable or iPad.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "新增《大乘佛法开示》\n"
+              "经藏文章支持分享\n"
               "\n"
-              "经藏新增五篇师父开示，中英双语，可在「经藏」中打开。每篇为完整讲稿，"
-              "按段落呈现，一节一节读下去。\n"
+              "经藏里的每一篇现在都有分享按钮。打开任意一篇经文或开示，就能把整篇正文"
+              "发给朋友、存到备忘录，或复制到任何地方。\n"
               "\n"
-              "大屏阅读也更舒服了：折叠屏展开或 iPad 上，正文会收在合适的行宽内居中，"
-              "不再左右拉满。\n"
+              "本次更新同时带来《大乘佛法开示》合集，十篇师父开示中英双语；"
+              "折叠屏展开或 iPad 上，正文也会收在合适的行宽内居中。\n"
               "\n"
               "其余功能与之前一致。"
           )
@@ -379,4 +381,4 @@ jobs:
       - name: Summary
         run: |
           gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.8.4 (72) — What's New filled, submitted for App Store review."
+          echo "Published 1.8.5 (73) — What's New filled, submitted for App Store review."

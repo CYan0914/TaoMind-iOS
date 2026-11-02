@@ -4,6 +4,13 @@ import SwiftUI
 
 struct LibraryDetailView: View {
     let entry: LibraryEntry
+    @State private var showShareSheet = false
+
+    /// 分享的是当前语言的整篇正文。标题用本地化后的章节名，
+    /// 这样英文界面分享出去是 Talk Six…，不会混进中文讲次。
+    private var shareText: String {
+        "\(entry.localizedChapter)\n\n\(entry.localizedVerse)"
+    }
 
     var body: some View {
         ScrollView {
@@ -59,5 +66,18 @@ struct LibraryDetailView: View {
         .paperBackground()
         .navigationTitle(entry.localizedChapter)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showShareSheet = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel(AppState.tr("Share"))
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(activityItems: [shareText])
+        }
     }
 }
