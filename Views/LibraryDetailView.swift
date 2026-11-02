@@ -4,6 +4,7 @@ import SwiftUI
 
 struct LibraryDetailView: View {
     let entry: LibraryEntry
+    @Environment(\.dismiss) private var dismiss
     @State private var showShareSheet = false
 
     /// 分享的是当前语言的整篇正文。标题用本地化后的章节名，
@@ -67,6 +68,16 @@ struct LibraryDetailView: View {
         .navigationTitle(entry.localizedChapter)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "chevron.left")
+                        Text(AppState.tr("Back"))
+                    }
+                }
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showShareSheet = true
