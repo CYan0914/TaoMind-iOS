@@ -111,27 +111,26 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.6 用户能感知的增量：
-          #   - 《大乘佛法开示》扩到 15 讲
-          #   - 每篇文章可分享
-          #   - 详情页左上角「返回」按钮
+          # 1.8.7 用户能感知的增量：
+          #   - 《大乘佛法开示》扩到 35 讲
+          #   - 分享改成「卡片图片 / 带链接的文字」，微信里可用
           # 面向终端读者写，不写 ShareSheet / ToolbarItem 这类实现细节
           WHATS_NEW_EN = (
-              "Five more talks, and a faster way back\n"
+              "Thirty-five talks, and sharing that works everywhere\n"
               "\n"
-              "Mahayana Dharma Teachings now holds fifteen talks in Chinese and English.\n"
+              "Mahayana Dharma Teachings now holds thirty-five talks in Chinese and English.\n"
               "\n"
-              "Every passage can be shared straight from the reading screen, and a Back "
-              "button returns you to the library list in one tap.\n"
+              "Share any passage as a card image, or send a link that opens the full text. "
+              "Both work in WeChat.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "新增五篇开示，分享与返回更顺手\n"
+              "经藏扩到三十五讲，分享在微信里也能用\n"
               "\n"
-              "《大乘佛法开示》现收录十五篇师父开示，中英双语。\n"
+              "《大乘佛法开示》现收录三十五篇师父开示，中英双语。\n"
               "\n"
-              "阅读任意一篇时，可直接分享整篇正文；左上角的「返回」按钮一步回到经藏列表。\n"
+              "分享时既可生成一张卡片图片，也可发送链接，在微信里点开就是全文。\n"
               "\n"
               "其余功能与之前一致。"
           )

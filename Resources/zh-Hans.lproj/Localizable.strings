@@ -50,6 +50,9 @@
 "The Reflection" = "反思";
 "The Way Forward" = "前进方向";
 "Share" = "分享";
+"share_as_card" = "分享图片";
+"share_as_text" = "分享文字";
+"share_read_full" = "全文阅读：";
 "Back" = "返回";
 "Copy" = "复制";
 "Copied to clipboard ✨" = "已复制到剪贴板 ✨";

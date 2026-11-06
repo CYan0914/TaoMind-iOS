@@ -115,6 +115,9 @@
 "card_collection_hint" = "One card for every day of practice — all 81 chapters of the Tao Te Ching";
 "card_collection_progress_fmt" = "%d / %d collected";
 "Share" = "Share";
+"share_as_card" = "Share as image";
+"share_as_text" = "Share as text";
+"share_read_full" = "Read the full text:";
 "Back" = "Back";
 "OK" = "OK";
 
