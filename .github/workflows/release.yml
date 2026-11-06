@@ -362,10 +362,16 @@ jobs:
                   print("!! lifetime IAP not found in ASC — skipping IAP attach")
               else:
                   life_id = lifetime["id"]
-                  print("lifetime IAP:", life_id, "state:", lifetime["attributes"].get("state"))
-                  api("POST", f"/appStoreVersions/{ver_id}/relationships/inAppPurchases",
-                      {"data": [{"type": "inAppPurchases", "id": life_id}]})
-                  print("lifetime IAP attached to version")
+                  state = lifetime["attributes"].get("state")
+                  print("lifetime IAP:", life_id, "state:", state)
+                  if state == "APPROVED":
+                      # 已过审的 IAP 不需要再随版本提交（2026-11-05 实测：对它调
+                      # relationships/inAppPurchases 恒 404，属预期，不是失败）
+                      print("lifetime IAP already approved — nothing to attach")
+                  else:
+                      api("POST", f"/appStoreVersions/{ver_id}/relationships/inAppPurchases",
+                          {"data": [{"type": "inAppPurchases", "id": life_id}]})
+                      print("lifetime IAP attached to version")
           except Exception as e:
               print("!! attach lifetime IAP failed:", e)
 
@@ -385,6 +391,7 @@ jobs:
           EOF
 
       - name: Summary
+        # 不再调 gh run view：workflow 没给 GH_TOKEN，那一步恒 exit 4，
+        # 会把已经成功的提审整条 run 标成 failure，白排查一次。
         run: |
-          gh run view ${{ github.run_id }} --json status,conclusion,url
-          echo "Published 1.8.6 (74) — What's New filled, submitted for App Store review."
+          echo "Submitted for App Store review — What's New filled from project.yml version."
