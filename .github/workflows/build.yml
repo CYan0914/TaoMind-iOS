@@ -442,5 +442,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run release.yml -R "$GITHUB_REPOSITORY"
+          # ⚠️ 必须带 --ref：不带就跑到默认分支 main，用的是 main 上那份
+          # 旧的 release.yml（版本号、What's New 全是旧值），会把 build 挂错版本而 409。
+          gh workflow run release.yml -R "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
           echo "Triggered release.yml — will fill What's New and submit ${VERSION:-1.3.0} (${BUILD:-28}) for review once the build is processed."
