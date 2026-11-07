@@ -8,22 +8,35 @@ struct LibraryDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var activeSheet: ShareSheetKind?
 
+    // 列表页拿到的只是目录（正文截断成 140/220 字摘要），全文在这里补。
+    // 加载完成前先用摘要占位，避免整页空白。
+    @State private var full: LibraryEntry?
+    @State private var loadFailed = false
+    private let api = APIClient()
+
+    private var display: LibraryEntry { full ?? entry }
+
+    /// 摘要长度（中文 140 / 英文 220）以内说明还没拿到全文。
+    private var needsFullLoad: Bool {
+        entry.verse_text.count <= 200 && (entry.verse_text_en?.count ?? 0) <= 300
+    }
+
     /// 文字分享带上落地页链接：微信只对 URL 生成预览卡片，
     /// 纯文本（整篇 1-2 万字）在微信里发不出去。
     private var shareText: String {
-        let excerptText = excerpt(entry.localizedVerse, limit: 220)
-        let link = "https://taomindapp.com/s/\(entry.display_order)"
-        return "\(entry.localizedChapter)\n\n\(excerptText)\n\n\(AppState.tr("share_read_full")) \(link)"
+        let excerptText = excerpt(display.localizedVerse, limit: 220)
+        let link = "https://taomindapp.com/s/\(display.display_order)"
+        return "\(display.localizedChapter)\n\n\(excerptText)\n\n\(AppState.tr("share_read_full")) \(link)"
     }
 
     /// 微信分享只稳定支持图片和链接，纯文本（讲次全文 1-2 万字）超出
     /// 微信单条消息上限，分享扩展会直接失败或根本不出现。改为图片卡片。
     private var cardContent: ShareCardContent {
         ShareCardContent(
-            title: entry.localizedChapter,
-            verse: excerpt(entry.localizedVerse),
+            title: display.localizedChapter,
+            verse: excerpt(display.localizedVerse),
             note: "",
-            subtitle: "TaoMind · \(entry.source)",
+            subtitle: "TaoMind · \(display.source)",
             attribution: nil
         )
     }
@@ -49,28 +62,60 @@ struct LibraryDetailView: View {
         var id: Int { rawValue }
     }
 
+    /// 取这一讲的全文。列表页给的只是 140 字摘要；失败时保留摘要并让用户可以重试。
+    private func loadFull() async {
+        guard needsFullLoad, full == nil else { return }
+        await MainActor.run { loadFailed = false }
+        do {
+            let result = try await api.fetchLibraryEntry(
+                source: entry.source,
+                order: entry.display_order
+            )
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                full = result
+                loadFailed = false
+            }
+        } catch is CancellationError {
+            return
+        } catch let error as URLError where error.code == .cancelled {
+            return
+        } catch {
+            await MainActor.run { loadFailed = true }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 // Attribution
-                Text("\(entry.source) · \(entry.localizedChapter)")
+                Text("\(display.source) · \(display.localizedChapter)")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
                 // Verse
-                Text(entry.localizedVerse)
+                Text(display.localizedVerse)
                     .font(.custom("Georgia", size: 18, relativeTo: .body))
                     .foregroundColor(DS.ink)
                     .lineSpacing(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                if full == nil && !loadFailed {
+                    HStack {
+                        Spacer()
+                        ProgressView().scaleEffect(0.8)
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                }
+
                 // Commentary (白话精讲)
-                if !entry.localizedCommentary.isEmpty {
+                if !display.localizedCommentary.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(AppState.tr("Commentary"))
                             .font(.headline)
                             .foregroundColor(DS.ink)
-                        Text(entry.localizedCommentary)
+                        Text(display.localizedCommentary)
                             .font(.body)
                             .foregroundColor(DS.inkSoft)
                             .lineSpacing(6)
@@ -82,17 +127,28 @@ struct LibraryDetailView: View {
                 }
 
                 // Reflection
-                if !entry.localizedReflection.isEmpty {
+                if !display.localizedReflection.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(AppState.tr("The Reflection"))
                             .font(.headline)
                             .foregroundColor(DS.ink)
-                        Text(entry.localizedReflection)
+                        Text(display.localizedReflection)
                             .font(.custom("Georgia", size: 16, relativeTo: .body))
                             .italic()
                             .foregroundColor(.secondary)
                             .lineSpacing(6)
                     }
+                }
+
+                // 全文没取到：正文只剩摘要，这里给一次重试。
+                if loadFailed {
+                    Button {
+                        Task { await loadFull() }
+                    } label: {
+                        Label(AppState.tr("Retry"), systemImage: "arrow.clockwise")
+                            .font(.subheadline)
+                    }
+                    .padding(.top, 4)
                 }
             }
             .padding()
@@ -101,7 +157,10 @@ struct LibraryDetailView: View {
             .readableColumn(max: 640)
         }
         .paperBackground()
-        .navigationTitle(entry.localizedChapter)
+        .task {
+            await loadFull()
+        }
+        .navigationTitle(display.localizedChapter)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

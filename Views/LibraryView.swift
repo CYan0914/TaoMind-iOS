@@ -271,11 +271,14 @@ struct LibraryView: View {
     private func load() async {
         await MainActor.run { isLoading = true }
         do {
-            let result = try await api.fetchLibrary()
+            // 只拉目录（约 45KB）。正文在点开某一讲时再取 —— 全量正文 200 讲时
+            // 会到 7.6MB，3Mbps 上行要 18 秒，直接撞 30 秒超时。
+            let result = try await api.fetchLibraryCatalog()
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 entries = result.entries
                 isLoading = false
+                errorMessage = nil
             }
         } catch is CancellationError {
             return

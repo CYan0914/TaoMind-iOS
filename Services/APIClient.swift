@@ -145,6 +145,36 @@ class APIClient {
         return try decoder.decode(LibraryResponse.self, from: data)
     }
 
+    /// 经藏目录（轻量版）：每条只带 140 字正文摘要，点开某一讲再取全文。
+    ///
+    /// 全量 `/library` 在 91 讲时已 3.6MB，服务器上行约 3.4Mbps，要 8 秒；
+    /// 讲到 200 讲会到 7.6MB、18 秒，撞 30 秒超时。目录只有约 45KB，1 秒内到。
+    /// 老版本客户端仍走 `/library`，服务端两条路都保留。
+    func fetchLibraryCatalog() async throws -> LibraryResponse {
+        let url = try makeURL("/library/catalog")
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        attachAuth(&request)
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        return try decoder.decode(LibraryResponse.self, from: data)
+    }
+
+    /// 单条经藏全文。(source, display_order) 在全表唯一。
+    /// 服务端同样做免费用户前 5 章 gate，这里拿到的 commentary 可能为空。
+    func fetchLibraryEntry(source: String, order: Int) async throws -> LibraryEntry {
+        let url = try makeURL(
+            "/library/entry",
+            params: ["source": source, "order": String(order)]
+        )
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        attachAuth(&request)
+        let (data, response) = try await session.data(for: request)
+        try validate(response)
+        return try decoder.decode(LibraryEntry.self, from: data)
+    }
+
     // MARK: - Journal
 
     func saveJournal(
