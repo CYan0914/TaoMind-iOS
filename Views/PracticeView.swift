@@ -1125,7 +1125,11 @@ struct PracticeView: View {
     /// service 内部有 cache 命中短路 + 50/天 Pro 额度保护,放心反复调。
     private func loadPersonalizedVerseIfEligible() async {
         let svc = PersonalizedDailyVerseService()
-        guard svc.isEligible() else { return }
+        guard svc.isEligible() else {
+            // 目标语言没有内容就退回 base verse（否则中文界面会停在英文槽）
+            appState.restoreBaseVerseIfNeeded()
+            return
+        }
         let reflections = (status?.checkins ?? [])
             .prefix(7)
             .map { $0.reflection }
@@ -1141,6 +1145,7 @@ struct PracticeView: View {
             appState.personalizedVerseFailedToday = false
         } catch {
             appState.personalizedVerseFailedToday = true
+            appState.restoreBaseVerseIfNeeded()
         }
     }
 

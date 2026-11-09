@@ -122,26 +122,27 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.8.8 用户能感知的增量：
-          #   - 经藏列表秒开，点开某一讲才加载全文（原来一次拉全量，讲次多了要等十几秒）
-          #   - 《大乘佛法开示》已到九十余讲
-          # 面向终端读者写，不写 LibraryCatalog / 懒加载 这类实现细节
+          # 1.8.9 用户能感知的增量：
+          #   - 切中英文后，每日经文 / 出处章节 / 感悟立即换到对应语言
+          #   - 修掉「英文系统手动切中文后，经文仍显示英文」（含离线兜底与通知内容）
+          # 面向终端读者写，不写 localized() / 语言槽 这类实现细节
           WHATS_NEW_EN = (
-              "More than ninety talks, and the library opens at once\n"
+              "The daily verse now follows your language\n"
               "\n"
-              "Mahayana Dharma Teachings now holds more than ninety talks in Chinese and English.\n"
+              "Switch the app between English and Chinese and the verse, its chapter "
+              "and the reflection change with it right away.\n"
               "\n"
-              "The library list opens right away, and a talk loads its full text only when "
-              "you open it, so the collection can keep growing without slowing down.\n"
+              "No restart needed, and the Chinese screen no longer shows leftover "
+              "English verses, even offline.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "经藏九十余讲，打开不再等\n"
+              "每日经文跟随你的语言\n"
               "\n"
-              "《大乘佛法开示》现收录九十余篇师父开示，中英双语。\n"
+              "在设置里切换中英文后，经文、出处章节和下方感悟会立即换成对应语言。\n"
               "\n"
-              "经藏列表打开即刻可用，点开某一讲才加载全文，讲次再多也不会变慢。\n"
+              "不需要重启 App，中文界面也不会再有英文经文残留，离线时同样如此。\n"
               "\n"
               "其余功能与之前一致。"
           )

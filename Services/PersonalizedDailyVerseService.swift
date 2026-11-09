@@ -113,17 +113,29 @@ struct PersonalizedDailyVerseService {
         }
     }
 
+    /// 槽位内容是否符合目标语言。
+    ///
+    /// 老缓存里有「中文槽装着英文」的形态（1.8.0 的最终兜底就是把英文 fallback
+    /// 写进主字段）。只靠「槽位有没有内容」判断会把这种脏数据当成命中，
+    /// 中文界面继续显示英文。中文目标下要求出现汉字。
+    private func isTargetLanguageUsable(_ v: DailyVerse, language: String) -> Bool {
+        guard language == "zh" else { return true }
+        return v.verse_text.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }
+    }
+
     /// 同步读今日缓存(给 NotificationService 用,不阻塞)。
     /// 签名与老 key 字符串保持不变 → NotificationService 零改动。
     func cachedForToday(language: String) -> DailyVerse? {
         let isEnglish = language != "zh"
         if let env = loadEntity(),
-           let v = slot(of: env, isEnglish: isEnglish), hasContent(v) {
+           let v = slot(of: env, isEnglish: isEnglish), hasContent(v),
+           isTargetLanguageUsable(v, language: language) {
             return v
         }
         // 升级后今天还没走过 fetch(实体尚未生成)→ 老 key 只读兜底
         if let env = decodeEntity(key: legacyCacheKey(language: language)),
-           let v = env.verse, hasContent(v) {
+           let v = env.verse, hasContent(v),
+           isTargetLanguageUsable(v, language: language) {
             return v
         }
         return nil
@@ -242,12 +254,15 @@ struct PersonalizedDailyVerseService {
 
         // 2) 目标槽已有内容 → 本地读返回。切语言的常见路径走这里:
         //    0 网络、0 LLM 额度、章节绝对不变。
-        if let hit = slot(of: env, isEnglish: targetIsEnglish), hasContent(hit) {
+        //    但内容必须真的是目标语言 —— 老缓存里存在「中文槽装英文」的脏数据,
+        //    当成命中会把英文一直留在中文界面上,所以不合格就当未命中,走补槽。
+        if let hit = slot(of: env, isEnglish: targetIsEnglish), hasContent(hit),
+           isTargetLanguageUsable(hit, language: language) {
             if migrated != nil { saveEntity(env) }   // 迁移结果落地,免得下次再搬
             return hit
         }
 
-        // 3) 目标槽为空(典型:老用户第一次切到另一种语言)→ 补一次,
+        // 3) 目标槽为空 / 内容不是目标语言 → 补一次,
         //    用另一槽锁死 source + chapter,强制同一章。
         let lock = reference(from: env, targetIsEnglish: targetIsEnglish)
         let fresh = try await callLLM(
@@ -320,7 +335,18 @@ struct PersonalizedDailyVerseService {
             language: language,
             authToken: token
         )
-        return parseToVerse(resp, language: language, lock: lock)
+        return ensureTargetLanguage(parseToVerse(resp, language: language, lock: lock), language: language)
+    }
+
+    /// 最后一道语言闸。
+    ///
+    /// 补槽 prompt 会给模型一段「另一语言」的锁章原文当意义锚点，模型偶尔直接
+    /// 照抄，于是中文槽里躺着英文句子 —— 中文界面显示英文经文。这里要求中文
+    /// 目标下必须出现汉字，否则退回本地双语兜底条目（`VerseFallback`）。
+    private func ensureTargetLanguage(_ verse: DailyVerse, language: String) -> DailyVerse {
+        guard !isTargetLanguageUsable(verse, language: language) else { return verse }
+        print("[DailyVerse] zh output had no CJK characters — falling back to local entry")
+        return VerseFallback.dailyVerse(isEnglish: false)
     }
 
     /// 4 层 fallback:JSON shape → markdown fence → WisdomResponse 字段直读 → VerseFallback
@@ -345,20 +371,9 @@ struct PersonalizedDailyVerseService {
             )
         }
         // 4) Final fallback
-        let fb = VerseFallback.verseForToday()
-        // VerseFallback 的文案本身是英文的 → 只进 `_en` 三列，主字段留空，
-        // 避免英文文本滞留在中文界面（串语言）。
-        //
-        // 1.8.0 这里曾少写 `chapter_en`（只给「中文槽位留空」的形态，章名却丢在
-        // 主字段），而当时 localized() 的中文分支又不检查空 → 中文界面整卡空白。
-        // 现在 localized() 两个方向都回落，这里也统一走 bilingual() 保持形态一致。
-        return bilingual(
-            source: fb.source,
-            chapter: fb.chapter,
-            text: fb.text,
-            reflection: fb.reflection,
-            language: "en"
-        )
+        // ⚠️ 这里曾硬编码 `language: "en"`（并只有英文文案）→ 中文用户拿到的
+        // 兜底经文永远是英文形态。现在按目标语言取本地双语条目，两槽都填。
+        return VerseFallback.dailyVerse(isEnglish: language != "zh")
     }
 
     /// 把一份内容按当前语言落到 `DailyVerse` 的两个语言槽位。

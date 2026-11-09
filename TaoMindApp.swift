@@ -94,20 +94,20 @@ struct TaoMindApp: App {
             let client = APIClient(baseURL: apiBaseURL)
             let verse = try await client.getDailyVerse()
             await MainActor.run {
+                // base verse 双语齐全，存一份供切语言补槽失败时回退
+                appState.baseVerse = verse
                 appState.dailyVerse = verse
                 dailyVerse = verse
             }
         } catch {
-            // Use offline fallback
-            let fallback = VerseFallback.verseForToday()
+            // 离线兜底：按当前界面语言组装（中英两槽都填）。
+            // 老写法把英文 fallback 塞进 `verse_text`（中文槽），中文界面
+            // 断网时必然显示英文经文。
             await MainActor.run {
-                appState.dailyVerse = DailyVerse(
-                    source: fallback.source,
-                    chapter: fallback.chapter,
-                    verse_text: fallback.text,
-                    reflection: fallback.reflection
-                )
-                dailyVerse = appState.dailyVerse
+                let fallback = VerseFallback.dailyVerse(isEnglish: appState.language == .english)
+                appState.baseVerse = fallback
+                appState.dailyVerse = fallback
+                dailyVerse = fallback
             }
         }
         // build 50: Step B — 若已登录且 (Pro 或 Day 1-3 free trial),
@@ -124,7 +124,16 @@ struct TaoMindApp: App {
     /// - 失败 → personalizedVerseFailedToday = true(PracticeView 据此显 upgrade banner)
     private func loadPersonalizedVerse(recentReflections: [String]?) async {
         let svc = PersonalizedDailyVerseService()
-        guard svc.isEligible() else { return }
+        guard svc.isEligible() else {
+            // 之前是裸 return。但个性化 verse 是按语言分槽的：英文模式生成的
+            // 那份只有 `_en` 三列，用户切中文后若这条路径直接返回，卡片会一直
+            // 停在英文形态。改成「目标语言没内容就退回 base verse」。
+            await MainActor.run {
+                appState.restoreBaseVerseIfNeeded()
+                dailyVerse = appState.dailyVerse
+            }
+            return
+        }
         // 跨日清 mood cache
         svc.clearStaleMoodIfNewDay()
         // 重新从 UserDefaults 读(可能在 PracticeView 里刚被改)
@@ -146,6 +155,10 @@ struct TaoMindApp: App {
         } catch {
             await MainActor.run {
                 appState.personalizedVerseFailedToday = true
+                // 补槽失败（未登录 / LLM 超时 / 额度限流）→ 目标语言没有内容时
+                // 退回 base verse，否则中文界面会一直显示英文槽的内容。
+                appState.restoreBaseVerseIfNeeded()
+                dailyVerse = appState.dailyVerse
             }
         }
     }
@@ -163,6 +176,36 @@ class AppState: ObservableObject {
         }
     }
     @Published var dailyVerse: DailyVerse?
+
+    /// 后端 /daily-verse 返回的固定经文（中英两槽齐全）。
+    ///
+    /// 个性化 verse 按语言分槽：英文模式生成的那份只有 `_en` 三列。用户从英文
+    /// 切中文时若补中文槽失败（未登录、LLM 超时、额度限流），`dailyVerse` 会
+    /// 一直停在英文形态，`localized()` 只能回落到英文槽 —— 中文界面显示英文
+    /// 经文。回退到这份 base verse 才是对的。
+    @Published var baseVerse: DailyVerse?
+
+    /// 当前显示的 verse 在**当前界面语言**下是否真的有内容，没有就退回 base verse。
+    /// 已有目标语言内容就不动（个性化通常比固定经文更贴切）。
+    ///
+    /// 中文判定要求「出现汉字」而不是「非空」：老缓存里存在中文槽装着英文的
+    /// 形态，非空判断会让它继续显示英文。
+    @discardableResult
+    func restoreBaseVerseIfNeeded() -> Bool {
+        let zhText = dailyVerse?.verse_text ?? ""
+        let hasTargetLanguageContent: Bool
+        switch language {
+        case .chinese:
+            hasTargetLanguageContent = zhText.unicodeScalars
+                .contains { (0x4E00...0x9FFF).contains($0.value) }
+        case .english:
+            hasTargetLanguageContent = !((dailyVerse?.verse_text_en ?? "").isEmpty)
+        }
+        guard !hasTargetLanguageContent, let base = baseVerse else { return false }
+        dailyVerse = base
+        personalizedVerse = nil
+        return true
+    }
 
     /// 是否已看过首启 onboarding（3 屏：价值预告 → 生活困惑 → 通知请求）
     @Published var hasSeenOnboarding: Bool {

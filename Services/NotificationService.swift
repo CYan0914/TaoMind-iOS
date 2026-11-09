@@ -78,8 +78,10 @@ final class NotificationService: NSObject, ObservableObject {
     /// build 50: 8am 推送取 verse 优先用个性化 cache(避免 LLM 重跑)
     private func fetchTodaysVerseForNotification() async -> DailyVerse {
         let svc = PersonalizedDailyVerseService()
+        // 用界面语言（含用户手动覆盖），不用系统语言 —— 英文系统手动切中文后
+        // 二者不一致，读错语言槽就会推出英文经文。
+        let language = AppState.currentLocaleId == "zh-Hans" ? "zh" : "en"
         if svc.isEligible(),
-           let language = Locale.preferredLanguages.first?.hasPrefix("zh") == true ? "zh" : "en",
            let personalized = svc.cachedForToday(language: language) {
             return personalized
         }
@@ -92,13 +94,7 @@ final class NotificationService: NSObject, ObservableObject {
             let client = APIClient(baseURL: apiBaseURL)
             return try await client.getDailyVerse()
         } catch {
-            let fallback = VerseFallback.verseForToday()
-            return DailyVerse(
-                source: fallback.source,
-                chapter: fallback.chapter,
-                verse_text: fallback.text,
-                reflection: fallback.reflection
-            )
+            return VerseFallback.dailyVerse(isEnglish: AppState.currentLocaleId != "zh-Hans")
         }
     }
 
