@@ -6,6 +6,9 @@ import UIKit
 struct LibraryDetailView: View {
     let entry: LibraryEntry
     @Environment(\.dismiss) private var dismiss
+    /// 读 `localizedVerse` 等计算属性读的是静态 AppState.currentLocaleId，
+    /// 不订阅的话切语言后本页不会重绘，正文停在旧语言。
+    @EnvironmentObject var appState: AppState
     @State private var activeSheet: ShareSheetKind?
 
     // 列表页拿到的只是目录（正文截断成 140/220 字摘要），全文在这里补。

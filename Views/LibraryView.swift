@@ -9,6 +9,9 @@ import SwiftUI
 
 struct LibraryView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    /// 订阅语言变化：本页条目全部来自目录接口，切语言后必须重拉一次，
+    /// 否则拿到的仍是旧语言那一路（服务端曾按 Accept-Language 只下发一路）。
+    @EnvironmentObject var appState: AppState
     @State private var entries: [LibraryEntry] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
@@ -30,7 +33,7 @@ struct LibraryView: View {
             }
             .navigationTitle(AppState.tr("Library"))
             .paperBackground()
-            .task {
+            .task(id: appState.language) {
                 jingjiang.load()
                 await load()
             }
