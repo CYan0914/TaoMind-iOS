@@ -122,25 +122,24 @@ jobs:
           # ⚠️ 这两个常量不会随版本自动更新，**每次发新版必须手改**。
           #    2026-10-02 查到：1.7.6 起一直没改，1.8.0 的包也照推 1.7.6 那段
           #    「体积缩小 85%」——用户在 ASC 手填的文案会被 set_whats_new() 覆盖掉。
-          # 1.9.0 用户能感知的增量：
-          #   - 经藏里的大乘佛法开示，切英文后正文显示英文全文（原先只有标题是英文，
-          #     正文一直是中文，因为服务端按系统语言裁剪、没跟随 App 内切换）
-          # 面向终端读者写，不写 localized() / Accept-Language 这类实现细节
+          # 1.9.1 用户能感知的增量：
+          #   - 道德经精讲的章节页补上返回按钮（原先是 sheet 里的 NavigationStack
+          #     根视图，系统不给返回按钮，和其他文章不一致）
+          # 面向终端读者写，不写 sheet / NavigationStack 这类实现细节
           WHATS_NEW_EN = (
-              "The teachings now read in English\n"
+              "Fix: the in-depth commentary had no way back\n"
               "\n"
-              "Switch the app to English and open the Mahayana Dharma teachings "
-              "in the Library: the full text is in English, not just the title.\n"
+              "Opening a chapter in the Tao Te Ching in-depth commentary now shows "
+              "a Back button, the same as every other article in the Library.\n"
               "\n"
-              "Switching back to Chinese restores the original text, unchanged."
+              "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "经藏讲义跟随语言显示\n"
+              "修复精讲页没有返回按钮\n"
               "\n"
-              "把 App 切换成英文后，经藏里的大乘佛法开示，正文会显示英文全文，"
-              "不再只有标题是英文。\n"
+              "道德经精讲的章节页现在有返回按钮，与经藏里其他文章一致。\n"
               "\n"
-              "切回中文，正文恢复原样，内容与之前完全一致。"
+              "其余功能与之前相同。"
           )
           # 推广文本（Promotional Text，170 字符上限）—— 可随时改，不需要送审
           # 上线后想换主打卖点（如节日、新功能）直接改这两条重跑本 workflow 即可

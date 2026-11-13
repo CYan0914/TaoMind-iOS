@@ -30,6 +30,20 @@ struct JingjiangDetailView: View {
         .paperBackground()
         .navigationTitle(AppState.tr("library_jingjiang"))
         .navigationBarTitleDisplayMode(.inline)
+        // 本页是 sheet 里的 NavigationStack 根视图，没有上一级可回，
+        // 系统不会自动给返回按钮（原文/金刚经详情页是手写的，所以有）。
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "chevron.left")
+                        Text(AppState.tr("Back"))
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - 头标
