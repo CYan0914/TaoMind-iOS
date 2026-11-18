@@ -266,10 +266,8 @@ jobs:
               if locale in have:
                   lid = have[locale]
                   cur = api("GET", f"/appStoreVersionLocalizations/{lid}")["data"]["attributes"]
-                  # subtitle 每次都覆盖：它是本 workflow 主动维护的字段（搜索权重第二高），
-                  # 之前一直空着，靠「只补缺失」逻辑永远补不上也不该被手工值锁死。
-                  attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"],
-                           "subtitle": meta["subtitle"]}
+                  # subtitle 不在这个资源上（见下方 set_subtitle），这里只管版本级字段
+                  attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"]}
                   for f in ("description", "keywords", "supportUrl"):
                       if not cur.get(f):
                           attrs[f] = meta[f]
@@ -285,7 +283,6 @@ jobs:
                           "locale": locale,
                           "whatsNew": text,
                           "promotionalText": meta["promotionalText"],
-                          "subtitle": meta["subtitle"],
                           "description": meta["description"],
                           "keywords": meta["keywords"],
                           "supportUrl": meta["supportUrl"],
@@ -296,6 +293,34 @@ jobs:
 
           set_whats_new("en-US", WHATS_NEW_EN)
           set_whats_new("zh-Hans", WHATS_NEW_ZH)
+
+          # subtitle 属于 App 级元数据（appInfoLocalizations），不是版本级。
+          # 之前它一直是空的 —— 这是搜索权重第二高的字段，30 字符上限。
+          # ⚠️ 往 appStoreVersionLocalizations PATCH subtitle 会 409
+          #    ENTITY_ERROR.ATTRIBUTE.UNKNOWN "'subtitle' is not an attribute"。
+          def set_subtitle(locale, text):
+              infos = api("GET", f"/apps/{app_id}/appInfos")["data"]
+              if not infos:
+                  print("  no appInfo, skip subtitle")
+                  return
+              for info in infos:
+                  ilocs = api("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]
+                  for il in ilocs:
+                      if il["attributes"].get("locale") != locale:
+                          continue
+                      if il["attributes"].get("subtitle") == text:
+                          print("  subtitle unchanged:", locale)
+                          return
+                      api("PATCH", f"/appInfoLocalizations/{il['id']}", {"data": {
+                          "type": "appInfoLocalizations", "id": il["id"],
+                          "attributes": {"subtitle": text},
+                      }})
+                      print("  subtitle set:", locale, "->", text)
+                      return
+              print("  subtitle localization not found:", locale)
+
+          set_subtitle("en-US", LOCALE_META["en-US"]["subtitle"])
+          set_subtitle("zh-Hans", LOCALE_META["zh-Hans"]["subtitle"])
 
           # 6) Submit for App Store review（modern reviewSubmissions flow, API v1.7+）
           # appStoreVersionSubmissions 已不允许 CREATE（403），需三步：
