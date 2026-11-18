@@ -225,9 +225,6 @@ jobs:
                       "* Bilingual: full support for English and Chinese (Simplified)."
                   ),
                   "keywords": "wisdom,taoism,reflection,buddhism,meditation,mindfulness,zen,dao,AI,philosophy,sutra,tao te ching",
-                  # subtitle 是搜索权重第二高的字段（仅次于标题），30 字符上限。
-                  # 之前一直是空的，等于白丢一个黄金坑位。
-                  "subtitle": "Daily Tao Wisdom for Anxiety",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
                   "promotionalText": PROMO_EN,
               },
@@ -249,7 +246,6 @@ jobs:
                       "* 语音输入：说出你的问题，自动转成文字。"
                   ),
                   "keywords": "智慧,道家,反思,佛教,冥想,正念,禅,道,AI,哲学,佛经,道德经,金刚经,语音",
-                  "subtitle": "道德经智慧，每天一句解忧",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
                   "promotionalText": PROMO_ZH,
               },
@@ -266,7 +262,7 @@ jobs:
               if locale in have:
                   lid = have[locale]
                   cur = api("GET", f"/appStoreVersionLocalizations/{lid}")["data"]["attributes"]
-                  # subtitle 不在这个资源上（见下方 set_subtitle），这里只管版本级字段
+                  # subtitle 不在这个资源上（App 级），本流程不碰它
                   attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"]}
                   for f in ("description", "keywords", "supportUrl"):
                       if not cur.get(f):
@@ -294,33 +290,17 @@ jobs:
           set_whats_new("en-US", WHATS_NEW_EN)
           set_whats_new("zh-Hans", WHATS_NEW_ZH)
 
-          # subtitle 属于 App 级元数据（appInfoLocalizations），不是版本级。
-          # 之前它一直是空的 —— 这是搜索权重第二高的字段，30 字符上限。
-          # ⚠️ 往 appStoreVersionLocalizations PATCH subtitle 会 409
-          #    ENTITY_ERROR.ATTRIBUTE.UNKNOWN "'subtitle' is not an attribute"。
-          def set_subtitle(locale, text):
-              infos = api("GET", f"/apps/{app_id}/appInfos")["data"]
-              if not infos:
-                  print("  no appInfo, skip subtitle")
-                  return
-              for info in infos:
-                  ilocs = api("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"]
-                  for il in ilocs:
-                      if il["attributes"].get("locale") != locale:
-                          continue
-                      if il["attributes"].get("subtitle") == text:
-                          print("  subtitle unchanged:", locale)
-                          return
-                      api("PATCH", f"/appInfoLocalizations/{il['id']}", {"data": {
-                          "type": "appInfoLocalizations", "id": il["id"],
-                          "attributes": {"subtitle": text},
-                      }})
-                      print("  subtitle set:", locale, "->", text)
-                      return
-              print("  subtitle localization not found:", locale)
-
-          set_subtitle("en-US", LOCALE_META["en-US"]["subtitle"])
-          set_subtitle("zh-Hans", LOCALE_META["zh-Hans"]["subtitle"])
+          # ⚠️ subtitle 不要在这里动。
+          # 它属于 App 级元数据（appInfoLocalizations），不是版本级 —— 往
+          # appStoreVersionLocalizations PATCH 它会 409 ENTITY_ERROR.ATTRIBUTE.UNKNOWN。
+          # 而且线上 appInfo 的 state 是 READY_FOR_DISTRIBUTION 时，PATCH
+          # appInfoLocalizations 也会 409 "The field 'subtitle' can not be modified
+          # in the current state"。要改只能等新版本进审核、或在 ASC 网页手动改。
+          #
+          # 2026-11-18 核实：subtitle 一直有值，不是空的 ——
+          #   en-US:   "Tao Te Ching & Lao Tzu Wisdom"
+          #   zh-Hans: "道德经与老子智慧，每日反思"
+          # （先前误判为「空着」，是因为只在版本级 localizations 里查，字段根本不在这。）
 
           # 6) Submit for App Store review（modern reviewSubmissions flow, API v1.7+）
           # appStoreVersionSubmissions 已不允许 CREATE（403），需三步：
