@@ -125,19 +125,19 @@ jobs:
           # 1.9.1 用户能感知的增量：
           #   - 道德经精讲的章节页补上返回按钮（原先是 sheet 里的 NavigationStack
           #     根视图，系统不给返回按钮，和其他文章不一致）
-          # 面向终端读者写，不写 sheet / NavigationStack 这类实现细节
+          # 1.9.2 用户能感知的增量：阅读体验的几处小改动。
+          # 面向终端读者写，不写实现细节
           WHATS_NEW_EN = (
-              "Fix: the in-depth commentary had no way back\n"
+              "Polish and fixes\n"
               "\n"
-              "Opening a chapter in the Tao Te Ching in-depth commentary now shows "
-              "a Back button, the same as every other article in the Library.\n"
+              "A few small refinements to the reading experience in the Library.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "修复精讲页没有返回按钮\n"
+              "细节打磨\n"
               "\n"
-              "道德经精讲的章节页现在有返回按钮，与经藏里其他文章一致。\n"
+              "经藏的阅读体验做了几处小改进。\n"
               "\n"
               "其余功能与之前相同。"
           )
@@ -225,6 +225,9 @@ jobs:
                       "* Bilingual: full support for English and Chinese (Simplified)."
                   ),
                   "keywords": "wisdom,taoism,reflection,buddhism,meditation,mindfulness,zen,dao,AI,philosophy,sutra,tao te ching",
+                  # subtitle 是搜索权重第二高的字段（仅次于标题），30 字符上限。
+                  # 之前一直是空的，等于白丢一个黄金坑位。
+                  "subtitle": "Daily Tao Wisdom for Anxiety",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
                   "promotionalText": PROMO_EN,
               },
@@ -246,6 +249,7 @@ jobs:
                       "* 语音输入：说出你的问题，自动转成文字。"
                   ),
                   "keywords": "智慧,道家,反思,佛教,冥想,正念,禅,道,AI,哲学,佛经,道德经,金刚经,语音",
+                  "subtitle": "道德经智慧，每天一句解忧",
                   "supportUrl": "https://cyan0914.github.io/taomind-privacy/support.html",
                   "promotionalText": PROMO_ZH,
               },
@@ -262,7 +266,10 @@ jobs:
               if locale in have:
                   lid = have[locale]
                   cur = api("GET", f"/appStoreVersionLocalizations/{lid}")["data"]["attributes"]
-                  attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"]}
+                  # subtitle 每次都覆盖：它是本 workflow 主动维护的字段（搜索权重第二高），
+                  # 之前一直空着，靠「只补缺失」逻辑永远补不上也不该被手工值锁死。
+                  attrs = {"whatsNew": text, "promotionalText": meta["promotionalText"],
+                           "subtitle": meta["subtitle"]}
                   for f in ("description", "keywords", "supportUrl"):
                       if not cur.get(f):
                           attrs[f] = meta[f]
@@ -278,6 +285,7 @@ jobs:
                           "locale": locale,
                           "whatsNew": text,
                           "promotionalText": meta["promotionalText"],
+                          "subtitle": meta["subtitle"],
                           "description": meta["description"],
                           "keywords": meta["keywords"],
                           "supportUrl": meta["supportUrl"],
