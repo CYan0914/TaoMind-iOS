@@ -42,6 +42,7 @@
 "tomorrow_promise_card_fmt" = "See you at %d:00 tomorrow · Tomorrow is day 3, when card 3 unlocks.";
 "tomorrow_promise_trial_fmt" = "See you at %d:00 tomorrow · Day 7 earns you 7 days of Pro.";
 "milestone_3_hint" = "A 3-day streak unlocks card 3";
+"seek_wisdom_now" = "Seek wisdom";
 "edit" = "Edit";
 "master_guidance" = "Master Guidance";
 "ask_master" = "Ask the Master";

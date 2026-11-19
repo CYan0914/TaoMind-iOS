@@ -224,7 +224,9 @@ struct PracticeView: View {
                 // 六张入口卡，才看到「今天该读什么」。首屏的主角必须是今日功课，
                 // 其余入口都只是做完功课之后的分流。
                 if let verse = appState.dailyVerse {
-                    DailyVerseCard(verse: verse, isPersonalized: appState.personalizedVerse != nil)
+                    // plain：经文直接排在纸面上，不再套第 N 张卡片 ——
+                    // 首屏需要的是「正文 vs 工具」两层，不是一列等重卡片。
+                    DailyVerseCard(verse: verse, isPersonalized: appState.personalizedVerse != nil, plain: true)
                 }
 
                 // Day 4–7：个性化经文仍在免费窗口内。明确告知这是试用，
@@ -335,6 +337,7 @@ struct PracticeView: View {
                     .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundColor(DS.bronze)
+                    .monospacedDigit()
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 14)
@@ -355,6 +358,8 @@ struct PracticeView: View {
                     .font(.custom("Georgia", size: 32, relativeTo: .largeTitle))
                     .fontWeight(.bold)
                     .foregroundColor(DS.ink)
+                    // 数字每天变，不加等宽数字时 1→10 会横向跳动
+                    .monospacedDigit()
                 Text(AppState.tr("streak_days"))
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -689,19 +694,30 @@ struct PracticeView: View {
 
     private var sourcePicker: some View {
         HStack(spacing: 10) {
-            sourceChip("📖", AppState.tr("read_verse"), selected: source == "verse") {
+            // 图标一律用 SF Symbols，只有 ☯ 保留字形 —— 它是品牌符号，
+            // 换成任何系统图标都会丢掉这层意思。原来是 📖 和 ☯ 混排，
+            // 彩色 emoji 和单色符号摆在一起，同一行两种笔触。
+            sourceChip("book.closed.fill", isSymbol: true,
+                       AppState.tr("read_verse"), selected: source == "verse") {
                 source = "verse"
             }
-            sourceChip("☯", AppState.tr("seek_wisdom_short"), selected: source == "wisdom") {
+            sourceChip("☯", isSymbol: false,
+                       AppState.tr("seek_wisdom_short"), selected: source == "wisdom") {
                 source = "wisdom"
             }
         }
     }
 
-    private func sourceChip(_ icon: String, _ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
+    private func sourceChip(_ icon: String, isSymbol: Bool, _ label: String,
+                            selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Text(icon)
+                if isSymbol {
+                    Image(systemName: icon)
+                        .font(.caption)
+                } else {
+                    Text(icon)
+                }
                 Text(label)
                     .font(.subheadline)
                     .fontWeight(selected ? .semibold : .regular)
@@ -710,7 +726,7 @@ struct PracticeView: View {
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(selected ? DS.ink : DS.ink.opacity(0.045))
-            .foregroundColor(selected ? .white : .primary)
+            .foregroundColor(selected ? DS.paperHi : DS.ink)
             .cornerRadius(DS.Radius.card)
         }
     }
@@ -882,6 +898,10 @@ struct PracticeView: View {
                     Text(AppState.tr("edit"))
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        // 触摸目标补到 44pt 左右：原来只有文字本身那么大
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 8)
+                        .contentShape(Rectangle())
                 }
             }
             Text(today.reflection)

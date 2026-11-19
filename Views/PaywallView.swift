@@ -362,6 +362,12 @@ private struct PlanCard: View {
     let showBestValue: Bool
     let onTap: () -> Void
 
+    // 选中档反白后的三层文字色。朱砂底上用纸白（#FDFBF5，对比约 6.5:1），
+    // 未选中仍是夜底上的暖白/灰褐/金。
+    private var primaryText: Color { isSelected ? DS.paperHi : DS.nightText }
+    private var secondaryText: Color { isSelected ? DS.paperHi.opacity(0.82) : DS.nightSoft }
+    private var accentText: Color { isSelected ? DS.paperHi : DS.nightGold }
+
     var body: some View {
         Button(action: onTap) {
             HStack {
@@ -370,16 +376,20 @@ private struct PlanCard: View {
                         // 标题统一为 "TaoMind Pro" 品牌（避免与 ASC product 名字耦合导致 lifetime 误显示为订阅）
                         Text(AppState.tr("pw_plan_brand"))
                             .font(DS.title(15))
-                            .foregroundColor(DS.nightText)
+                            .foregroundColor(primaryText)
 
                         if showBestValue {
-                            // 「荐」朱砂小印（双语同形，异域感即品牌感）
+                            // 「荐」小印：未选中时朱砂底纸白字；选中后整卡已是朱砂，
+                            // 印必须反过来，否则和底色糊在一起。
                             Text(AppState.tr("pw_best_value"))
                                 .font(.system(size: 11, weight: .black))
-                                .foregroundColor(DS.paperHi)
+                                .foregroundColor(isSelected ? DS.cinnabar : DS.paperHi)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 3)
-                                .background(RoundedRectangle(cornerRadius: 2).fill(DS.cinnabar))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(isSelected ? DS.paperHi : DS.cinnabar)
+                                )
                                 .rotationEffect(.degrees(-2))
                         }
                     }
@@ -388,14 +398,14 @@ private struct PlanCard: View {
                     // 所有档都显示（用户原话：每档下面一行小子）
                     Text(periodLabel)
                         .font(.caption)
-                        .foregroundColor(DS.nightSoft)
+                        .foregroundColor(secondaryText)
 
                     // 价格锚点：长周期档折算月均价 + 相对月档省多少（"$3.33/mo · Save 58%"）
                     if let anchor = priceAnchor {
                         Text(anchor)
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(DS.nightGold)
+                            .foregroundColor(accentText)
                     }
 
                     // build 42: 年卡下面挂「N 天免费试用」小行（金印 + 文字）。
@@ -406,11 +416,11 @@ private struct PlanCard: View {
                         HStack(spacing: 4) {
                             Image(systemName: "gift.fill")
                                 .font(.caption2)
-                                .foregroundColor(DS.nightGold)
+                                .foregroundColor(accentText)
                             Text(trialLabel)
                                 .font(.caption2)
                                 .fontWeight(.semibold)
-                                .foregroundColor(DS.nightGold)
+                                .foregroundColor(accentText)
                         }
                         .padding(.top, 2)
                     }
@@ -421,17 +431,22 @@ private struct PlanCard: View {
                 Text(package.localizedPriceString)
                     .font(.title3)
                     .fontWeight(.bold)
-                    .foregroundColor(DS.nightText)
+                    .foregroundColor(primaryText)
+                    .monospacedDigit()
             }
             .padding()
+            // 选中的档用实心朱砂反白：原来所有档都是"暗底 + 淡朱砂描边"，
+            // 选中与未选中只差一点透明度，用户要在五档里找自己在哪一档。
+            // 反白之后推荐档一眼可见，其余档退成安静的描边。
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.card)
-                    .stroke(isSelected ? DS.cinnabar : DS.nightText.opacity(0.22), lineWidth: isSelected ? 1.5 : 1)
+                    .stroke(isSelected ? DS.cinnabar : DS.nightText.opacity(0.20), lineWidth: isSelected ? 1.5 : 1)
                     .background(
                         RoundedRectangle(cornerRadius: DS.Radius.card)
-                            .fill(isSelected ? DS.cinnabar.opacity(0.10) : DS.night.opacity(0.55))
+                            .fill(isSelected ? DS.cinnabar : DS.night.opacity(0.55))
                     )
             )
+            .shadow(color: isSelected ? DS.cinnabarDeep.opacity(0.35) : .clear, radius: 12, y: 4)
         }
     }
 

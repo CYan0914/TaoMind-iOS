@@ -97,6 +97,23 @@ struct JournalView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+
+                    // 空状态不能只有一句说明：给一个能立刻做的动作。
+                    Button {
+                        appState.selectedTab = 0
+                    } label: {
+                        Text(AppState.tr("seek_wisdom_now"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .tracking(1)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(DS.ink)
+                            .foregroundColor(DS.paperHi)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.button))
+                    }
+                    .padding(.top, 4)
+
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

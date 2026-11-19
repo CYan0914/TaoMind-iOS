@@ -131,6 +131,7 @@
 "tomorrow_promise_card_fmt" = "明天 %d:00 见 · 明天就是第 3 天，会解锁第 3 张纪念卡。";
 "tomorrow_promise_trial_fmt" = "明天 %d:00 见 · 明天满 7 天，送 7 天 Pro。";
 "milestone_3_hint" = "连续 3 天解锁第 3 张纪念卡";
+"seek_wisdom_now" = "去求取智慧";
 "edit" = "修改";
 "master_guidance" = "名师指点";
 "ask_master" = "请名师指点";
