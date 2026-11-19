@@ -49,7 +49,8 @@ final class AuthService: NSObject, ObservableObject {
         switch result {
         case .failure(let error):
             print("[Auth] Apple sign in failed: \(error)")
-            authError = "Sign in failed: \(error.localizedDescription)"
+            // 用户自己点了取消不是错误，不要弹红字。
+            authError = Self.friendlyAppleError(error)
             return false
         case .success(let authorization):
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
@@ -229,6 +230,30 @@ final class AuthService: NSObject, ObservableObject {
             UserDefaults.standard.set(data, forKey: userKey)
         }
         UserDefaults.standard.set(token, forKey: tokenKey)
+    }
+
+    // MARK: - Apple error 人话化
+
+    /// 把 ASAuthorizationError 翻成能指导下一步的文案。
+    ///
+    /// 1000（unknown）绝大多数不是 App 的问题：设备没登录 iCloud、
+    /// 关闭了双重认证，或者到 Apple 认证服务的网络不通（国内网络尤其常见）。
+    /// 直接把系统的「未能完成操作。(AuthorizationError错误1000。)」甩给用户，
+    /// 他只会以为 App 坏了然后卸载。
+    private static func friendlyAppleError(_ error: Error) -> String? {
+        guard let e = error as? ASAuthorizationError else {
+            return "Sign in failed: \(error.localizedDescription)"
+        }
+        switch e.code {
+        case .canceled:
+            return nil
+        case .notHandled:
+            return AppState.tr("apple_signin_not_handled")
+        case .invalidResponse:
+            return AppState.tr("apple_signin_invalid_response")
+        default:
+            return AppState.tr("apple_signin_unknown")
+        }
     }
 
     // MARK: - Helpers

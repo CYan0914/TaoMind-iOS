@@ -35,6 +35,9 @@
 "reminder_time" = "Daily reminder";
 "reminder_morning" = "Morning · 8:00";
 "reminder_evening" = "Evening · 20:00";
+"apple_signin_unknown" = "Sign-in didn't complete. Check that this device is signed in to iCloud with two-factor authentication, then try again.";
+"apple_signin_not_handled" = "The sign-in request wasn't handled. Please try again.";
+"apple_signin_invalid_response" = "Apple returned an invalid response. Please try again later.";
 "edit" = "Edit";
 "master_guidance" = "Master Guidance";
 "ask_master" = "Ask the Master";

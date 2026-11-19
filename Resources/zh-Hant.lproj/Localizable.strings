@@ -124,6 +124,9 @@
 "reminder_time" = "提醒時間";
 "reminder_morning" = "早晨 8:00";
 "reminder_evening" = "晚間 20:00";
+"apple_signin_unknown" = "登入沒能完成。請確認裝置已登入 iCloud 並開啟雙重認證，網路順暢後重試。";
+"apple_signin_not_handled" = "登入請求沒有被處理，請重試。";
+"apple_signin_invalid_response" = "Apple 回傳了無效回應，請稍後重試。";
 "edit" = "修改";
 "master_guidance" = "名師指點";
 "ask_master" = "請名師指點";
