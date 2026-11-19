@@ -46,6 +46,27 @@ struct LibraryDetailView: View {
 
     /// 卡片版位有限：取正文开头，尽量在句末截断，避免半个句子。
     /// 上限 110 字 —— ShareCardView 固定 340x480，150 字会挤掉底部二维码。
+    /// 正文按段落分别渲染。
+    ///
+    /// 大乘讲法单篇很长：中文两三千到三万字，英文是中文的四倍（第一讲英文
+    /// 12.8 万字符）。塞进单个 `Text` 时 SwiftUI 排版扛不住 —— 页面标题
+    /// 已经出来了，正文位置却一片空白。拆成每段一个 `Text` 就正常。
+    @ViewBuilder
+    private func verseBody(_ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { _, line in
+                let paragraph = line.trimmingCharacters(in: .whitespaces)
+                if !paragraph.isEmpty {
+                    Text(paragraph)
+                        .font(.custom("Georgia", size: 18, relativeTo: .body))
+                        .foregroundColor(DS.ink)
+                        .lineSpacing(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
+
     private func excerpt(_ text: String, limit: Int = 110) -> String {
         let flat = text
             .replacingOccurrences(of: "\n", with: " ")
@@ -97,11 +118,7 @@ struct LibraryDetailView: View {
                     .foregroundColor(.secondary)
 
                 // Verse
-                Text(display.localizedVerse)
-                    .font(.custom("Georgia", size: 18, relativeTo: .body))
-                    .foregroundColor(DS.ink)
-                    .lineSpacing(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                verseBody(display.localizedVerse)
 
                 if full == nil && !loadFailed {
                     HStack {
