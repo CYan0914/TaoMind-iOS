@@ -32,6 +32,11 @@ final class NotificationService: NSObject, ObservableObject {
     private let apiBaseURL = "https://taomindapp.com"
 
     // 习惯闭环通知的稳定 identifier（取消/重排用）
+    /// 通知点击后直达今日功课。
+    /// 用户点开推送时最想做的事就是打卡，落到默认 tab 还得多点两下，
+    /// 这两下就是 D1→D2 流失的一部分。
+    static let practiceDeepLink = "taomind://practice"
+
     // 每日经文推送时段（Settings 可改，默认早晨）
     static let reminderWindowKey = "reminder.window"
     static var reminderWindow: ReminderWindow {
@@ -75,6 +80,7 @@ final class NotificationService: NSObject, ObservableObject {
         content.subtitle = "\(verse.source) · \(verse.localizedChapter)"
         content.body = verse.localizedVerse
         content.sound = .default
+        content.userInfo = ["deeplink": Self.practiceDeepLink]
 
         // 按用户选择的时段（默认早晨 8:00）重复推送
         let window = Self.reminderWindow
@@ -222,6 +228,7 @@ final class NotificationService: NSObject, ObservableObject {
         content.title = title
         content.body = body
         content.sound = .default
+        content.userInfo = ["deeplink": Self.practiceDeepLink]
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
         let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
@@ -241,5 +248,37 @@ final class NotificationService: NSObject, ObservableObject {
 
     private func dayString(_ date: Date) -> String {
         Self.dayFormatter.string(from: date)
+    }
+}
+
+// MARK: - Notification taps → 直达今日功课
+
+extension Notification.Name {
+    /// 点击习惯类通知后切到 Practice tab（ContentView tag = 3）
+    static let openPracticeTab = Notification.Name("taomind.openPracticeTab")
+}
+
+extension NotificationService: UNUserNotificationCenterDelegate {
+    /// App 在前台时也要把通知显示出来，否则习惯提醒在用户正开着 App 时静默丢失。
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let info = response.notification.request.content.userInfo
+        if let link = info["deeplink"] as? String, link == Self.practiceDeepLink {
+            Task { @MainActor in
+                NotificationCenter.default.post(name: .openPracticeTab, object: nil)
+            }
+        }
+        completionHandler()
     }
 }

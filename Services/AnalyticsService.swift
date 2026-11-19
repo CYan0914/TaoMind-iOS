@@ -19,5 +19,7 @@ enum Analytics {
     static func purchaseSuccess(packageID: String) { track("purchase_success", ["package": packageID]) }
     static func purchaseFail(packageID: String) { track("purchase_fail", ["package": packageID]) }
     static func cardUnlocked(number: Int) { track("card_unlocked", ["number": "\(number)"]) }
+    /// 打卡完成：带当前连击数，用来算 D1/D3 留存曲线。
+    static func checkinCompleted(streak: Int) { track("checkin_completed", ["streak": "\(streak)"]) }
     static func collectionOpened() { track("collection_opened") }
 }

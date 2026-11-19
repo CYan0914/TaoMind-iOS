@@ -1,5 +1,6 @@
 import SwiftUI
 import GoogleSignIn
+import UserNotifications
 
 @main
 struct TaoMindApp: App {
@@ -48,6 +49,9 @@ struct TaoMindApp: App {
                 // Make SwiftUI Text resolve in the selected language (auto-follows system)
                 .environment(\.locale, Locale(identifier: appState.language.localeId))
                 .task {
+                    // 通知 delegate 必须尽早挂上：冷启动时用户点的那条通知
+                    // 只有在 delegate 就位后才会回调 didReceive。
+                    UNUserNotificationCenter.current().delegate = NotificationService.shared
                     await loadDailyVerse()
                     // Schedule tomorrow's daily verse notification
                     await NotificationService.shared.scheduleDailyVerse()
@@ -83,7 +87,15 @@ struct TaoMindApp: App {
                         }
                     }
                 }
+                // 点通知 → 直达今日功课（ContentView 里 Practice 的 tag 是 3）
+                .onReceive(NotificationCenter.default.publisher(for: .openPracticeTab)) { _ in
+                    appState.selectedTab = 3
+                }
                 .onOpenURL { url in
+                    if url.scheme == "taomind", url.host == "practice" {
+                        appState.selectedTab = 3
+                        return
+                    }
                     ReferralService.shared.handleDeepLink(url)
                 }
         }

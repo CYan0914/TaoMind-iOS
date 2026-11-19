@@ -320,6 +320,13 @@ struct PracticeView: View {
                                      min(streak, Self.trialStreakGoal), Self.trialStreakGoal))
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    // 第 3 天的纪念卡里程碑提前说：Day 1 就得有一个够得着的短期目标。
+                    // 只讲「连续 7 天」对新人太远，等于没有目标。
+                    if streak < 3 {
+                        Text(AppState.tr("milestone_3_hint"))
+                            .font(.caption2)
+                            .foregroundColor(DS.bronze)
+                    }
                 }
 
                 Spacer()
@@ -884,11 +891,38 @@ struct PracticeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(DS.paperHi)
                 .cornerRadius(DS.Radius.small)
+
+            // 打卡后的「明天见」：说清楚几点见、再坚持会得到什么。
+            // 只弹纪念卡的话，用户对明天没有任何预期，D2 能不能回来全靠运气。
+            if let streak = status?.streak {
+                HStack(spacing: 6) {
+                    Image(systemName: "sunrise")
+                        .font(.caption)
+                        .foregroundColor(DS.bronze)
+                    Text(tomorrowPromiseText(streak))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .padding()
         // 修设计审计 2026-09-02 Blocker 3：打卡完成态背景 .green 0.06 → DS.sageSoft 0.06
         .background(DS.sageSoft.opacity(0.06))
         .cornerRadius(14)
+    }
+
+    /// 明天见：时间点取用户设置的提醒时段，并把 3 天 / 7 天两个奖励节点一次说清。
+    private func tomorrowPromiseText(_ streak: Streak) -> String {
+        let hour = NotificationService.reminderWindow.hour
+        let next = streak.currentStreak + 1
+        if next == 3 {
+            return String(format: AppState.tr("tomorrow_promise_card_fmt"), hour)
+        }
+        if next == 7 {
+            return String(format: AppState.tr("tomorrow_promise_trial_fmt"), hour)
+        }
+        return String(format: AppState.tr("tomorrow_promise_fmt"), hour)
     }
 
     @ViewBuilder
@@ -1214,6 +1248,8 @@ struct PracticeView: View {
                     intent: appState.userIntent
                 )
                 await MainActor.run {
+                    // 留存埋点：没有这条就算不出 D1/D3 曲线，任何留存改动都无从判断
+                    Analytics.checkinCompleted(streak: result.streak.currentStreak)
                     status = CheckinListResponse(checkins: status?.checkins ?? [], today: result.checkin, streak: result.streak, backfill: status?.backfill)
                     reflection = ""
                     isEditingToday = false

@@ -38,6 +38,10 @@
 "apple_signin_unknown" = "Sign-in didn't complete. Check that this device is signed in to iCloud with two-factor authentication, then try again.";
 "apple_signin_not_handled" = "The sign-in request wasn't handled. Please try again.";
 "apple_signin_invalid_response" = "Apple returned an invalid response. Please try again later.";
+"tomorrow_promise_fmt" = "See you at %d:00 tomorrow · Card 3 unlocks on day 3, and day 7 earns 7 days of Pro.";
+"tomorrow_promise_card_fmt" = "See you at %d:00 tomorrow · Tomorrow is day 3, when card 3 unlocks.";
+"tomorrow_promise_trial_fmt" = "See you at %d:00 tomorrow · Day 7 earns you 7 days of Pro.";
+"milestone_3_hint" = "A 3-day streak unlocks card 3";
 "edit" = "Edit";
 "master_guidance" = "Master Guidance";
 "ask_master" = "Ask the Master";
