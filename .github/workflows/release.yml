@@ -2,6 +2,12 @@ name: Publish to App Store
 
 on:
   workflow_dispatch:
+    inputs:
+      cancel_pending:
+        description: 'If another version is waiting for review, withdraw it first and reuse it'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,6 +21,7 @@ jobs:
       APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
       APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
       APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
+      CANCEL_PENDING: ${{ inputs.cancel_pending }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -181,19 +188,73 @@ jobs:
           if not build_id:
               sys.exit("build 1.4.0(30) not VALID within timeout")
 
-          # 3) Find or create App Store version 1.3.0
+          # 3) Find or create App Store version.
+          #
+          # 版本状态走这条路（2026-11-19 修：之前直接 POST 新建，
+          # 撞上其他版本在等审就 409 "You cannot create a new version" 整个 run 崩掉）：
+          #   ① 同名版本已存在（重跑）→ 直接用它；
+          #   ② 有别的版本在等审，且 cancel_pending=true → 用 canceled:true 撤回它，
+          #      等它落到 DEVELOPER_REJECTED 后改名 + 换 build 复用（截图/元数据都在里面）；
+          #   ③ 以上都不是 → 按旧路 POST 新建。
+          # 注意：② 会清空那一版的等审进度。release 端只在「真想换版」
+          # （修了崩溃级 bug、当前审还值得重排）时传 cancel_pending=true，
+          # 否则别碰，让新内容走下个 build。
+          import os as _os
+          CANCEL_PENDING = _os.environ.get("CANCEL_PENDING", "false").lower() == "true"
           vers = api("GET", f"/apps/{app_id}/appStoreVersions?filter[platform]=IOS&filter[versionString]={VERSION}")["data"]
           if vers:
               ver_id = vers[0]["id"]
-              print("version:", ver_id)
+              print("version (same string):", ver_id)
           else:
-              created = api("POST", "/appStoreVersions", {"data": {
-                  "type": "appStoreVersions",
-                  "attributes": {"platform": "IOS", "versionString": VERSION},
-                  "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
-              }})
-              ver_id = created["data"]["id"]
-              print("created version:", ver_id)
+              editables = api("GET",
+                  f"/apps/{app_id}/appStoreVersions?filter[platform]=IOS&limit=10")["data"]
+              blocked = [v for v in editables
+                         if v["attributes"].get("appStoreState") in
+                         ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE")]
+              if blocked and CANCEL_PENDING:
+                  vic = blocked[0]
+                  vic_state = vic["attributes"].get("appStoreState")
+                  print(f"another version waiting ({vic['attributes'].get('versionString')}, {vic_state}) — withdrawing and reusing it")
+                  pend = api("GET",
+                      f"/reviewSubmissions?filter[app]={app_id}&filter[platform]=IOS&limit=10")["data"]
+                  live = [s for s in pend if s["attributes"].get("state") in
+                          ("WAITING_FOR_REVIEW", "IN_REVIEW", "READY_FOR_REVIEW")]
+                  if live:
+                      c = api("PATCH", f"/reviewSubmissions/{live[0]['id']}", {"data": {
+                          "type": "reviewSubmissions", "id": live[0]["id"],
+                          "attributes": {"canceled": True}}})
+                      print("withdraw:", c["data"]["attributes"].get("state"))
+                  # 撤回是异步的：submission 先 CANCELING → COMPLETE，版本随后才
+                  # DEVELOPER_REJECTED。轮到可编辑态再往下走，否则 PATCH 直接 409。
+                  for i in range(24):
+                      cur = api("GET",
+                          f"/appStoreVersions/{vic['id']}?fields%5BappStoreVersions%5D=appStoreState")["data"]
+                      st = cur["attributes"].get("appStoreState")
+                      print(f"  withdraw poll {i}: {st}")
+                      if st == "DEVELOPER_REJECTED":
+                          break
+                      time.sleep(15)
+                  else:
+                      sys.exit("withdrawn version never reached DEVELOPER_REJECTED")
+                  api("PATCH", f"/appStoreVersions/{vic['id']}", {"data": {
+                      "type": "appStoreVersions", "id": vic["id"],
+                      "attributes": {"versionString": VERSION}}})
+                  ver_id = vic["id"]
+                  print(f"reused version as {VERSION}:", ver_id)
+              elif blocked:
+                  sys.exit(
+                      f"BLOCKED: version {blocked[0]['attributes'].get('versionString')} "
+                      f"is {blocked[0]['attributes'].get('appStoreState')} — new version "
+                      f"{VERSION} cannot be created. Re-run with cancel_pending=true to "
+                      f"withdraw it and reuse, or wait for review to finish.")
+              else:
+                  created = api("POST", "/appStoreVersions", {"data": {
+                      "type": "appStoreVersions",
+                      "attributes": {"platform": "IOS", "versionString": VERSION},
+                      "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                  }})
+                  ver_id = created["data"]["id"]
+                  print("created version:", ver_id)
 
           # 4) Associate build with the version
           api("PATCH", f"/appStoreVersions/{ver_id}", {"data": {
