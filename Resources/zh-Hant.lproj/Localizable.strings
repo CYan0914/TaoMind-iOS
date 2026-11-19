@@ -1,0 +1,333 @@
+/*
+  TaoMind 中文（简体）翻译
+  键 = 英文界面原文（即代码中的字符串字面量）
+*/
+
+/* ===== Tab 欄 ===== */
+"Wisdom" = "求取智慧";
+"Journal" = "修行日誌";
+"Settings" = "設定";
+
+/* ===== 每日經文 ===== */
+"Daily Verse" = "每日經文";
+
+/* ===== 求取智慧頁 ===== */
+"Seek Wisdom" = "求取智慧";
+"Describe your situation. Receive ancient guidance." = "描述你的處境，獲取古老智慧的指引。";
+"Context" = "場景";
+"Your Situation" = "你的處境";
+"Describe what you're facing... e.g., \n\"My team is burning out from constant deadlines...\"" = "描述你面临的处境……例如：\n\"我的团队因无休止的截止日期而精疲力尽……\"";
+"Response Style" = "回覆風格";
+"Consulting the Sage..." = "正在請教智者……";
+"The sage is silent. Check your connection and try again." = "智者沒有回應，請檢查網路後重試。";
+"Voice input" = "語音輸入";
+"Stop recording" = "停止錄音";
+"Recording…" = "正在聆聽……";
+"Microphone access needed" = "需要麥克風許可權";
+"Allow microphone and speech recognition in Settings to use voice input." = "請在設定中允許使用麥克風和語音識別，即可用語音輸入問題。";
+"Speech recognition isn't available here." = "當前裝置或語言暫不支援語音識別。";
+"OK" = "好";
+"Business Decision" = "商業決策";
+"Leadership" = "領導力";
+"Career" = "職業發展";
+"Personal" = "個人成長";
+"Conflict" = "人際衝突";
+"Unlimited free today" = "今日無限次";
+"free_today_fmt" = "今日剩餘 %d 次";
+"Classic · Direct" = "經典 · 直接";
+"Balanced" = "平衡";
+"Reflective · Poetic" = "詩意 · 反思";
+"upgrade_for_styles" = "免費版使用經典風格，升級解鎖全部風格。";
+
+/* ===== 免費版日誌限制 ===== */
+"free_journal_limit_fmt" = "免費版最多儲存 %d 條日誌，升級解鎖無限條。";
+"Upgrade" = "升級";
+
+/* ===== 智慧結果頁 ===== */
+"The Sage Speaks" = "智者之言";
+"The Passage" = "經文";
+"The Wisdom" = "智慧解讀";
+"The Reflection" = "反思";
+"The Way Forward" = "前進方向";
+"Share" = "分享";
+"share_as_card" = "分享圖片";
+"share_as_text" = "分享文字";
+"share_read_full" = "全文閱讀：";
+"Back" = "返回";
+"Copy" = "複製";
+"Copied to clipboard ✨" = "已複製到剪貼簿 ✨";
+
+/* ===== 修行日誌頁 ===== */
+"Loading your journal..." = "正在載入你的修行日誌……";
+"Your Journal is Empty" = "你的修行日誌還是空的";
+"Every wisdom session is saved here.\nGo seek wisdom to fill your journal." = "每一次求取智慧都會儲存在這裡。\n去求取智慧來充實你的日誌吧。";
+
+/* ===== 日誌詳情頁 ===== */
+"Your Question" = "你的問題";
+"📜 The Passage" = "📜 經文";
+"🌿 The Wisdom" = "🌿 智慧解讀";
+"🪞 The Reflection" = "🪞 反思";
+"💧 The Way Forward" = "💧 前進方向";
+"My Notes" = "我的筆記";
+"Save Notes" = "儲存筆記";
+"Journal Entry" = "日誌詳情";
+
+/* ===== 設定頁 ===== */
+"Active" = "已啟用";
+"Free Tier" = "免費版";
+"You have full access to all features. Thank you for supporting TaoMind!" = "你已解鎖全部功能，感謝支援 TaoMind！";
+"Unlimited wisdom sessions, journal entries, and more." = "無限次求取智慧、無限條日誌記錄及更多功能。";
+"Restore Purchases" = "恢復購買";
+"Upgrade to Premium" = "升級到高階版";
+"TaoMind Premium" = "TaoMind 高階版";
+"Monthly" = "每月";
+"Annual" = "每年";
+"Weekly" = "每週";
+"Daily" = "每天";
+"Quarterly" = "每季度";
+"Semi-annual" = "每半年";
+"Lifetime" = "終身";
+"every_n_months_fmt" = "每 %d 個月";
+"Export Journal" = "匯出日誌";
+"Export" = "匯出";
+
+/* ===== 每日功課頁 ===== */
+"Practice" = "功課";
+"Daily Practice" = "每日功課";
+"Read today's verse, reflect, and keep your streak. Sign in to sync across devices." = "閱讀今日經文、寫下感悟、保持連續打卡。登入後可在多裝置間同步。";
+"Sign in to Practice" = "登入以同步功課";
+"Your daily practice and streaks sync across devices." = "你的每日功課與連續打卡資料會在多裝置間同步。";
+"Your Reflection" = "今日感悟";
+"streak_days" = "連續天數";
+"best_streak" = "最長記錄";
+"total_checkins_fmt" = "共 %d 天";
+"days" = "天";
+"today" = "今天";
+"signed_in_as" = "已登入：%@";
+"read_verse" = "今日感悟";
+"seek_wisdom_short" = "求取智慧";
+"write_once_daily" = "每天一次";
+"reflection_placeholder" = "寫下這段智慧對你今天的意義……";
+"complete_practice" = "完成今日功課";
+"practice_done_today" = "今日功課已完成";
+"edit" = "修改";
+"master_guidance" = "名師指點";
+"ask_master" = "請名師指點";
+"master_locked" = "升級解鎖名師指點";
+"master_free_try" = "試一次名師指點 · 本週免費";
+"master_followup_placeholder" = "向名師追問……";
+"master_followup_locked" = "解鎖追問，與名師深談你的感悟";
+"recent_practice" = "近期功課";
+"Backfill" = "補卡";
+"backfill_explain" = "為漏掉的一天補寫感悟，可修復連續打卡。Pro 每月可補 1 次。";
+"backfill_placeholder" = "簡短寫一句這一天你領悟了什麼……";
+"streak_days_fmt" = "連續打卡 %d 天";
+"share_card_subtitle" = "TaoMind · 每日功課";
+"Library" = "經藏";
+"Commentary" = "白話精講";
+"monthly_report" = "修習月報";
+"monthly_report_hint" = "覆盤本月修習，AI 名師為你總結成長";
+"monthly_report_locked" = "升級解鎖修習月報";
+"monthly_report_empty" = "本月還沒有打卡記錄，先去完成每日功課吧";
+"Language" = "語言";
+"Responses will appear in your selected language when supported." = "回覆將盡量以你選擇的語言顯示。";
+"Preferences" = "偏好設定";
+"Version" = "版本";
+"API Status" = "介面狀態";
+"Connected" = "已連線";
+"Privacy Policy" = "隱私政策";
+"Terms of Service" = "服務條款";
+"About" = "關於";
+"TaoMind brings the wisdom of the Tao Te Ching and Diamond Sutra to your modern challenges." = "TaoMind 將《道德經》與《金剛經》的智慧帶給你現代生活中的挑戰。";
+"\nAll AI-generated content is reflective in nature and not a substitute for professional advice." = "\n所有 AI 生成的內容僅供參考，不能替代專業建議。";
+
+/* ===== 每日推送 ===== */
+"☯ Daily Wisdom" = "☯ 每日智慧";
+
+/* ===== 習慣閉環推送 ===== */
+"miss_checkin_warning" = "今日一經還差一步——完成今天的感悟，別讓連擊斷掉。";
+"churn_recall_title" = "你的連擊快回來了";
+"churn_recall_body" = "還差一天，你的連擊就能恢復——道在等你。";
+"milestone_incentive_title" = "里程碑就在前方";
+"milestone_incentive_body_fmt" = "再堅持一天，就是你的第 %d 天里程碑。";
+
+/* ===== 購買頁 ===== */
+"Unlock TaoMind Premium" = "解鎖 TaoMind 高階版";
+"Full access to ancient wisdom, unlimited" = "無限獲取古老智慧";
+"Unlimited wisdom sessions" = "無限次求取智慧";
+"Unlimited journal entries" = "無限條日誌記錄";
+"Full response style tuning" = "完整回覆風格調節";
+"Export your journal" = "匯出你的日誌";
+"pw_master" = "AI 名師逐句點評你的每日感悟";
+"Streak milestones & share cards" = "連續打卡里程碑與分享卡片";
+"Monthly backfill to heal your streak" = "每月 1 次補卡，修復連續打卡";
+"Monthly practice report" = "每月修習月報，覆盤你的成長";
+"Full library of the Tao Te Ching & Diamond Sutra" = "《道德經》81 章 + 《金剛經》32 品全文精讀";
+"Start Premium" = "開始訂閱";
+"Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings." = "訂閱會自動續費，除非在週期結束前至少 24 小時取消。可在 App Store 設定中管理。";
+"Close" = "關閉";
+"Purchases restored! 🎉" = "已恢復購買！🎉";
+"No purchases found to restore." = "沒有找到可恢復的購買記錄。";
+"Retry" = "重試";
+
+/* ===== 首啟 Onboarding ===== */
+"Ancient wisdom for today" = "古老智慧，為你今日所用";
+"A new verse every day" = "每天一章經文";
+"Tao Te Ching and Diamond Sutra, one chapter at a time" = "道德經與金剛經，一章一章品讀";
+"Ask the sage about anything" = "向智者請教任何困惑";
+"Get guidance rooted in 2,500-year-old wisdom" = "獲得源自兩千五百年智慧的指引";
+"Build a practice that sticks" = "打卡連擊，養成持久修行";
+"Daily check-ins, streaks and gentle reminders" = "每日打卡、連擊與溫柔的提醒";
+"What do you most want to solve right now?" = "你現在最想解決什麼？";
+"Your choice shapes your first day's guidance." = "你的選擇將決定第一天名師指點的方向。";
+"One verse, every morning" = "每天早晨，一章經文";
+"Get your daily verse, and a gentle nudge when your practice is slipping." = "每天接收經文，修行快斷線時收到溫柔的提醒。";
+"Continue" = "繼續";
+"Enable Notifications" = "開啟通知";
+"Not now" = "暫不開啟";
+
+/* ===== Paywall: lifetime + offerings fallback ===== */
+"One-time purchase" = "一次性買斷";
+"Unable to load purchase options. Please check your connection." = "無法載入購買選項，請檢查網路後重試。";
+"Retry" = "重試";
+"Restore" = "恢復購買";
+
+/* ===== 付費牆場景條 ===== */
+"pw_ctx_generic" = "解鎖 TaoMind 全部能力";
+"pw_ctx_seek_limit" = "今日免費求取智慧已用完";
+"pw_ctx_journal_full" = "免費版日誌已存滿 20 條";
+"pw_ctx_library_locked" = "免費試讀已結束，全部 113 章精讀等你解鎖";
+"pw_ctx_backfill" = "補卡修復連擊——Pro 每月 1 次";
+"pw_ctx_monthly_report" = "你的修習月報已就緒";
+"pw_ctx_master_feedback" = "本週免費名師指點已用完";
+"pw_ctx_master_followup" = "與名師繼續深談你的感悟";
+"pw_ctx_journal_export" = "把修行日誌匯出為文字";
+"pw_ctx_style_tuning" = "調節智者的回覆風格";
+"pw_ctx_seek_result" = "你剛完成一次完整的求取——讓修行繼續下去";
+
+/* ===== 額度用盡提示（HTTP 429，與網路錯誤區分）===== */
+"quota_reached_title" = "今天的求取次數用完了";
+/* 2026-10-12 起免費額度統一為每天 3 次 → 文案仍不寫死次數 */
+"quota_reached_body" = "今天的免費次數用完了，明天恢復。升級 Pro 可無限求取，還能聽取完整的經文旁白。";
+"quota_reached_cta" = "升級 Pro · 無限求取";
+"quota_reached_generic" = "今天的免費額度已用完，明天恢復。";
+"share_card_download_hint" = "掃碼下載 TaoMind";
+"seek_banner_title" = "解鎖完整修行";
+"seek_banner_sub" = "無限求取 · 名師指點 · 完整經藏";
+"journal_slots_left_fmt" = "免費版日誌還可儲存 %d / %d 條，升級解鎖無限。";
+"journal_full_now" = "日誌已存滿——升級後可繼續儲存。";
+
+/* ===== 價格錨點 ===== */
+"pw_monthly_equiv_fmt" = "%@/月";
+"pw_save_fmt" = "省 %d%%";
+"pw_best_value" = "薦";
+"pw_plan_lifetime" = "TaoMind Pro 終身版";
+"pw_plan_brand" = "TaoMind Pro";
+"library_tao_te_ching" = "《道德經》";
+"library_diamond_sutra" = "《金剛經》";
+"library_subtitle" = "《道德經》 · 《金剛經》";
+"library_jingjiang" = "道德經·精講";
+"library_jingjiang_pro" = "PRO";
+"library_hub_original" = "原文";
+"library_hub_in_depth" = "深度通釋";
+"library_hub_count_fmt" = "%d 章";
+"chapter_fmt" = "第 %d 章";
+
+/* ===== 精講 (build 46：原創通釋, 1 章試讀 + 35 章 Pro) ===== */
+"pw_ctx_jingjiang_locked" = "精講試讀已完，解鎖全部 36 章深度通釋";
+"jingjiang_counter_title" = "一個反常識點";
+"jingjiang_scene_title" = "一個場景：30 歲的產品經理";
+"jingjiang_tension_title" = "張力：跟上一章的連線";
+"jingjiang_action_title" = "今天一句行動";
+
+/* ===== 修行紀念卡 ===== */
+"card_unlock_title" = "收藏到新紀念卡";
+"card_unlocked_fmt" = "修行第 %d 天 · 收得第 %d/%d 章";
+"card_collection" = "修行紀念冊";
+"card_collection_hint" = "每天打卡收藏一張，集齊《道德經》81 章";
+"card_collection_progress_fmt" = "已收藏 %d / %d 張";
+
+/* ===== 數字宣紙改版新增 ===== */
+"seek_eyebrow" = "求 · 觀 · 思";
+"seal_seek_caption" = "按印 · 開始求取";
+"seal_seeking" = "推演中…";
+"daily_verse_eyebrow" = "每 日 經 文";
+"daily_verse_collapse" = "收起每日經文";
+"daily_verse_expand" = "展開每日經文";
+
+/* ===== 付費牆夜底改版 ===== */
+"pw_eyebrow" = "入室弟子";
+"pw_trial_note" = "以免費試用開始——隨時可取消";
+"pw_trial_xday_fmt" = "%d 天免費試用";
+
+/* ===== build 34: 評分 + 社交證明 + 推薦裂變 ===== */
+"rate_taomind" = "給 TaoMind 評分";
+"onboarding_social_proof" = "已有 5 萬+ 修行者在此同路";
+"referral_title" = "給 7 天，得 7 天";
+"referral_body" = "把邀請碼分享給朋友，他加入後你們各得 7 天 TaoMind Pro。";
+"referral_my_code" = "我的邀請碼";
+"referral_qr_hint" = "掃碼用我的邀請碼下載";
+"referral_stat_invited" = "已邀請朋友";
+"referral_stat_granted" = "累計獲得 Pro 天數";
+"referral_share_button" = "分享給朋友";
+"referral_share_text_fmt" = "用我的邀請碼 %@ 解鎖 7 天 TaoMind Pro · %@";
+"referral_redeem_success" = "你們都獲得了 7 天 Pro ✨";
+"referral_footer_fmt" = "%@ 在修行第 %d 天分享";
+"referral_monthly_fmt" = "%@ 的修行報告 · %@";
+
+/* ===== build 39: Google Sign-In + Account ===== */
+"Account" = "賬戶";
+"Sign Out" = "退出登入";
+"Continue with Google" = "用 Google 賬號繼續";
+"Signed in with Google" = "已用 Google 賬號登入";
+"Signed in with Apple" = "已用 Apple 賬號登入";
+
+/* ===== build 50: 情緒化每日經文 ===== */
+"mood_calm" = "平靜";
+"mood_restless" = "煩躁";
+"mood_stuck" = "卡住";
+"mood_hopeful" = "期待";
+"mood_row_title" = "今天感覺如何?";
+"mood_row_hint" = "點選後今日經文會為你定製";
+"mood_row_locked_hint" = "每日情緒定製經文——點心情,我們為你挑一句當下合用的。Pro 專屬。";
+"personalized_verse_eyebrow" = "今日經文 · 為你而選";
+"personalized_verse_upsell_title" = "專屬於你的每日經文";
+"personalized_verse_upsell_sub" = "每天點一下心情,我們為你挑一句當下合用的經文。Pro 專屬。";
+"pw_ctx_personalized_daily_verse" = "每日情緒定製經文——點心情,給你一句當下合用的";
+
+/* ===== 太上感應篇 (2026-09-11) ===== */
+"library_ganying" = "太上感應篇";
+"library_hub_treatise" = "勸善文 · 24 節";
+
+/* ===== 清靜經 + 列子 (2026-09-11) ===== */
+"library_qingjing" = "清靜經";
+"library_liezi" = "列子";
+
+/* ===== 莊子精選 (2026-09-12) ===== */
+"library_zhuangzi" = "莊子";
+
+/* ===== 大乘佛法開示 (2026-10-31) ===== */
+"library_dasheng" = "大乘佛法開示";
+"library_hub_teachings" = "師父開示";
+"library_hub_talks_fmt" = "%d 講";
+
+/* ===== 打卡換 7 天 Pro 體驗卡（1.7.4）===== */
+"trial_progress_title" = "連續打卡 7 天，得 7 天 Pro";
+"trial_progress_fmt" = "已連續 %d 天，共 %d 天";
+"trial_granted_title" = "連續打卡 7 天，7 天 Pro 到手";
+"trial_granted_body" = "經藏全文與無限求取已為你開放，有效期至 %@。";
+"paywall_trial_hint" = "或者：連續打卡 7 天，免費得 7 天 Pro。";
+
+/* ===== 經藏邀請：儲存求取結果後引導進經藏（1.7.4）===== */
+"library_invite_title" = "想讀原文嗎？";
+"library_invite_body" = "這次求取已存入修行日誌。道德經、金剛經、莊子的完整原文與逐章精講都在經藏裡——原文與譯文對照，一章一章讀下去。";
+"library_invite_cta" = "去看看經藏";
+"library_invite_later" = "以後再說";
+
+/* ===== 語音輸入（求取智慧 + 寫感悟）===== */
+"Microphone access needed" = "需要麥克風許可權";
+"Allow microphone and speech recognition in Settings to use voice input." = "請在「設定」中允許麥克風與語音識別，才能使用語音輸入。";
+"Speech recognition isn't available here." = "當前環境無法使用語音識別。";
+"Recording…" = "正在聆聽…";
+"Voice input" = "語音輸入";
+"Stop recording" = "停止錄音";

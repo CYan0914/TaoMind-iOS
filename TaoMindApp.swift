@@ -172,6 +172,8 @@ class AppState: ObservableObject {
     @Published var language: Language {
         didSet {
             Self.currentLocaleId = language.localeId
+            Self.uiLocaleId = Self.resolveUILocale(
+                language, system: Locale.preferredLanguages.first ?? "en")
             UserDefaults.standard.set(language.rawValue, forKey: Self.languageOverrideKey)
         }
     }
@@ -255,6 +257,24 @@ class AppState: ObservableObject {
     /// 当前语言对应的 locale（供 Bundle 查询与 SwiftUI 环境使用）
     static var currentLocaleId = "en"
 
+    /// UI 文案实际走哪个 `.lproj`。
+    ///
+    /// `currentLocaleId` 只有 `zh-Hans` / `en` 两个值，全项目十来处用 `== "zh-Hans"`
+    /// 判断该取中文槽还是英文槽，动它会连带改内容选择。所以繁简细分只落在这里：
+    /// 港台/澳门用户系统是 zh-Hant，仍按中文内容走，但界面换成繁体文案。
+    static var uiLocaleId = "en"
+
+    /// 中文再按系统地区分繁简。认不出的中文一律回简体（大陆/新马）。
+    static func resolveUILocale(_ language: Language, system: String) -> String {
+        guard language == .chinese else { return "en" }
+        let s = system.lowercased()
+        if s.hasPrefix("zh-hant") || s.hasPrefix("zh-tw")
+            || s.hasPrefix("zh-hk") || s.hasPrefix("zh-mo") {
+            return "zh-Hant"
+        }
+        return "zh-Hans"
+    }
+
     init() {
         // 优先使用用户手动设置的覆盖语言，否则跟随系统语言
         let saved = UserDefaults.standard.string(forKey: Self.languageOverrideKey)
@@ -262,6 +282,7 @@ class AppState: ObservableObject {
         let detected: Language = saved.flatMap(Language.init(rawValue:)) ?? (system.hasPrefix("zh") ? .chinese : .english)
         self.language = detected
         Self.currentLocaleId = detected.localeId
+        Self.uiLocaleId = Self.resolveUILocale(detected, system: system)
         self.hasSeenOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingSeenKey)
         self.userIntent = UserDefaults.standard.string(forKey: Self.userIntentKey)
         // 首装日期锚（首次启动 seed 当下；后续读取已有值）
@@ -278,9 +299,17 @@ class AppState: ObservableObject {
 
     /// 根据当前语言翻译字符串（键 = 英文原文，表 = Localizable.strings）
     static func tr(_ key: String) -> String {
-        guard let path = Bundle.main.path(forResource: currentLocaleId, ofType: "lproj"),
-              let langBundle = Bundle(path: path) else { return key }
-        return langBundle.localizedString(forKey: key, value: key, table: "Localizable")
+        if let path = Bundle.main.path(forResource: uiLocaleId, ofType: "lproj"),
+           let langBundle = Bundle(path: path) {
+            return langBundle.localizedString(forKey: key, value: key, table: "Localizable")
+        }
+        // 繁体表缺失时退回简体，别直接吐英文 key
+        if uiLocaleId == "zh-Hant",
+           let path = Bundle.main.path(forResource: "zh-Hans", ofType: "lproj"),
+           let langBundle = Bundle(path: path) {
+            return langBundle.localizedString(forKey: key, value: key, table: "Localizable")
+        }
+        return key
     }
 
     /// 翻译带格式化参数的字符串，如 tr("total_checkins_fmt", 5)
