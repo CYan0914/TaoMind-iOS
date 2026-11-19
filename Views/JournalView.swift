@@ -103,6 +103,37 @@ struct JournalView: View {
                 .padding()
             } else {
                 List {
+                    // 「回望」：把 7 天前 / 30 天前写的那一条拎到最上面。
+                    // 记录的价值来自重读 —— 只写不读，用户付出的是输入成本、
+                    // 拿到的是零回报，Journal 就变成一条单向沉没的列表。
+                    if let look = lookBackEntry {
+                        Section {
+                            Button {
+                                activeSheet = .detail(look.entry)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(look.label)
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(DS.bronze)
+                                    Text(look.entry.question)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(DS.ink)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.leading)
+                                    Text(look.entry.reflection)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .listRowBackground(DS.paperHi)
+                        }
+                    }
+
                     // Free tier: journal limit banner（动态剩余额度——越接近上限越有紧迫感）
                     if !subscriptionManager.isPro {
                         Section {
@@ -177,6 +208,26 @@ struct JournalView: View {
         .task {
             await loadEntries()
         }
+    }
+
+    /// 「回望」条目：优先 7 天前，其次 30 天前（±1 天容差，避免用户当天没写就没有）。
+    private var lookBackEntry: (entry: JournalEntry, label: String)? {
+        let cal = Calendar.current
+        for (days, key) in [(7, "lookback_7"), (30, "lookback_30")] {
+            guard let target = cal.date(byAdding: .day, value: -days, to: Date()) else { continue }
+            if let hit = entries.first(where: { entry in
+                guard let d = entry.createdDate else { return false }
+                let diff = cal.dateComponents(
+                    [.day],
+                    from: cal.startOfDay(for: d),
+                    to: cal.startOfDay(for: target)
+                ).day ?? 999
+                return abs(diff) <= 1
+            }) {
+                return (hit, String(format: AppState.tr(key), days))
+            }
+        }
+        return nil
     }
 
     /// Build a plain-text export of the journal (Pro feature)

@@ -7,6 +7,8 @@ struct SettingsView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var authService: AuthService
     @State private var showReferral = false
+    /// 每日经文推送时段（与 NotificationService.reminderWindow 共用同一个 key）
+    @AppStorage(NotificationService.reminderWindowKey) private var reminderWindow = ReminderWindow.morning.rawValue
 
     var body: some View {
         // build 34 v2: List 默认 systemBackground（白）与全站宣纸色不一致。
@@ -137,6 +139,18 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .listRowBackground(DS.paperHi)
+
+                // 每日经文推送时段。写死 8:00 对作息晚的人等于没有提醒，
+                // 会直接导致用户关掉通知权限 —— 连带整条习惯闭环失效。
+                Picker(AppState.tr("reminder_time"), selection: $reminderWindow) {
+                    ForEach(ReminderWindow.allCases, id: \.self) { window in
+                        Text(AppState.tr(window.labelKey)).tag(window.rawValue)
+                    }
+                }
+                .listRowBackground(DS.paperHi)
+                .onChange(of: reminderWindow) { _ in
+                    Task { await NotificationService.shared.scheduleDailyVerse() }
+                }
             } header: {
                 Label("Preferences", systemImage: "gearshape")
             }

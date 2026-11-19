@@ -27,6 +27,14 @@
 "quick_reflect_2" = "Grateful for what is";
 "quick_reflect_3" = "Some restlessness, still sitting";
 "quick_reflect_4" = "Keep walking";
+"personalization_trial_hint" = "Personalized verse · free through day 7. Keep a 7-day streak to keep it.";
+"evening_nudge_title" = "Today's practice is still open";
+"evening_nudge_body_fmt" = "%d-day streak. One line finishes today's practice.";
+"lookback_7" = "%d days ago · you wrote";
+"lookback_30" = "%d days ago · you wrote";
+"reminder_time" = "Daily reminder";
+"reminder_morning" = "Morning · 8:00";
+"reminder_evening" = "Evening · 20:00";
 "edit" = "Edit";
 "master_guidance" = "Master Guidance";
 "ask_master" = "Ask the Master";

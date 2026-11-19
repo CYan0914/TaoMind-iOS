@@ -227,6 +227,16 @@ struct PracticeView: View {
                     DailyVerseCard(verse: verse, isPersonalized: appState.personalizedVerse != nil)
                 }
 
+                // Day 4–7：个性化经文仍在免费窗口内。明确告知这是试用，
+                // 并给出保留路径 —— 否则第 8 天突然消失时，用户感觉是被抽走了。
+                if showPersonalizationTrialHint {
+                    Text(AppState.tr("personalization_trial_hint"))
+                        .font(.caption2)
+                        .foregroundColor(DS.inkSoft)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+
                 // Source picker
                 sourcePicker
 
@@ -457,10 +467,8 @@ struct PracticeView: View {
     }
 
     private func openBackfill() {
-        guard subscriptionManager.isPro else {
-            subscriptionManager.openPaywall(.backfill)
-            return
-        }
+        // 免费版每月也有 1 次补卡（断签护符），不再直接弹付费墙。
+        // 用满名额后服务端返回 409，由 BackfillView 把原因显示出来。
         showBackfill = true
     }
 
@@ -603,7 +611,14 @@ struct PracticeView: View {
         return subscriptionManager.isPro || PersonalizedDailyVerseService.isInFreeTrial()
     }
 
-    /// 已签到 且 非 Pro 且 非 trial → Day 4+ 显升级 banner
+    /// Day 4–7 的衔接提示：还在免费窗口内，但要说清楚「为什么现在能用」。
+    private var showPersonalizationTrialHint: Bool {
+        guard authService.isSignedIn, !subscriptionManager.isPro else { return false }
+        let day = PersonalizedDailyVerseService.daysSinceInstall()
+        return day >= 3 && day < PersonalizedDailyVerseService.freePersonalizationDays
+    }
+
+    /// 已签到 且 非 Pro 且 非 trial → Day 8+ 显升级 banner（免费个性化窗口已延长到 7 天）
     private var showUpgradeBanner: Bool {
         guard authService.isSignedIn else { return false }
         return !subscriptionManager.isPro && !PersonalizedDailyVerseService.isInFreeTrial()
@@ -1138,6 +1153,10 @@ struct PracticeView: View {
         errorMessage = nil
         do {
             status = try await service.fetchStatus()
+            // 连击状态同步给主屏 Widget（打卡/断签后立刻可见）
+            if let s = status {
+                WidgetSharedStore.publishStreak(s.streak.currentStreak, done: s.streak.todayDone)
+            }
             // Sync the persisted feedback into today's checkin if present
             if let today = status?.today, let fb = today.master_feedback, !fb.isEmpty {
                 feedback = fb

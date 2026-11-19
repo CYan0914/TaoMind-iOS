@@ -116,6 +116,14 @@
 "quick_reflect_2" = "心存感恩";
 "quick_reflect_3" = "略有煩擾，仍靜坐";
 "quick_reflect_4" = "繼續前行";
+"personalization_trial_hint" = "個人化經文 · 前 7 天免費，連續打卡 7 天即可保留";
+"evening_nudge_title" = "今天還沒記一筆";
+"evening_nudge_body_fmt" = "連續 %d 天，寫一句就完成今天的功課。";
+"lookback_7" = "回望 · %d 天前你寫道";
+"lookback_30" = "回望 · %d 天前你寫道";
+"reminder_time" = "提醒時間";
+"reminder_morning" = "早晨 8:00";
+"reminder_evening" = "晚間 20:00";
 "edit" = "修改";
 "master_guidance" = "名師指點";
 "ask_master" = "請名師指點";

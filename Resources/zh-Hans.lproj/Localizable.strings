@@ -116,6 +116,14 @@
 "quick_reflect_2" = "心存感恩";
 "quick_reflect_3" = "略有烦扰，仍静坐";
 "quick_reflect_4" = "继续前行";
+"personalization_trial_hint" = "个性化经文 · 前 7 天免费，连续打卡 7 天即可保留";
+"evening_nudge_title" = "今天还没记一笔";
+"evening_nudge_body_fmt" = "连续 %d 天，写一句就完成今天的功课。";
+"lookback_7" = "回望 · %d 天前你写道";
+"lookback_30" = "回望 · %d 天前你写道";
+"reminder_time" = "提醒时间";
+"reminder_morning" = "早晨 8:00";
+"reminder_evening" = "晚间 20:00";
 "edit" = "修改";
 "master_guidance" = "名师指点";
 "ask_master" = "请名师指点";

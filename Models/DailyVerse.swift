@@ -105,6 +105,13 @@ struct JournalEntry: Codable, Identifiable {
     let created_at: String
 
     var isFavorite: Bool { is_favorite == 1 }
+
+    /// 解析后的创建时间，供「回望」按日期挑旧条目用。
+    var createdDate: Date? {
+        ISO8601DateFormatter().date(from: created_at)
+            ?? DateFormatter.apiDate.date(from: String(created_at.prefix(19)))
+    }
+
     var formattedDate: String {
         // Parse ISO date from API
         guard let date = ISO8601DateFormatter().date(from: created_at) ??

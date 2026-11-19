@@ -52,6 +52,7 @@ targets:
       - path: Models
       - path: Services
       - path: Views
+      - path: Shared
       - path: Resources
         excludes:
           # 2026-09-17：精讲音频（81 × ~5.7MB ≈ 462MB）已下架，App 只保留文字。
@@ -74,3 +75,31 @@ targets:
       - package: RevenueCat
       - package: GoogleSignIn
         product: GoogleSignIn
+      - target: TaoMindWidget
+        embed: true
+
+  # 主屏小组件：今日经文 + 连续天数。
+  # 数据经 App Group `group.com.cyan0914.taomind` 与主 App 共享（见 Shared/WidgetShared.swift）。
+  TaoMindWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget
+      - path: Shared
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: TaoMind
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/TaoMindWidget.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cyan0914.taomind.widget
+        PRODUCT_NAME: TaoMindWidget
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework

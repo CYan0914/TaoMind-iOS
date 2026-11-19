@@ -6,7 +6,7 @@ import Foundation
 // 1. 复用 `/seek-wisdom` 端点(主后端) → 不新搭后端,不动主后端代码
 // 2. 每日 1 个 user × 1 LLM call;缓存命中当日(per userId + yyyyMMdd + language)绝不重 LLM
 // 3. Mood 中途切换不重 LLM(省 50/天 Pro 额度)
-// 4. Pro 永远过;Free 仅 Day 1-3 过(trial);Day 4 起非 Pro 走 fallback + upgrade banner
+// 4. Pro 永远过;Free 仅 Day 1-7 过(trial,与打卡换体验卡的 7 天门槛对齐);Day 8 起非 Pro 走 fallback + upgrade banner
 // 5. 解析 4 层 fallback:JSON → regex 提取 markdown fence → WisdomResponse 字段 → VerseFallback
 // 6. scenario_type 优先 "personalized_daily_verse"(新值),400 时 retry "personal"
 //
@@ -28,14 +28,30 @@ struct PersonalizedDailyVerseService {
 
     // MARK: - Free trial
 
-    /// 新装后前 3 个日历日免费体验 Day 1, 2, 3
-    static func isInFreeTrial(now: Date = Date()) -> Bool {
+    /// 新装后前 7 个日历日免费体验（Day 1–7）。
+    ///
+    /// 原先是 3 天：Day 4 个性化经文突然消失，退回固定经文。而连续打卡换
+    /// 7 天 Pro 体验卡的门槛是第 7 天 —— 中间 Day 4–6 是空档，用户既没有
+    /// 个性化内容、也拿不到任何奖励，习惯还没成形（通常 D5–D7 才稳）就先
+    /// 降一档体验，这是留存最陡的一段。
+    ///
+    /// 改成 7 天后窗口与后端 TRIAL_STREAK_THRESHOLD 对齐：
+    ///   坚持打卡的人第 7 天直接换到体验卡，无缝续上；
+    ///   没坚持到的人本来就留不住，不必提前 4 天赶客。
+    static let freePersonalizationDays = 7
+
+    /// 安装后的第几个日历日（安装当天 = 0）。
+    static func daysSinceInstall(now: Date = Date()) -> Int {
         let install = UserDefaults.standard.object(forKey: installDateKey) as? Date ?? Date()
         let cal = Calendar.current
-        let days = cal.dateComponents([.day],
+        return cal.dateComponents([.day],
             from: cal.startOfDay(for: install),
             to: cal.startOfDay(for: now)).day ?? 0
-        return days >= 0 && days < 3
+    }
+
+    static func isInFreeTrial(now: Date = Date()) -> Bool {
+        let days = daysSinceInstall(now: now)
+        return days >= 0 && days < freePersonalizationDays
     }
 
     /// 是否在 Pro 或 trial 窗口内(可享受 personalized verse)

@@ -10,6 +10,20 @@ import SwiftUI
 // 如未来要按用户偏好时段（如"早 8 点"vs"晚 9 点"）做 A/B，扩展点：
 // `scheduleHabitNotifications(_ preferredWindow: ReminderWindow?)` 注释位。
 
+// MARK: - Reminder Window（每日经文推送时段）
+
+/// 每日经文推送的时段。原先写死 8:00 —— 作息偏晚的人收到早上 8 点推送
+/// 只会去关通知，而通知一关，整套习惯闭环（预警/召回/里程碑）全部失效。
+/// 让用户自己挑时段，是保住通知权限最便宜的一步。
+enum ReminderWindow: String, CaseIterable {
+    case morning
+    case evening
+
+    var hour: Int { self == .morning ? 8 : 20 }
+    var minute: Int { 0 }
+    var labelKey: String { self == .morning ? "reminder_morning" : "reminder_evening" }
+}
+
 @MainActor
 final class NotificationService: NSObject, ObservableObject {
 
@@ -18,9 +32,16 @@ final class NotificationService: NSObject, ObservableObject {
     private let apiBaseURL = "https://taomindapp.com"
 
     // 习惯闭环通知的稳定 identifier（取消/重排用）
+    // 每日经文推送时段（Settings 可改，默认早晨）
+    static let reminderWindowKey = "reminder.window"
+    static var reminderWindow: ReminderWindow {
+        ReminderWindow(rawValue: UserDefaults.standard.string(forKey: reminderWindowKey) ?? "") ?? .morning
+    }
+
     private let missWarningId = "habit-miss-warning"
     private let churnRecallId = "habit-churn-recall"
     private let milestoneIncentiveId = "habit-milestone-incentive"
+    private let eveningNudgeId = "habit-evening-nudge"
 
     // MARK: - Authorization
 
@@ -55,10 +76,11 @@ final class NotificationService: NSObject, ObservableObject {
         content.body = verse.localizedVerse
         content.sound = .default
 
-        // Schedule for tomorrow at 8:00 AM local time
+        // 按用户选择的时段（默认早晨 8:00）重复推送
+        let window = Self.reminderWindow
         var dateComponents = DateComponents()
-        dateComponents.hour = 8
-        dateComponents.minute = 0
+        dateComponents.hour = window.hour
+        dateComponents.minute = window.minute
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         let request = UNNotificationRequest(
@@ -128,11 +150,27 @@ final class NotificationService: NSObject, ObservableObject {
                 )
             }
 
-            // 2) 断签召回：连续 ≥2 天未打卡 → 10:00，推经文 + "连击还差一天恢复"
+            // 2) 晚间兜底：今天还没打卡，且昨天的预警（18:00）不会触发
+            //    （条件与 1) 互斥：昨天也没打的人拿不到 18:00，就在这里 21:00 补一次）。
+            //    D1 流失是最容易救的一档，晚间是当天最后一个还能行动的时间窗。
+            if !streak.todayDone && !dates.contains(yesterday) {
+                scheduleOneShot(
+                    hour: 21, minute: 0, id: eveningNudgeId,
+                    title: AppState.tr("evening_nudge_title"),
+                    body: String(
+                        format: AppState.tr("evening_nudge_body_fmt"),
+                        streak.currentStreak
+                    )
+                )
+            }
+
+            // 3) 断签召回：连续 ≥1 天未打卡 → 次日 10:00，推经文 + "连击还差一天恢复"。
+            //    原先是 ≥2 天：昨天没打的人当天只有一条 18:00 预警，用户没响应就
+            //    彻底安静到第三天 —— 而 D1 恰恰是最容易挽回的一档。
             if let last = streak.lastCheckinDate,
                let lastDate = Self.dayFormatter.date(from: last),
                let gap = cal.dateComponents([.day], from: lastDate, to: Date()).day,
-               gap >= 2 {
+               gap >= 1 {
                 let verse = await fetchTodayVerse()
                 scheduleOneShot(
                     hour: 10, minute: 0, id: churnRecallId,
@@ -141,7 +179,7 @@ final class NotificationService: NSObject, ObservableObject {
                 )
             }
 
-            // 3) 里程碑激励：当前连续 N 天，明天恰好是里程碑（7/21/49/81）→ 19:00
+            // 4) 里程碑激励：当前连续 N 天，明天恰好是里程碑（7/21/49/81）→ 19:00
             let milestones: Set<Int> = [7, 21, 49, 81]
             if !streak.todayDone && milestones.contains(streak.currentStreak + 1) {
                 let target = streak.currentStreak + 1
@@ -159,7 +197,7 @@ final class NotificationService: NSObject, ObservableObject {
     /// Remove any scheduled habit-loop notification
     func cancelHabitNotifications() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: [missWarningId, churnRecallId, milestoneIncentiveId]
+            withIdentifiers: [missWarningId, churnRecallId, milestoneIncentiveId, eveningNudgeId]
         )
     }
 

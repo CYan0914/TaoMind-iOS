@@ -98,6 +98,7 @@ struct TaoMindApp: App {
                 appState.baseVerse = verse
                 appState.dailyVerse = verse
                 dailyVerse = verse
+                publishWidgetState()
             }
         } catch {
             // 离线兜底：按当前界面语言组装（中英两槽都填）。
@@ -108,6 +109,7 @@ struct TaoMindApp: App {
                 appState.baseVerse = fallback
                 appState.dailyVerse = fallback
                 dailyVerse = fallback
+                publishWidgetState()
             }
         }
         // build 50: Step B — 若已登录且 (Pro 或 Day 1-3 free trial),
@@ -151,6 +153,7 @@ struct TaoMindApp: App {
                 dailyVerse = personalized
                 appState.personalizedVerse = personalized
                 appState.personalizedVerseFailedToday = false
+                publishWidgetState()
             }
         } catch {
             await MainActor.run {
@@ -161,6 +164,20 @@ struct TaoMindApp: App {
                 dailyVerse = appState.dailyVerse
             }
         }
+    }
+
+    /// 把今日经文写进 App Group —— 主屏 Widget 读的是这份快照。
+    private func publishWidgetState() {
+        guard let verse = appState.dailyVerse else { return }
+        let source = verse.localizedChapter.isEmpty
+            ? verse.source
+            : "\(verse.source) · \(verse.localizedChapter)"
+        WidgetSharedStore.publish(
+            verse: verse.localizedVerse,
+            source: source,
+            streak: WidgetSharedStore.streak,
+            done: WidgetSharedStore.done
+        )
     }
 }
 
