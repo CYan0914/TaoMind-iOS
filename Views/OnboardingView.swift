@@ -261,6 +261,9 @@ struct OnboardingView: View {
 
     private func finish() {
         appState.hasSeenOnboarding = true
+        // 新用户第一屏落在 Practice（今日经文 + 打卡），而不是 AI 求问页：
+        // 习惯养成从「今天读一句、记一笔」起步，先读经文再看别的。
+        appState.selectedTab = 3
         dismiss()
     }
 }

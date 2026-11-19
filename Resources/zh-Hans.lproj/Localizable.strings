@@ -110,6 +110,12 @@
 "reflection_placeholder" = "写下这段智慧对你今天的意义……";
 "complete_practice" = "完成今日功课";
 "practice_done_today" = "今日功课已完成";
+"practice_pending" = "待打卡";
+"practice_done_short" = "已完成";
+"quick_reflect_1" = "今日心静";
+"quick_reflect_2" = "心存感恩";
+"quick_reflect_3" = "略有烦扰，仍静坐";
+"quick_reflect_4" = "继续前行";
 "edit" = "修改";
 "master_guidance" = "名师指点";
 "ask_master" = "请名师指点";

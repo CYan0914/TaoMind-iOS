@@ -21,6 +21,12 @@
 "reflection_placeholder" = "Write what this wisdom means for you today...";
 "complete_practice" = "Complete Today's Practice";
 "practice_done_today" = "Today's practice complete";
+"practice_pending" = "Pending";
+"practice_done_short" = "Done";
+"quick_reflect_1" = "A quiet mind today";
+"quick_reflect_2" = "Grateful for what is";
+"quick_reflect_3" = "Some restlessness, still sitting";
+"quick_reflect_4" = "Keep walking";
 "edit" = "Edit";
 "master_guidance" = "Master Guidance";
 "ask_master" = "Ask the Master";

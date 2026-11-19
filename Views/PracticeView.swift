@@ -151,6 +151,13 @@ struct PracticeView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
+                // 未登录也能读今日经文：每日习惯的第一步不该被登录墙挡住。
+                // 登录只负责「记录」——积累连续天数、跨设备同步、解锁师父指点。
+                if let verse = appState.dailyVerse {
+                    DailyVerseCard(verse: verse, isPersonalized: false)
+                        .padding(.horizontal, 20)
+                }
+
                 SignInWithAppleButton(
                     .signIn,
                     onRequest: { request in
@@ -212,29 +219,10 @@ struct PracticeView: View {
                 // 连续打卡 7 天 → 7 天 Pro 体验卡的进度（让用户看得见奖励）
                 trialProgressBanner
 
-                // build 50: Mood chip row — Pro/trial 才显,签到后引导用户选心情
-                if showMoodRow {
-                    moodRow
-                }
-
-                // Streak actions (backfill + share card)
-                streakActions
-
-                // 修行纪念册入口（打卡收集 81 张道德经卡）
-                cardCollectionEntry
-
-                // Monthly report (Pro)
-                monthlyReportCard
-
-                // 修设计审计 2026-09-02 QW2：经藏入口（5 tab → 4 tab 后从底 tab 迁入）
-                libraryEntry
-
-                // build 50: 升级 banner — Day 4+ 非 Pro 显,紧贴 verse card 形成视觉链路
-                if showUpgradeBanner {
-                    personalizedUpgradeBanner
-                }
-
-                // Today's verse
+                // 今日经文 —— 每日习惯的第一个动作。
+                // 原先排在第 9 位：新用户要先划过补卡/分享/纪念册/月报/经藏/升级
+                // 六张入口卡，才看到「今天该读什么」。首屏的主角必须是今日功课，
+                // 其余入口都只是做完功课之后的分流。
                 if let verse = appState.dailyVerse {
                     DailyVerseCard(verse: verse, isPersonalized: appState.personalizedVerse != nil)
                 }
@@ -261,6 +249,18 @@ struct PracticeView: View {
                 if let checkins = status?.checkins, !checkins.isEmpty {
                     historySection(checkins)
                 }
+
+                // ── 做完今日功课之后才分流：补卡 / 分享 / 纪念册 / 月报 / 经藏 ──
+                if showMoodRow {
+                    moodRow
+                }
+                if showUpgradeBanner {
+                    personalizedUpgradeBanner
+                }
+                streakActions
+                cardCollectionEntry
+                monthlyReportCard
+                libraryEntry
             }
             .padding()
         }
@@ -370,10 +370,14 @@ struct PracticeView: View {
                     // 修设计审计 2026-09-02 Blocker 3：iOS 系统绿跟 bronze 暖色系跳戏。
                     // 改 DS.sage（鼠尾草绿），保留「成功」语义但融入宣纸调色板。
                     .foregroundColor((status?.streak.todayDone ?? false) ? DS.sage : .secondary)
-                Text(AppState.tr("signed_in_as", authService.user?.display_name ?? authService.user?.email ?? ""))
+                // 原来这里是「登录账号名」，对每日习惯没有任何推动：用户要的是
+                // 「我今天做没做」。改成明确的状态，未完成时朱砂色提示「待打卡」。
+                Text((status?.streak.todayDone ?? false)
+                     ? AppState.tr("practice_done_short")
+                     : AppState.tr("practice_pending"))
                     .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    .fontWeight(.semibold)
+                    .foregroundColor((status?.streak.todayDone ?? false) ? DS.sage : DS.cinnabar)
             }
             .frame(maxWidth: .infinity)
         }
@@ -740,9 +744,35 @@ struct PracticeView: View {
                 }
                 .transition(.opacity)
             }
+
+            // 快捷感悟：想打卡但一时写不出话 —— 点一下填入，之后仍可编辑。
+            // 不绕过后端「感悟不能为空」的校验，也不让用户卡在空白输入框前放弃。
+            if reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Self.quickReflectionKeys, id: \.self) { key in
+                            Button(AppState.tr(key)) {
+                                reflection = AppState.tr(key)
+                            }
+                            .font(.caption)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(DS.ink.opacity(0.05))
+                            .foregroundColor(DS.inkSoft)
+                            .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: speechService.isRecording)
     }
+
+    /// 快捷感悟文案的本地化 key；点选即用，降低「今天不知道写什么」的放弃率。
+    private static let quickReflectionKeys = [
+        "quick_reflect_1", "quick_reflect_2", "quick_reflect_3", "quick_reflect_4",
+    ]
 
     // MARK: - Voice Input (写感悟)
 
