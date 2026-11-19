@@ -125,19 +125,21 @@ jobs:
           # 1.9.1 用户能感知的增量：
           #   - 道德经精讲的章节页补上返回按钮（原先是 sheet 里的 NavigationStack
           #     根视图，系统不给返回按钮，和其他文章不一致）
-          # 1.9.2 用户能感知的增量：阅读体验的几处小改动。
+          # 1.9.3 用户能感知的增量：
+          #   - 修复大乘师父讲法部分讲次英文正文空白（长文渲染问题）
           # 面向终端读者写，不写实现细节
           WHATS_NEW_EN = (
-              "Polish and fixes\n"
+              "Bug fixes\n"
               "\n"
-              "A few small refinements to the reading experience in the Library.\n"
+              "Fixed an issue where some long English talks in the "
+              "Mahayana Teachings appeared blank.\n"
               "\n"
               "Everything else works as before."
           )
           WHATS_NEW_ZH = (
-              "细节打磨\n"
+              "问题修复\n"
               "\n"
-              "经藏的阅读体验做了几处小改进。\n"
+              "修复了大乘师父讲法部分讲次英文正文显示为空白的问题。\n"
               "\n"
               "其余功能与之前相同。"
           )
