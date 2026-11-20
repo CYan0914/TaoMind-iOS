@@ -84,7 +84,7 @@
 /* ===== Paywall context banners (弹墙场景条，slug keys need explicit English) ===== */
 "upgrade_for_styles" = "Free plan uses the classic style. Upgrade to unlock all styles.";
 "pw_ctx_generic" = "Unlock everything TaoMind has to offer";
-"pw_ctx_seek_limit" = "Today's free wisdom sessions are used up";
+"pw_ctx_seek_limit" = "Today's free session is used up — 465 passages in the Library are still unread";
 "pw_ctx_journal_full" = "Your free journal is full — 20 entries saved";
 "pw_ctx_library_locked" = "Free preview complete — the full 113-chapter library awaits";
 "pw_ctx_backfill" = "Heal your streak — backfill is a Pro feature";
@@ -227,3 +227,11 @@
 "Recording…" = "Recording…";
 "Voice input" = "Voice input";
 "Stop recording" = "Stop recording";
+
+/* ===== Purchase failure (2026-11-21) ===== */
+"purchase_failed_title" = "Purchase didn't go through";
+"purchase_failed_body" = "Nothing was charged. Check your connection and try again. If you were already charged, tap Restore Purchases.";
+
+/* ===== Home Screen widget guide (2026-11-21) ===== */
+"widget_guide_title" = "Put today's verse on your Home Screen";
+"widget_guide_body" = "Touch and hold your Home Screen, tap +, search TaoMind, and add the widget. Tomorrow's verse and your streak will be waiting when you wake up.";

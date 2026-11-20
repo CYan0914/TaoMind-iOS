@@ -1,6 +1,49 @@
 import Foundation
 import RevenueCat
 
+// MARK: - Paywall Feature (付费墙功能清单，按场景筛选)
+
+/// 付费墙上的功能条目。场景决定展示哪三条 —— 全量罗列 9 条对第一次看墙的人是信息过载。
+enum PaywallFeature: CaseIterable {
+    case master
+    case unlimitedSeek
+    case backfill
+    case journal
+    case library
+    case milestones
+    case report
+    case styleTuning
+    case journalExport
+
+    var icon: String {
+        switch self {
+        case .master: return "person.wave.2"
+        case .unlimitedSeek: return "infinity"
+        case .backfill: return "calendar.badge.plus"
+        case .journal: return "book"
+        case .library: return "books.vertical"
+        case .milestones: return "leaf"
+        case .report: return "chart.line.uptrend.xyaxis"
+        case .styleTuning: return "paintbrush"
+        case .journalExport: return "square.and.arrow.up"
+        }
+    }
+
+    var titleKey: String {
+        switch self {
+        case .master: return "pw_master"
+        case .unlimitedSeek: return "Unlimited wisdom sessions"
+        case .backfill: return "Monthly backfill to heal your streak"
+        case .journal: return "Unlimited journal entries"
+        case .library: return "Full library of the Tao Te Ching & Diamond Sutra"
+        case .milestones: return "Streak milestones & share cards"
+        case .report: return "Monthly practice report"
+        case .styleTuning: return "Full response style tuning"
+        case .journalExport: return "Export your journal"
+        }
+    }
+}
+
 // MARK: - Paywall Context (付费墙场景化：弹墙时刻 → 场景文案)
 
 /// 弹付费墙时的场景上下文。付费墙永远出现在用户刚被限制的那一秒，
@@ -37,6 +80,41 @@ enum PaywallContext {
         case .personalizedDailyVerse: return "pw_ctx_personalized_daily_verse"
         }
     }
+
+    /// 该场景下最相关的三条功能。nil = 通用场景，展示完整九条清单。
+    var featuredFeatures: [PaywallFeature]? {
+        switch self {
+        case .generic:
+            return nil
+        case .seekLimitToday, .seekResult, .personalizedDailyVerse:
+            return [.unlimitedSeek, .master, .library]
+        case .libraryLocked, .jingjiangLocked:
+            return [.library, .unlimitedSeek, .master]
+        case .journalFull:
+            return [.journal, .journalExport, .master]
+        case .backfill:
+            return [.backfill, .milestones, .library]
+        case .monthlyReport:
+            return [.report, .milestones, .backfill]
+        case .masterFeedback, .masterFollowup:
+            return [.master, .unlimitedSeek, .styleTuning]
+        case .journalExport:
+            return [.journalExport, .journal, .master]
+        case .styleTuning:
+            return [.styleTuning, .master, .unlimitedSeek]
+        }
+    }
+}
+
+// MARK: - Purchase Outcome
+
+/// 购买结果。取消与失败必须分开：用户主动取消不该弹错误提示，
+/// 但失败（网络/支付/Store 问题）必须给出可执行文案 —— 原来 catch 只打日志，
+/// 用户点了「Start Premium」没反应，会以为 App 卡死。
+enum PurchaseOutcome {
+    case success
+    case cancelled
+    case failed
 }
 
 // MARK: - Subscription Manager (RevenueCat wrapper)
@@ -199,7 +277,7 @@ final class SubscriptionManager: NSObject, ObservableObject {
 
     // MARK: - Purchase
 
-    func purchase(_ package: Package) async -> Bool {
+    func purchase(_ package: Package) async -> PurchaseOutcome {
         isLoading = true
         defer { isLoading = false }
         Analytics.purchaseStart(packageID: package.identifier)
@@ -214,11 +292,16 @@ final class SubscriptionManager: NSObject, ObservableObject {
             Task { await syncEntitlementToBackend() }
             // 返回真实购买结果，不是 isPro —— 体验期内 isPro 恒为 true，
             // 拿它当返回值会让「购买失败」被误报成成功。
-            return rcActive
+            return rcActive ? .success : .failed
         } catch {
             Analytics.purchaseFail(packageID: package.identifier)
             print("[RevenueCat] Purchase failed: \(error)")
-            return false
+            // RevenueCat 把 ErrorCode 直接作为 Error 抛出；用户取消不是故障，
+            // 静默返回即可，否则每次关掉系统支付面板都弹一次错误。
+            let nsError = error as NSError
+            let rcCode = (error as? RevenueCat.ErrorCode)
+                ?? RevenueCat.ErrorCode(rawValue: nsError.code)
+            return rcCode == .purchaseCancelledError ? .cancelled : .failed
         }
     }
 

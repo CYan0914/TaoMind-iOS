@@ -21,6 +21,7 @@ final class ReviewPromptService {
     private let defaults = UserDefaults.standard
     private let promptedSeek2Key = "review.prompted.at2seeks"
     private let promptedStreak3Key = "review.prompted.atStreak3"
+    private let promptedTrialKey = "review.prompted.atTrial"
     private let lastPromptedKey = "review.last_prompted_at"
 
     private init() {}
@@ -37,6 +38,15 @@ final class ReviewPromptService {
         guard currentStreak >= 3, !defaults.bool(forKey: promptedStreak3Key) else { return }
         requestReview()
         defaults.set(true, forKey: promptedStreak3Key)
+    }
+
+    /// 7 天 Pro 体验卡发放时调用。仅弹一次。
+    /// 这是满意度峰值：用户刚刚白拿到最值钱的奖励，此刻的好感高于第 3 天。
+    /// 与第 3 天的触发相隔 4 天，24h 冷却不会吞掉它。
+    func promptAfterTrial() {
+        guard !defaults.bool(forKey: promptedTrialKey) else { return }
+        requestReview()
+        defaults.set(true, forKey: promptedTrialKey)
     }
 
     /// Unconditional prompt: used by the "Rate TaoMind" row in Settings.

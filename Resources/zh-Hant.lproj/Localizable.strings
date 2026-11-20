@@ -216,7 +216,7 @@
 
 /* ===== 付費牆場景條 ===== */
 "pw_ctx_generic" = "解鎖 TaoMind 全部能力";
-"pw_ctx_seek_limit" = "今日免費求取智慧已用完";
+"pw_ctx_seek_limit" = "今日免費求問已用完——經藏裡還有 465 條沒讀";
 "pw_ctx_journal_full" = "免費版日誌已存滿 20 條";
 "pw_ctx_library_locked" = "免費試讀已結束，全部 113 章精讀等你解鎖";
 "pw_ctx_backfill" = "補卡修復連擊——Pro 每月 1 次";
@@ -353,3 +353,11 @@
 "Recording…" = "正在聆聽…";
 "Voice input" = "語音輸入";
 "Stop recording" = "停止錄音";
+
+/* ===== 購買失敗提示（2026-11-21）===== */
+"purchase_failed_title" = "購買沒有完成";
+"purchase_failed_body" = "沒有扣款。請檢查網路後重試；如果已經付過款，點「恢復購買」即可。";
+
+/* ===== 主畫面小工具引導（2026-11-21）===== */
+"widget_guide_title" = "把今日經文放到主畫面";
+"widget_guide_body" = "長按主畫面空白處，點左上角「+」，搜尋 TaoMind 加入小工具。明天醒來，經文和連續天數就在主畫面上。";

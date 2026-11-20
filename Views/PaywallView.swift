@@ -17,6 +17,7 @@ struct PaywallView: View {
     @State private var selectedPackage: Package?
     @State private var showRestoreAlert = false
     @State private var restoreMessage = ""
+    @State private var showPurchaseFailedAlert = false
 
     /// 合并 current offering 与 "lifetime" offering 的所有 package。
     /// Lifetime 买断挂在独立 offering（identifier="lifetime"）上，
@@ -28,17 +29,19 @@ struct PaywallView: View {
             let existing = Set(pkgs.map { $0.identifier })
             pkgs += lifetimeOffering.availablePackages.filter { !existing.contains($0.identifier) }
         }
-        // 价格锚点：展示顺序不赌 RevenueCat 后台排列——年档（性价比最高）置顶、终身档第二，
-        // 其余按周期从长到短，月/周档垫底，让用户第一眼看到的就是最划算的选项。
+        // 价格锚点：年档置顶（性价比最高）、终身档第二，其余按周期从长到短，
+        // 月/周档垫底。零信任用户第一眼看到的是年档而不是终身价 —— 后者门槛最高。
         pkgs.sort { Self.anchorRank($0.packageType) < Self.anchorRank($1.packageType) }
         return pkgs
     }
 
-    /// Lifetime 居首（用户原话：lifetime 排在最上面）→ 其余按周期从长到短。
+    /// 年档居首、终身第二，其余周期从长到短。
+    /// 2026-11-20 修正：此前实现把 lifetime 排 0、注释却写「年档置顶」，两者矛盾。
+    /// 评审确认以「年档置顶」为准 —— 首屏心理门槛最低的方案拿第一顺位。
     private static func anchorRank(_ type: PackageType) -> Int {
         switch type {
-        case .lifetime: return 0
-        case .annual: return 1
+        case .annual: return 0
+        case .lifetime: return 1
         case .sixMonth: return 2
         case .threeMonth: return 3
         case .twoMonth: return 4
@@ -94,20 +97,29 @@ struct PaywallView: View {
                         )
                     }
 
-                    // MARK: - Features（前 3 条为核心价值 hero，其余为完整清单）
+                    // MARK: - Features
+                    // 场景化：只展示与本次触顶最相关的三条。通用入口才给完整清单。
+                    // 第一次看墙的人面对九条功能只会滑过去，三条才读得完。
                     VStack(spacing: 14) {
-                        HeroFeatureRow(icon: "person.wave.2", text: AppState.tr("pw_master"))
-                        HeroFeatureRow(icon: "infinity", text: AppState.tr("Unlimited wisdom sessions"))
-                        HeroFeatureRow(icon: "calendar.badge.plus", text: AppState.tr("Monthly backfill to heal your streak"))
-                        Divider()
-                            .overlay(DS.nightText.opacity(0.15))
-                            .padding(.vertical, 2)
-                        FeatureRow(icon: "book", text: AppState.tr("Unlimited journal entries"))
-                        FeatureRow(icon: "books.vertical", text: AppState.tr("Full library of the Tao Te Ching & Diamond Sutra"))
-                        FeatureRow(icon: "leaf", text: AppState.tr("Streak milestones & share cards"))
-                        FeatureRow(icon: "chart.line.uptrend.xyaxis", text: AppState.tr("Monthly practice report"))
-                        FeatureRow(icon: "paintbrush", text: AppState.tr("Full response style tuning"))
-                        FeatureRow(icon: "square.and.arrow.up", text: AppState.tr("Export your journal"))
+                        if let featured = context.featuredFeatures {
+                            ForEach(Array(featured.enumerated()), id: \.offset) { _, feature in
+                                HeroFeatureRow(icon: feature.icon,
+                                               text: AppState.tr(feature.titleKey))
+                            }
+                        } else {
+                            HeroFeatureRow(icon: "person.wave.2", text: AppState.tr("pw_master"))
+                            HeroFeatureRow(icon: "infinity", text: AppState.tr("Unlimited wisdom sessions"))
+                            HeroFeatureRow(icon: "calendar.badge.plus", text: AppState.tr("Monthly backfill to heal your streak"))
+                            Divider()
+                                .overlay(DS.nightText.opacity(0.15))
+                                .padding(.vertical, 2)
+                            FeatureRow(icon: "book", text: AppState.tr("Unlimited journal entries"))
+                            FeatureRow(icon: "books.vertical", text: AppState.tr("Full library of the Tao Te Ching & Diamond Sutra"))
+                            FeatureRow(icon: "leaf", text: AppState.tr("Streak milestones & share cards"))
+                            FeatureRow(icon: "chart.line.uptrend.xyaxis", text: AppState.tr("Monthly practice report"))
+                            FeatureRow(icon: "paintbrush", text: AppState.tr("Full response style tuning"))
+                            FeatureRow(icon: "square.and.arrow.up", text: AppState.tr("Export your journal"))
+                        }
                     }
                     .padding(.horizontal, 4)
 
@@ -248,6 +260,12 @@ struct PaywallView: View {
             } message: {
                 Text(restoreMessage)
             }
+            // 购买失败必须说出来：静默失败等于让用户以为 App 卡死。
+            .alert(AppState.tr("purchase_failed_title"), isPresented: $showPurchaseFailedAlert) {
+                Button(AppState.tr("OK")) {}
+            } message: {
+                Text(AppState.tr("purchase_failed_body"))
+            }
             .task {
                 // 2026-09-02 fix: 删掉 sync isPro check。SubscriptionManager.init() 启动时
                 // 异步跑 refreshStatus()，如果用户已是 Pro，isPro 会在 .task 跑后
@@ -272,7 +290,10 @@ struct PaywallView: View {
     private func purchase() {
         guard let pkg = selectedPackage else { return }
         Task {
-            _ = await subscriptionManager.purchase(pkg)
+            let outcome = await subscriptionManager.purchase(pkg)
+            if outcome == .failed {
+                showPurchaseFailedAlert = true
+            }
         }
     }
 }

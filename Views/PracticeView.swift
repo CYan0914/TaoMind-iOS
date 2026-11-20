@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import WidgetKit
 
 // MARK: - Daily Practice (每日功课)
 
@@ -33,6 +34,9 @@ struct PracticeView: View {
     /// 写感悟的语音输入（与求取智慧页共用 SpeechService）
     @StateObject private var speechService = SpeechService()
     @State private var showSpeechPermissionDenied = false
+    /// 主屏小组件引导（只在打卡完成后出现一次）
+    @AppStorage("widget.guide.dismissed") private var widgetGuideDismissed = false
+    @State private var widgetInstalled = false
 
     /// 连续打卡换体验卡的门槛，与后端 TRIAL_STREAK_THRESHOLD 对齐
     private static let trialStreakGoal = 7
@@ -50,6 +54,7 @@ struct PracticeView: View {
         .navigationTitle("Practice")
         .paperBackground()
         .task {
+            checkWidgetInstalled()
             if authService.isSignedIn {
                 await loadStatus()
             }
@@ -251,6 +256,10 @@ struct PracticeView: View {
                 } else {
                     saveButton
                 }
+
+                // 打卡完成后才推小组件：此刻用户刚完成今日动作，
+                // 「明天打开手机就能看到」是把习惯延续到主屏的最低成本路径。
+                widgetGuideCard
 
                 // Master guidance (Pro)
                 if let today = status?.today {
@@ -932,6 +941,52 @@ struct PracticeView: View {
         .cornerRadius(14)
     }
 
+    /// 打卡完成后的主屏小组件引导。只出现一次：装过组件、或用户主动关掉，都不再打扰。
+    @ViewBuilder
+    private var widgetGuideCard: some View {
+        if (status?.streak.todayDone ?? false) && !widgetGuideDismissed && !widgetInstalled {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "rectangle.stack.badge.plus")
+                        .font(.title3)
+                        .foregroundColor(DS.bronze)
+                    Text(AppState.tr("widget_guide_title"))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(DS.ink)
+                    Spacer()
+                    Button {
+                        widgetGuideDismissed = true
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.secondary)
+                            .padding(8)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Text(AppState.tr("widget_guide_body"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .background(DS.paperHi)
+            .cornerRadius(14)
+        }
+    }
+
+    private func checkWidgetInstalled() {
+        WidgetCenter.shared.getCurrentConfigurations { result in
+            if case .success(let widgets) = result {
+                DispatchQueue.main.async {
+                    widgetInstalled = widgets.contains { $0.kind == "TaoMindWidget" }
+                }
+            }
+        }
+    }
+
     /// 明天见：时间点取用户设置的提醒时段，并把 3 天 / 7 天两个奖励节点一次说清。
     private func tomorrowPromiseText(_ streak: Streak) -> String {
         let hour = NotificationService.reminderWindow.hour
@@ -1287,6 +1342,8 @@ struct PracticeView: View {
                        let until = ISO8601DateFormatter().date(from: raw) {
                         subscriptionManager.applyTrial(until: until)
                         trialGrantedUntil = until
+                        // 拿到体验卡是满意度峰值：此刻求评分，比第 3 天的连击更容易拿到正面评价
+                        ReviewPromptService.shared.promptAfterTrial()
                     }
                 }
                 // 打卡成功后重排习惯通知（今日已完成 → 18:00 预警/19:00 激励应取消）
