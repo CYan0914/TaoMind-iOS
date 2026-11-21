@@ -51,7 +51,7 @@ struct LibraryInviteView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
                         .background(DS.bronze)
-                        .foregroundStyle(.white)
+                        .foregroundColor(DS.paperHi)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
 

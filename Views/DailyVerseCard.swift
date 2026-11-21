@@ -47,7 +47,7 @@ struct DailyVerseCard: View {
     private var content: some View {
         VStack(spacing: 12) {
             Text(AppState.tr(isPersonalized ? "personalized_verse_eyebrow" : "daily_verse_eyebrow"))
-                .eyebrowStyle(isPersonalized ? DS.cinnabar : DS.bronze)
+                .eyebrowStyle(isPersonalized ? DS.cinnabar : DS.bronzeDeep)
 
             Text(verse.localizedVerse)
                 .font(DS.verse(plain ? 18 : 16, relativeTo: .body))

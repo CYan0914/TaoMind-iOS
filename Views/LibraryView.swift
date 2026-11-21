@@ -136,7 +136,7 @@ struct LibraryView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
             .background(DS.ink)
-            .foregroundColor(.white)
+            .foregroundColor(DS.paperHi)
             .cornerRadius(DS.Radius.small)
         }
         .padding()
@@ -348,7 +348,8 @@ private struct LibraryHubCard: View {
                         .foregroundColor(DS.ink)
                     if showPro {
                         Text(AppState.tr("library_jingjiang_pro"))
-                            .font(.system(size: 9, weight: .bold))
+                            // FINDING-006：9pt 低于 12pt 标签下限，且不随 Dynamic Type 缩放。
+                            .font(.system(size: 11, weight: .bold, relativeTo: .caption2))
                             .tracking(1)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)

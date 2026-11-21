@@ -75,7 +75,7 @@ struct BackfillView: View {
                     .background(reflection.trimmingCharacters(in: .whitespaces).isEmpty
                                 ? Color.gray.opacity(0.3)
                                 : DS.ink)
-                    .foregroundColor(reflection.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .white)
+                    .foregroundColor(reflection.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : DS.paperHi)
                     .cornerRadius(14)
                 }
                 .disabled(reflection.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)

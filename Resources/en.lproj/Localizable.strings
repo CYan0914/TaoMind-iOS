@@ -235,3 +235,5 @@
 /* ===== Home Screen widget guide (2026-11-21) ===== */
 "widget_guide_title" = "Put today's verse on your Home Screen";
 "widget_guide_body" = "Touch and hold your Home Screen, tap +, search TaoMind, and add the widget. Tomorrow's verse and your streak will be waiting when you wake up.";
+/* ===== Accessibility labels (2026-11-21 design review) ===== */
+"send" = "Send";

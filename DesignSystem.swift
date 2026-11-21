@@ -18,7 +18,9 @@ enum DS {
     /// 淡墨（次要文字）
     static let inkSoft = Color(red: 0.361, green: 0.325, blue: 0.275)    // #5C5346
     /// 宿墨（辅助/弱化文字）
-    static let inkFaint = Color(red: 0.545, green: 0.506, blue: 0.447)   // #8B8172
+    /// 2026-11-21 设计审 FINDING-005：#8B8172 对 paper 只有 3.34:1，够不上小字 AA。
+    /// 加深到 #6F6657（paper 底 4.93:1）后仍明显淡于 inkSoft，层级没变。
+    static let inkFaint = Color(red: 0.435, green: 0.400, blue: 0.341)   // #6F6657
     /// 朱砂（印章 · 主 CTA · 点睛）
     static let cinnabar = Color(red: 0.651, green: 0.227, blue: 0.169)   // #A63A2B
     /// 朱砂深（按压态）
@@ -87,7 +89,10 @@ enum DS {
     }
 
     /// 眉标（全大写小字 + 宽字距）
-    static let eyebrowFont: Font = .system(size: 11, weight: .semibold)
+    /// 2026-11-21 设计审 FINDING-001：原先 `.system(size: 11)` 有两处问题 ——
+    /// 11pt 低于 12pt 标签下限，且固定字号不随 Dynamic Type 放大，用户调大字号后
+    /// 眉标会跟正文脱节。改用语义样式 `.caption`（12pt）后自动跟随系统字号。
+    static let eyebrowFont: Font = .system(.caption, weight: .semibold)
     /// 眉标字距
     static let eyebrowTracking: CGFloat = 3
 
@@ -163,7 +168,9 @@ extension View {
     }
 
     /// 眉标样式（全大写 + 宽字距 + 铜金）
-    func eyebrowStyle(_ color: Color = DS.bronze) -> some View {
+    /// 默认用 bronzeDeep 而非 bronze：铜金 #8A6D3B 对宣纸底只有 4.23:1，
+    /// 眉标是 12pt 小字，必须过 4.5:1。bronzeDeep 实测 5.51:1。—— FINDING-001
+    func eyebrowStyle(_ color: Color = DS.bronzeDeep) -> some View {
         self.font(DS.eyebrowFont)
             .foregroundColor(color)
             .tracking(DS.eyebrowTracking)

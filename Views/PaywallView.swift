@@ -219,21 +219,31 @@ struct PaywallView: View {
                         }
                         .font(.caption)
                         .foregroundColor(DS.nightSoft)
+                        // FINDING-002：原来只有文字高度（约 13pt），远低于 44pt 命中区。
+                        // 这是「付了钱没生效」的用户唯一能点的按钮。
+                        .padding(.vertical, 13)
+                        .contentShape(Rectangle())
 
                         // Terms/Privacy 挂 paywall 底部（Guideline 3.1.2 惯例，提升审核稳健性）
                         HStack(spacing: 14) {
                             Link(AppState.tr("Privacy Policy"),
                                  destination: URL(string: "https://cyan0914.github.io/taomind-privacy/privacy.html")!)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
                             Text("·")
                             Link(AppState.tr("Terms of Service"),
                                  destination: URL(string: "https://cyan0914.github.io/taomind-privacy/terms.html")!)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
                         }
                         .font(.caption2)
                         .foregroundColor(DS.nightSoft)
 
                         Text(AppState.tr("Subscription auto-renews unless cancelled at least 24h before the end of the period. Manage in App Store settings."))
                             .font(.caption2)
-                            .foregroundColor(DS.nightSoft.opacity(0.7))
+                            // FINDING-003：原来再叠 0.7 透明度 → 混合色 #8C8270 对夜底只有 4.41:1，
+                            // 11pt 小字不达标。合规文案是全屏最需要读清的一行。
+                            .foregroundColor(DS.nightSoft)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -253,6 +263,7 @@ struct PaywallView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(AppState.tr("Close")) { dismiss() }
                         .foregroundColor(DS.nightSoft)
+                        .accessibilityLabel(AppState.tr("Close"))
                 }
             }
             .alert(AppState.tr("Restore"), isPresented: $showRestoreAlert) {

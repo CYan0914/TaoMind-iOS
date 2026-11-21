@@ -45,7 +45,7 @@ struct MonthlyReportView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(DS.ink)
-                                .foregroundColor(.white)
+                                .foregroundColor(DS.paperHi)
                                 .cornerRadius(14)
                         }
                         .padding(.top, 8)

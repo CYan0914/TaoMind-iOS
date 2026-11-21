@@ -961,17 +961,23 @@ struct PracticeView: View {
                         Image(systemName: "xmark")
                             .font(.caption.weight(.semibold))
                             .foregroundColor(.secondary)
-                            .padding(8)
+                            // FINDING-004：原来 padding(8) 只有约 28pt 命中区。
+                            .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(AppState.tr("Close"))
                 }
                 Text(AppState.tr("widget_guide_body"))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DS.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(14)
+            // 与同屏其它卡片一致：paperHi 平底 + 圆角 14 + 12/14 内边距
+            // （本屏 10 张卡片都是这个形制，DS.paperCard 的圆角 6 + 描边反而是少数派，
+            //   token 漂移已单列为 FINDING-011，不在这一张卡上单独改。）
+            .padding(.vertical, 12)
+            .padding(.horizontal, 14)
             .background(DS.paperHi)
             .cornerRadius(14)
         }
@@ -1135,18 +1141,20 @@ struct PracticeView: View {
                         if isSendingChat {
                             ProgressView()
                                 .progressViewStyle(.circular)
-                                .tint(.white)
+                                .tint(DS.paperHi)
                                 .frame(width: 36, height: 36)
                         } else {
                             Image(systemName: "arrow.up.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(
                                     chatInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                        ? Color.gray.opacity(0.4)
+                                        ? DS.inkFaint.opacity(0.4)   // FINDING-009：原来内联系统灰
                                         : DS.ink
                                 )
                         }
                     }
+                    // FINDING-007：图标按钮默认 VoiceOver 只念「按钮」
+                    .accessibilityLabel(AppState.tr("send"))
                     .disabled(chatInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingChat)
                 }
             } else {

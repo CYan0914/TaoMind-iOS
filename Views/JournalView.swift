@@ -76,7 +76,7 @@ struct JournalView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
                     .background(DS.ink)
-                    .foregroundColor(.white)
+                    .foregroundColor(DS.paperHi)
                     .cornerRadius(DS.Radius.small)
                 }
                 .padding()

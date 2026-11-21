@@ -81,7 +81,7 @@ struct JournalEntryDetailView: View {
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                         .background(DS.ink.opacity(0.5))
-                        .foregroundColor(.white)
+                        .foregroundColor(DS.paperHi)
                         .cornerRadius(DS.Radius.small)
                         .disabled(true)
                     }
