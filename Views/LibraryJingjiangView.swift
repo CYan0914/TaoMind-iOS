@@ -62,7 +62,7 @@ struct LibraryJingjiangView: View {
                         if locked {
                             Text(AppState.tr("library_jingjiang_pro"))
                                 // FINDING-006：9pt 低于 12pt 标签下限，且不随 Dynamic Type 缩放。
-                                .font(.system(size: 11, weight: .bold, relativeTo: .caption2))
+                                .font(.system(.caption2, weight: .bold))
                                 .tracking(1)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
