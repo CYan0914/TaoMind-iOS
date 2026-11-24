@@ -36,6 +36,10 @@ struct PracticeView: View {
     @State private var showSpeechPermissionDenied = false
     /// 主屏小组件引导（只在打卡完成后出现一次）
     @AppStorage("widget.guide.dismissed") private var widgetGuideDismissed = false
+    /// 首次打卡完成后要一次通知权限（2026-11-24 起从首启挪到这里）。
+    /// 首启就要权限通过率极低，还会打断「体验→付费」的热链路；
+    /// 刚打完卡是用户最愿意接收「明天见」的时刻。
+    @AppStorage("notifications.promptedAfterCheckin") private var promptedNotificationsAfterCheckin = false
     @State private var widgetInstalled = false
 
     /// 连续打卡换体验卡的门槛，与后端 TRIAL_STREAK_THRESHOLD 对齐
@@ -63,6 +67,12 @@ struct PracticeView: View {
             if signedIn {
                 Task { await loadStatus() }
             }
+        }
+        // 首次打卡完成 → 要一次通知权限（只一次，拒绝后不再骚扰）
+        .onChange(of: status?.streak.todayDone) { done in
+            guard done == true, !promptedNotificationsAfterCheckin else { return }
+            promptedNotificationsAfterCheckin = true
+            NotificationService.shared.requestPermission()
         }
         // build 50: 登录后 / 升级 Pro / 切换心情 → 重评估个性化 verse
         .onChange(of: subscriptionManager.isPro) { _ in
