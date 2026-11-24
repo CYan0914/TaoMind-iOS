@@ -237,3 +237,18 @@
 "widget_guide_body" = "Touch and hold your Home Screen, tap +, search TaoMind, and add the widget. Tomorrow's verse and your streak will be waiting when you wake up.";
 /* ===== Accessibility labels (2026-11-21 design review) ===== */
 "send" = "Send";
+
+
+/* ===== Onboarding 2026-11-24: first reading + paywall ===== */
+"ob_preview_eyebrow" = "Your first reading";
+"ob_preview_title" = "Here is what the sage says about your situation.";
+"ob_preview_sub" = "This one is on us. It does not use your free questions.";
+"ob_preview_loading" = "Consulting the text…";
+"ob_preview_failed" = "The sage could not be reached right now.";
+"ob_preview_locked_reflection" = "The reflection — what this asks of you";
+"ob_preview_locked_way" = "The way forward — one thing to do today";
+"ob_preview_locked_followup" = "Ask a follow-up, and keep the thread";
+"ob_preview_free_note" = "Pro unlocks the full reading, the follow-up, and unlimited questions.";
+"pw_start_trial" = "Or try 7 days free first";
+"The Passage" = "The Passage";
+"The Wisdom" = "The Wisdom";

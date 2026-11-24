@@ -10,8 +10,19 @@ struct PaywallView: View {
     /// 弹墙场景（决定顶部场景条文案；触发点通过 openPaywall(_:) 传入）
     let context: PaywallContext
 
-    init(context: PaywallContext = .generic) {
+    /// 引导页第 4 屏内嵌时用：关闭键由引导接管（要先写 hasSeenOnboarding 再落 tab）。
+    /// nil = 常规 sheet，关闭即 dismiss。
+    let onClose: (() -> Void)?
+
+    /// 「先免费试 7 天」小字入口。nil 时不渲染（常规付费墙不重复承诺）。
+    let onStartTrial: (() -> Void)?
+
+    init(context: PaywallContext = .generic,
+         onClose: (() -> Void)? = nil,
+         onStartTrial: (() -> Void)? = nil) {
         self.context = context
+        self.onClose = onClose
+        self.onStartTrial = onStartTrial
     }
 
     @State private var selectedPackage: Package?
@@ -205,6 +216,21 @@ struct PaywallView: View {
                                 .foregroundColor(DS.nightSoft)
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 2)
+
+                            // 引导页内嵌时给一个可点的出口：不想现在付钱 → 先去打卡拿 7 天。
+                            // 常规付费墙不传 onStartTrial，避免把「关闭」包装成转化路径。
+                            if let onStartTrial {
+                                Button(action: onStartTrial) {
+                                    Text(AppState.tr("pw_start_trial"))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(DS.nightGold)
+                                        .underline()
+                                        .padding(.vertical, 10)
+                                        .contentShape(Rectangle())
+                                }
+                                .accessibilityLabel(AppState.tr("pw_start_trial"))
+                            }
                         }
                     }
 
@@ -261,9 +287,12 @@ struct PaywallView: View {
             )
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(AppState.tr("Close")) { dismiss() }
-                        .foregroundColor(DS.nightSoft)
-                        .accessibilityLabel(AppState.tr("Close"))
+                    Button(AppState.tr("Close")) {
+                        // 引导内嵌时交给引导收尾（先写 hasSeenOnboarding 再落 tab）
+                        if let onClose { onClose() } else { dismiss() }
+                    }
+                    .foregroundColor(DS.nightSoft)
+                    .accessibilityLabel(AppState.tr("Close"))
                 }
             }
             .alert(AppState.tr("Restore"), isPresented: $showRestoreAlert) {
@@ -291,9 +320,13 @@ struct PaywallView: View {
                 }
             }
             // Auto-dismiss when purchase succeeds OR user is already Pro.
-            // 唯一 dismiss 入口：等 isPro 翻 true 主动 dismiss。
+            // 唯一 dismiss 入口：等 isPro 翻 true 主动结束。
+            // 引导内嵌时必须走 onClose，否则全屏引导关掉了但 hasSeenOnboarding 没写，
+            // 下次启动又会弹一次引导。
             .onChange(of: subscriptionManager.isPro) { isPro in
-                if isPro { dismiss() }
+                if isPro {
+                    if let onClose { onClose() } else { dismiss() }
+                }
             }
         }
     }

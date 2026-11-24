@@ -363,3 +363,18 @@
 "widget_guide_body" = "長按主畫面空白處，點左上角「+」，搜尋 TaoMind 加入小工具。明天醒來，經文和連續天數就在主畫面上。";
 /* ===== 可及性標籤（2026-11-21 設計審）===== */
 "send" = "傳送";
+
+
+/* ===== 引導改版 2026-11-24：首次解讀 + 付費牆 ===== */
+"ob_preview_eyebrow" = "你的第一次解讀";
+"ob_preview_title" = "這是針對你的處境，給出的一卦。";
+"ob_preview_sub" = "這一次由我們送你，不佔你每天的免費提問。";
+"ob_preview_loading" = "正在翻檢經文…";
+"ob_preview_failed" = "現在連不上，稍後再試。";
+"ob_preview_locked_reflection" = "省思 —— 它在問你什麼";
+"ob_preview_locked_way" = "今日可行 —— 今天能做的一件事";
+"ob_preview_locked_followup" = "繼續追問，把這條線聊完";
+"ob_preview_free_note" = "Pro 解鎖完整解讀、追問，以及不限次數的提問。";
+"pw_start_trial" = "或者先免費試 7 天";
+"The Passage" = "經文";
+"The Wisdom" = "老子怎麼說";
